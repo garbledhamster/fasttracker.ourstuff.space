@@ -1,4 +1,4 @@
-const STORAGE_KEY = "fastingTrackerStateV4";
+const STORAGE_KEY = "fastingTrackerStateV5";
 const RING_CIRC = 2 * Math.PI * 80;
 
 const FAST_TYPES = [
@@ -31,6 +31,10 @@ let tickHandle = null;
 let toastHandle = null;
 let swReg = null;
 
+let navHoldTimer = null;
+let navHoldShown = false;
+let suppressNavClickEl = null;
+
 document.addEventListener("DOMContentLoaded", () => {
   initUI();
   startTick();
@@ -62,6 +66,7 @@ function saveState() {
 
 function initUI() {
   initTabs();
+  initNavTooltips();
   initFastTypeChips();
   initButtons();
   initSettings();
@@ -71,7 +76,15 @@ function initUI() {
 
 function initTabs() {
   document.querySelectorAll("nav .nav-btn").forEach(btn => {
-    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+    btn.addEventListener("click", (e) => {
+      if (suppressNavClickEl === btn) {
+        suppressNavClickEl = null;
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      switchTab(btn.dataset.tab);
+    });
   });
   switchTab("timer");
 }
@@ -94,6 +107,60 @@ function switchTab(tab) {
   if (tab === "settings") renderSettings();
 }
 
+function initNavTooltips() {
+  const tooltip = $("nav-tooltip");
+  const hide = () => {
+    tooltip.classList.add("hidden");
+    navHoldShown = false;
+    clearTimeout(navHoldTimer);
+    navHoldTimer = null;
+  };
+
+  const showFor = (btn) => {
+    const label = btn.dataset.label || "";
+    if (!label) return;
+    const r = btn.getBoundingClientRect();
+    tooltip.textContent = label;
+    tooltip.classList.remove("hidden");
+
+    const pad = 10;
+    const tw = tooltip.offsetWidth || 90;
+    const th = tooltip.offsetHeight || 24;
+    let x = r.left + r.width / 2 - tw / 2;
+    x = Math.max(pad, Math.min(window.innerWidth - tw - pad, x));
+    let y = r.top - th - 10;
+    if (y < pad) y = r.bottom + 10;
+    tooltip.style.left = x + "px";
+    tooltip.style.top = y + "px";
+  };
+
+  const startHold = (btn) => {
+    clearTimeout(navHoldTimer);
+    navHoldShown = false;
+    suppressNavClickEl = null;
+    navHoldTimer = setTimeout(() => {
+      navHoldShown = true;
+      suppressNavClickEl = btn;
+      showFor(btn);
+      setTimeout(() => { if (navHoldShown) hide(); }, 1400);
+    }, 420);
+  };
+
+  document.querySelectorAll("nav .nav-btn").forEach(btn => {
+    btn.addEventListener("touchstart", () => startHold(btn), { passive: true });
+    btn.addEventListener("touchend", hide, { passive: true });
+    btn.addEventListener("touchcancel", hide, { passive: true });
+
+    btn.addEventListener("mousedown", () => startHold(btn));
+    btn.addEventListener("mouseup", hide);
+    btn.addEventListener("mouseleave", hide);
+    btn.addEventListener("blur", hide);
+  });
+
+  window.addEventListener("scroll", hide, { passive: true });
+  window.addEventListener("resize", hide, { passive: true });
+}
+
 function getTypeById(id) {
   return FAST_TYPES.find(t => t.id === id) || FAST_TYPES[0];
 }
@@ -110,7 +177,7 @@ function initFastTypeChips() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.dataset.typeId = type.id;
-    btn.className = "whitespace-nowrap px-3 py-1.5 rounded-full border text-xs border-slate-700 text-slate-100 bg-slate-900/80";
+    btn.className = "whitespace-nowrap px-4 py-2 md:px-3 md:py-1.5 rounded-full border text-sm md:text-xs border-slate-700 text-slate-100 bg-slate-900/80";
     btn.textContent = type.label;
     btn.addEventListener("click", () => {
       pendingTypeId = type.id;
@@ -142,8 +209,7 @@ function applyTypeToActiveFast(typeId) {
   const t = getTypeById(typeId);
   af.typeId = t.id;
   af.plannedDurationHours = t.durationHours;
-  const plannedMs = t.durationHours * 3600000;
-  af.endTimestamp = af.startTimestamp + plannedMs;
+  af.endTimestamp = af.startTimestamp + t.durationHours * 3600000;
   af.status = "active";
   state.reminders = { endNotified: false, lastHourlyAt: null };
 }
@@ -168,13 +234,10 @@ function closeFastTypeModal() {
 
 function usePendingFastType() {
   if (!pendingTypeId) { closeFastTypeModal(); return; }
-
   selectedFastTypeId = pendingTypeId;
   state.settings.defaultFastTypeId = selectedFastTypeId;
-
   if (state.activeFast) applyTypeToActiveFast(selectedFastTypeId);
   saveState();
-
   closeFastTypeModal();
   highlightSelectedFastType();
   updateTimer();
@@ -445,11 +508,11 @@ function renderAlertsPill() {
   const dot = $("alerts-dot");
   const label = $("alerts-label");
 
-  if (!("Notification" in window)) { dot.className = "w-1.5 h-1.5 rounded-full bg-slate-600"; label.textContent = "Unavailable"; return; }
-  if (Notification.permission === "denied") { dot.className = "w-1.5 h-1.5 rounded-full bg-red-500"; label.textContent = "Blocked"; return; }
-  if (Notification.permission === "default") { dot.className = "w-1.5 h-1.5 rounded-full bg-slate-600"; label.textContent = "Enable alerts"; return; }
-  if (state.settings.alertsEnabled) { dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400"; label.textContent = "Alerts on"; }
-  else { dot.className = "w-1.5 h-1.5 rounded-full bg-slate-600"; label.textContent = "Alerts off"; }
+  if (!("Notification" in window)) { dot.className = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-slate-600"; label.textContent = "Unavailable"; return; }
+  if (Notification.permission === "denied") { dot.className = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-red-500"; label.textContent = "Blocked"; return; }
+  if (Notification.permission === "default") { dot.className = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-slate-600"; label.textContent = "Enable alerts"; return; }
+  if (state.settings.alertsEnabled) { dot.className = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-emerald-400"; label.textContent = "Alerts on"; }
+  else { dot.className = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-slate-600"; label.textContent = "Alerts off"; }
 }
 
 async function sendNotification(title, body) {
@@ -604,7 +667,7 @@ function renderCalendar() {
   for (let i = 0; i < 42; i++) {
     const cell = document.createElement("button");
     cell.type = "button";
-    cell.className = "aspect-square rounded-xl flex flex-col items-center justify-center text-[11px]";
+    cell.className = "aspect-square rounded-xl flex flex-col items-center justify-center text-[12px] md:text-[11px]";
 
     let dayNum, date, isCurrent = false;
 
@@ -636,7 +699,7 @@ function renderCalendar() {
 
     if (isToday && isCurrent) {
       const dot = document.createElement("span");
-      dot.className = "w-1.5 h-1.5 rounded-full bg-brand-500 mb-0.5";
+      dot.className = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-brand-500 mb-0.5";
       cell.appendChild(dot);
     }
 
@@ -646,7 +709,7 @@ function renderCalendar() {
 
     if (hasFast) {
       const tiny = document.createElement("span");
-      tiny.className = "mt-0.5 text-[9px] text-cyan-100";
+      tiny.className = "mt-0.5 text-[10px] md:text-[9px] text-cyan-100";
       tiny.textContent = Math.round(data.totalHours) + "h";
       cell.appendChild(tiny);
     }
@@ -686,10 +749,10 @@ function renderDayDetails() {
 
   day.entries.forEach(e => {
     const row = document.createElement("div");
-    row.className = "flex items-center justify-between bg-slate-900 rounded-xl px-3 py-2";
+    row.className = "flex items-center justify-between bg-slate-900 rounded-xl px-3 py-3 md:py-2";
 
     const left = document.createElement("div");
-    left.className = "flex flex-col text-[11px]";
+    left.className = "flex flex-col text-sm md:text-[11px]";
 
     const type = getTypeById(e.typeId);
     const title = document.createElement("div");
@@ -713,7 +776,7 @@ function renderRecentFasts() {
   container.innerHTML = "";
   if (!state.history.length) {
     const p = document.createElement("p");
-    p.className = "text-slate-400";
+    p.className = "text-slate-400 text-sm md:text-xs";
     p.textContent = "No fasts logged yet.";
     container.appendChild(p);
     return;
@@ -721,10 +784,10 @@ function renderRecentFasts() {
 
   state.history.slice(0, 10).forEach(e => {
     const row = document.createElement("div");
-    row.className = "flex items-center justify-between bg-slate-900 rounded-xl px-3 py-2";
+    row.className = "flex items-center justify-between bg-slate-900 rounded-xl px-3 py-3 md:py-2";
 
     const left = document.createElement("div");
-    left.className = "flex flex-col text-[11px]";
+    left.className = "flex flex-col text-sm md:text-[11px]";
 
     const type = getTypeById(e.typeId);
     const title = document.createElement("div");
