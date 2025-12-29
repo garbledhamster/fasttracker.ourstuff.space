@@ -1,4 +1,4 @@
-const STORAGE_KEY = "fastingTrackerStateV2";
+const STORAGE_KEY = "fastingTrackerStateV3";
 const RING_CIRC = 2 * Math.PI * 80;
 
 const FAST_TYPES = [
@@ -36,6 +36,9 @@ document.addEventListener("DOMContentLoaded", () => {
   registerServiceWorker();
 });
 
+function $(id) { return document.getElementById(id); }
+function clone(x) { return JSON.parse(JSON.stringify(x)); }
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -55,10 +58,6 @@ function loadState() {
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
 }
-
-function clone(x) { return JSON.parse(JSON.stringify(x)); }
-
-function $(id) { return document.getElementById(id); }
 
 function initUI() {
   initTabs();
@@ -94,6 +93,15 @@ function switchTab(tab) {
   if (tab === "settings") renderSettings();
 }
 
+function getTypeById(id) {
+  return FAST_TYPES.find(t => t.id === id) || FAST_TYPES[0];
+}
+
+function getActiveType() {
+  if (state.activeFast?.typeId) return getTypeById(state.activeFast.typeId);
+  return getTypeById(selectedFastTypeId);
+}
+
 function initFastTypeChips() {
   const container = $("fast-type-chips");
   container.innerHTML = "";
@@ -105,19 +113,20 @@ function initFastTypeChips() {
     btn.textContent = type.label;
     btn.addEventListener("click", () => {
       selectedFastTypeId = type.id;
+      state.settings.defaultFastTypeId = selectedFastTypeId;
+
+      if (state.activeFast) applyTypeToActiveFast(type.id);
+      saveState();
+
       highlightSelectedFastType();
       openFastTypeModal(type);
+
       if (!state.activeFast) renderTimerMetaIdle();
-      saveSelectedTypeToDefaults();
+      updateTimer();
     });
     container.appendChild(btn);
   });
   highlightSelectedFastType();
-}
-
-function saveSelectedTypeToDefaults() {
-  state.settings.defaultFastTypeId = selectedFastTypeId;
-  saveState();
 }
 
 function highlightSelectedFastType() {
@@ -132,8 +141,18 @@ function highlightSelectedFastType() {
       chip.classList.add("bg-slate-900/80", "text-slate-100", "border-slate-700");
     }
   });
-  const type = getSelectedFastType();
-  $("timer-type").textContent = type ? (type.label + " fast") : "No fast selected";
+}
+
+function applyTypeToActiveFast(typeId) {
+  const af = state.activeFast;
+  if (!af) return;
+  const t = getTypeById(typeId);
+  af.typeId = t.id;
+  af.plannedDurationHours = t.durationHours;
+  const plannedMs = t.durationHours * 3600000;
+  af.endTimestamp = af.startTimestamp + plannedMs;
+  af.status = "active";
+  state.reminders = { endNotified: false, lastHourlyAt: null };
 }
 
 function openFastTypeModal(type) {
@@ -151,14 +170,10 @@ function openFastTypeModal(type) {
 
 function closeFastTypeModal() { $("fast-type-modal").classList.add("hidden"); }
 
-function getSelectedFastType() {
-  return FAST_TYPES.find(t => t.id === selectedFastTypeId) || FAST_TYPES[0];
-}
-
 function initButtons() {
   $("start-fast-btn").addEventListener("click", startFast);
-  $("end-fast-btn").addEventListener("click", () => finishFast(true));
-  $("log-fast-btn").addEventListener("click", () => finishFast(false));
+  $("stop-fast-btn").addEventListener("click", stopFastAndLog);
+
   $("alerts-btn").addEventListener("click", onAlertsButton);
 
   $("modal-close").addEventListener("click", closeFastTypeModal);
@@ -177,7 +192,7 @@ function initButtons() {
     renderSettings();
   });
 
-  $("export-data").addEventListener("click", exportData);
+  $("export-data").addEventListener("click", exportCSV);
   $("clear-data").addEventListener("click", clearAllData);
 
   $("calendar-prev").addEventListener("click", () => { calendarMonth = addMonths(calendarMonth, -1); renderCalendar(); renderDayDetails(); });
@@ -189,6 +204,7 @@ function initButtons() {
     saveState();
     highlightSelectedFastType();
     if (!state.activeFast) renderTimerMetaIdle();
+    updateTimer();
   });
 
   $("timer-main").addEventListener("click", cycleTimeMode);
@@ -199,9 +215,7 @@ function initButtons() {
   });
 
   $("edit-start-close").addEventListener("click", closeEditStartModal);
-  $("edit-start-now").addEventListener("click", () => {
-    $("edit-start-input").value = toLocalInputValue(new Date());
-  });
+  $("edit-start-now").addEventListener("click", () => { $("edit-start-input").value = toLocalInputValue(new Date()); });
   $("edit-start-save").addEventListener("click", saveEditedStartTime);
 
   document.addEventListener("visibilitychange", () => { if (!document.hidden) renderAll(); });
@@ -226,15 +240,14 @@ function renderSettings() {
 }
 
 function startFast() {
-  const type = getSelectedFastType();
+  const type = getTypeById(selectedFastTypeId);
   const now = Date.now();
-  const durationMs = type.durationHours * 3600000;
   state.activeFast = {
     id: "fast_" + now,
     typeId: type.id,
     startTimestamp: now,
-    endTimestamp: now + durationMs,
     plannedDurationHours: type.durationHours,
+    endTimestamp: now + type.durationHours * 3600000,
     status: "active"
   };
   state.reminders = { endNotified: false, lastHourlyAt: null };
@@ -243,12 +256,13 @@ function startFast() {
   showToast("Fast started");
 }
 
-function finishFast(early) {
+function stopFastAndLog() {
   const af = state.activeFast;
   if (!af) return;
   const now = Date.now();
-  const endTs = early ? now : af.endTimestamp;
+  const endTs = now;
   const durHrs = Math.max(0, (endTs - af.startTimestamp) / 3600000);
+
   state.history.unshift({
     id: af.id,
     typeId: af.typeId,
@@ -256,22 +270,22 @@ function finishFast(early) {
     endTimestamp: endTs,
     durationHours: Math.round(durHrs * 100) / 100
   });
+
   state.activeFast = null;
   state.reminders = { endNotified: false, lastHourlyAt: null };
   saveState();
-  renderAll();
+
   calendarMonth = startOfMonth(new Date());
   selectedDayKey = formatDateKey(new Date());
+  renderAll();
   showToast("Fast logged");
 }
 
 function startTick() {
   if (tickHandle) clearInterval(tickHandle);
   tickHandle = setInterval(() => {
-    try {
-      updateTimer();
-      handleAlerts();
-    } catch (e) {}
+    updateTimer();
+    handleAlerts();
   }, 1000);
   updateTimer();
   renderAlertsPill();
@@ -292,18 +306,21 @@ function updateTimer() {
   const mode = $("timer-mode");
   const sub = $("timer-sub");
   const header = $("header-subtitle");
+  const status = $("timer-status");
+  const typePill = $("timer-type");
 
   ring.setAttribute("stroke-dasharray", String(RING_CIRC));
 
   const displayMode = state.settings.timeDisplayMode || "elapsed";
-  const type = getSelectedFastType();
-  const typeLabel = type ? (type.label + " fast") : "No fast selected";
-  $("timer-type").textContent = typeLabel;
+  const type = getActiveType();
+  typePill.textContent = type ? (type.label + " fast") : "No fast selected";
 
   if (!state.activeFast) {
+    status.textContent = "IDLE";
     header.textContent = "No active fast";
     ring.setAttribute("stroke-dashoffset", String(RING_CIRC));
     renderTimerMetaIdle();
+
     const plannedMs = (type?.durationHours || 0) * 3600000;
     const totalStr = formatHMS(plannedMs);
 
@@ -320,9 +337,9 @@ function updateTimer() {
       main.textContent = totalStr;
       sub.textContent = "Tap time to change view";
     }
+
     $("start-fast-btn").classList.remove("hidden");
-    $("end-fast-btn").classList.add("hidden");
-    $("log-fast-btn").classList.add("hidden");
+    $("stop-fast-btn").classList.add("hidden");
     $("meta-start-btn").disabled = true;
     return;
   }
@@ -344,16 +361,15 @@ function updateTimer() {
   $("meta-end").textContent = formatDateTime(new Date(end));
   $("meta-planned").textContent = (af.plannedDurationHours || Math.round(total / 3600000)) + " h";
 
+  $("start-fast-btn").classList.add("hidden");
+  $("stop-fast-btn").classList.remove("hidden");
+
   if (now < end) {
+    status.textContent = "FASTING";
     header.textContent = "Ends " + formatTimeShort(new Date(end));
-    $("start-fast-btn").classList.add("hidden");
-    $("end-fast-btn").classList.remove("hidden");
-    $("log-fast-btn").classList.add("hidden");
   } else {
+    status.textContent = "COMPLETE";
     header.textContent = "Fast complete";
-    $("start-fast-btn").classList.add("hidden");
-    $("end-fast-btn").classList.add("hidden");
-    $("log-fast-btn").classList.remove("hidden");
   }
 
   if (displayMode === "elapsed") {
@@ -378,30 +394,19 @@ function updateTimer() {
 }
 
 function renderTimerMetaIdle() {
-  const type = getSelectedFastType();
+  const type = getTypeById(selectedFastTypeId);
   $("meta-start-btn").textContent = "—";
   $("meta-end").textContent = "—";
   $("meta-planned").textContent = (type?.durationHours || 0) + " h";
 }
 
 async function onAlertsButton() {
-  if (!("Notification" in window)) {
-    showToast("Notifications not supported here");
-    return;
-  }
-
-  if (Notification.permission === "denied") {
-    showToast("Alerts blocked in browser settings");
-    return;
-  }
+  if (!("Notification" in window)) { showToast("Notifications not supported"); return; }
+  if (Notification.permission === "denied") { showToast("Alerts blocked in browser settings"); return; }
 
   if (Notification.permission === "default") {
     const res = await Notification.requestPermission();
-    if (res !== "granted") {
-      showToast("Permission not granted");
-      renderAlertsPill();
-      return;
-    }
+    if (res !== "granted") { showToast("Permission not granted"); renderAlertsPill(); return; }
     state.settings.alertsEnabled = true;
     saveState();
     renderAlertsPill();
@@ -413,6 +418,7 @@ async function onAlertsButton() {
   state.settings.alertsEnabled = !state.settings.alertsEnabled;
   saveState();
   renderAlertsPill();
+
   if (state.settings.alertsEnabled) {
     await sendNotification("Alerts enabled", "You’ll be notified when your fast ends.");
     showToast("Alerts enabled");
@@ -430,19 +436,16 @@ function renderAlertsPill() {
     label.textContent = "Unavailable";
     return;
   }
-
   if (Notification.permission === "denied") {
     dot.className = "w-1.5 h-1.5 rounded-full bg-red-500";
     label.textContent = "Blocked";
     return;
   }
-
   if (Notification.permission === "default") {
     dot.className = "w-1.5 h-1.5 rounded-full bg-slate-600";
     label.textContent = "Enable alerts";
     return;
   }
-
   if (state.settings.alertsEnabled) {
     dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
     label.textContent = "Alerts on";
@@ -462,16 +465,13 @@ async function sendNotification(title, body) {
         body,
         icon: "assets/favicon/android-chrome-192x192.png",
         badge: "assets/favicon/android-chrome-192x192.png",
-        tag: "fasting-tracker",
-        renotify: false
+        tag: "fasting-tracker"
       });
       return;
     }
   } catch {}
 
-  try {
-    new Notification(title, { body });
-  } catch {}
+  try { new Notification(title, { body }); } catch {}
 }
 
 function handleAlerts() {
@@ -485,9 +485,7 @@ function handleAlerts() {
   const endTs = af.endTimestamp;
 
   if (!state.reminders.endNotified && now >= endTs) {
-    if (state.settings.notifyOnEnd) {
-      sendNotification("Fast complete", "You reached your fasting goal.");
-    }
+    if (state.settings.notifyOnEnd) sendNotification("Fast complete", "You reached your fasting goal.");
     state.reminders.endNotified = true;
     state.reminders.lastHourlyAt = now;
     saveState();
@@ -505,15 +503,12 @@ function handleAlerts() {
 }
 
 function openEditStartModal() {
-  if (!state.activeFast) return;
   const start = new Date(state.activeFast.startTimestamp);
   $("edit-start-input").value = toLocalInputValue(start);
   $("edit-start-modal").classList.remove("hidden");
 }
 
-function closeEditStartModal() {
-  $("edit-start-modal").classList.add("hidden");
-}
+function closeEditStartModal() { $("edit-start-modal").classList.add("hidden"); }
 
 function saveEditedStartTime() {
   if (!state.activeFast) return;
@@ -523,11 +518,12 @@ function saveEditedStartTime() {
   if (!isFinite(d.getTime())) { showToast("Invalid time"); return; }
 
   const af = state.activeFast;
-  const planned = (af.plannedDurationHours || getSelectedFastType().durationHours || 0) * 3600000;
+  const plannedMs = (af.plannedDurationHours || getActiveType().durationHours || 0) * 3600000;
   af.startTimestamp = d.getTime();
-  af.endTimestamp = af.startTimestamp + planned;
+  af.endTimestamp = af.startTimestamp + plannedMs;
   af.status = "active";
   state.reminders = { endNotified: false, lastHourlyAt: null };
+
   saveState();
   closeEditStartModal();
   updateTimer();
@@ -542,18 +538,40 @@ function showToast(msg) {
   toastHandle = setTimeout(() => t.classList.add("hidden"), 2200);
 }
 
-function exportData() {
-  const payload = JSON.stringify({ history: state.history, settings: state.settings }, null, 2);
-  const blob = new Blob([payload], { type: "application/json" });
+function exportCSV() {
+  const rows = [];
+  rows.push(["id","typeId","typeLabel","startISO","endISO","durationHours"].join(","));
+  for (const e of state.history) {
+    const type = getTypeById(e.typeId);
+    const startISO = new Date(e.startTimestamp).toISOString();
+    const endISO = new Date(e.endTimestamp).toISOString();
+    const duration = (typeof e.durationHours === "number" ? e.durationHours : Number(e.durationHours)) || 0;
+    rows.push([
+      csvCell(e.id),
+      csvCell(e.typeId),
+      csvCell(type?.label || ""),
+      csvCell(startISO),
+      csvCell(endISO),
+      csvCell(duration.toFixed(2))
+    ].join(","));
+  }
+  const csv = rows.join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "fasting-tracker-data.json";
+  a.download = "history.csv";
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
-  showToast("Exported");
+  showToast("Exported CSV");
+}
+
+function csvCell(v) {
+  const s = String(v ?? "");
+  if (/[",\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
+  return s;
 }
 
 function clearAllData() {
@@ -669,8 +687,7 @@ function renderDayDetails() {
     return;
   }
 
-  const total = day.totalHours;
-  summary.textContent = `${day.entries.length} fast(s), ${total.toFixed(1)} total hours`;
+  summary.textContent = `${day.entries.length} fast(s), ${day.totalHours.toFixed(1)} total hours`;
 
   day.entries.forEach(e => {
     const row = document.createElement("div");
@@ -679,10 +696,10 @@ function renderDayDetails() {
     const left = document.createElement("div");
     left.className = "flex flex-col text-[11px]";
 
-    const type = FAST_TYPES.find(t => t.id === e.typeId);
+    const type = getTypeById(e.typeId);
     const title = document.createElement("div");
     title.className = "text-slate-100";
-    title.textContent = `${type ? type.label : "Custom"} • ${e.durationHours.toFixed(1)}h`;
+    title.textContent = `${type ? type.label : "Custom"} • ${Number(e.durationHours).toFixed(1)}h`;
 
     const time = document.createElement("div");
     time.className = "text-slate-400";
@@ -714,10 +731,10 @@ function renderRecentFasts() {
     const left = document.createElement("div");
     left.className = "flex flex-col text-[11px]";
 
-    const type = FAST_TYPES.find(t => t.id === e.typeId);
+    const type = getTypeById(e.typeId);
     const title = document.createElement("div");
     title.className = "text-slate-100";
-    title.textContent = `${type ? type.label : "Custom"} • ${e.durationHours.toFixed(1)}h`;
+    title.textContent = `${type ? type.label : "Custom"} • ${Number(e.durationHours).toFixed(1)}h`;
 
     const start = new Date(e.startTimestamp);
     const time = document.createElement("div");
@@ -752,11 +769,11 @@ function toLocalInputValue(d) {
 }
 
 function formatHMS(ms) {
-  const s = Math.floor(ms / 1000);
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const r = s % 60;
-  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(r).padStart(2,"0")}`;
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
 }
 
 function formatDateTime(d) {
@@ -780,7 +797,5 @@ function formatDateKey(d) {
 
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
-  try {
-    swReg = await navigator.serviceWorker.register("./sw.js");
-  } catch {}
+  try { swReg = await navigator.serviceWorker.register("./sw.js"); } catch {}
 }
