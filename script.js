@@ -12,9 +12,12 @@ import {
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {
   getFirestore,
+  collection,
   doc,
+  addDoc,
   getDoc,
   setDoc,
+  deleteDoc,
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
@@ -26,6 +29,21 @@ const DEVICE_KEY_ID = "device-wrap-key";
 const RING_CIRC = 2 * Math.PI * 80;
 const ENCRYPTION_VERSION = 1;
 const PBKDF2_ITERATIONS = 310000;
+const NOTES_SCHEMA = Object.freeze({
+  text: "",
+  createdAt: 0,
+  updatedAt: 0,
+  dateKey: "YYYY-MM-DD",
+  fastContext: {
+    fastId: null,
+    typeId: null,
+    typeLabel: null,
+    startTimestamp: null,
+    endTimestamp: null,
+    durationHours: null,
+    status: null
+  }
+});
 
 const FAST_TYPES = [
   {
@@ -183,6 +201,9 @@ let pendingPassword = null;
 let needsUnlock = false;
 let authRememberChoice = null;
 let stateUnsubscribe = null;
+let notesUnsubscribe = null;
+let notesLoaded = false;
+let notes = [];
 
 let navHoldTimer = null;
 let navHoldShown = false;
@@ -219,6 +240,109 @@ function getStateDocRef(uid) {
 
 function getUserDocRef(uid) {
   return doc(db, "users", uid);
+}
+
+function getNotesCollectionRef(uid) {
+  return collection(db, "users", uid, "notes");
+}
+
+function getNoteDocRef(uid, noteId) {
+  return doc(db, "users", uid, "notes", noteId);
+}
+
+function stopNotesListener() {
+  if (notesUnsubscribe) {
+    notesUnsubscribe();
+    notesUnsubscribe = null;
+  }
+}
+
+function normalizeNoteSnapshot(snap) {
+  const data = snap.data() || {};
+  return {
+    id: snap.id,
+    text: typeof data.text === "string" ? data.text : "",
+    createdAt: typeof data.createdAt === "number" ? data.createdAt : 0,
+    updatedAt: typeof data.updatedAt === "number" ? data.updatedAt : 0,
+    dateKey: typeof data.dateKey === "string" ? data.dateKey : "",
+    fastContext: data.fastContext || null
+  };
+}
+
+function buildFastContextSnapshot() {
+  if (!state.activeFast) return null;
+  const type = getTypeById(state.activeFast.typeId);
+  return {
+    fastId: state.activeFast.id,
+    typeId: state.activeFast.typeId,
+    typeLabel: type?.label || null,
+    startTimestamp: state.activeFast.startTimestamp,
+    endTimestamp: state.activeFast.endTimestamp,
+    durationHours: state.activeFast.plannedDurationHours,
+    status: state.activeFast.status
+  };
+}
+
+function buildNotePayload({ text, dateKey, fastContext } = {}) {
+  const now = Date.now();
+  return {
+    text: (text || "").trim(),
+    createdAt: now,
+    updatedAt: now,
+    dateKey: dateKey || selectedDayKey || formatDateKey(new Date()),
+    fastContext: fastContext ?? buildFastContextSnapshot()
+  };
+}
+
+function buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt } = {}) {
+  const payload = {
+    updatedAt: Date.now()
+  };
+  if (typeof text === "string") payload.text = text.trim();
+  if (typeof dateKey === "string") payload.dateKey = dateKey;
+  if (fastContext !== undefined) payload.fastContext = fastContext;
+  if (typeof createdAt === "number") payload.createdAt = createdAt;
+  return payload;
+}
+
+async function createNote({ text, dateKey, fastContext } = {}) {
+  const user = auth.currentUser;
+  if (!user) return null;
+  const payload = buildNotePayload({ text, dateKey, fastContext });
+  try {
+    const docRef = await addDoc(getNotesCollectionRef(user.uid), payload);
+    return docRef.id;
+  } catch {
+    return null;
+  }
+}
+
+async function updateNote(noteId, { text, dateKey, fastContext, createdAt } = {}) {
+  const user = auth.currentUser;
+  if (!user || !noteId) return;
+  const payload = buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt });
+  try {
+    await setDoc(getNoteDocRef(user.uid, noteId), payload, { merge: true });
+  } catch {}
+}
+
+async function deleteNote(noteId) {
+  const user = auth.currentUser;
+  if (!user || !noteId) return;
+  try {
+    await deleteDoc(getNoteDocRef(user.uid, noteId));
+  } catch {}
+}
+
+function startNotesListener(uid) {
+  stopNotesListener();
+  notesLoaded = false;
+  notes = [];
+  notesUnsubscribe = onSnapshot(getNotesCollectionRef(uid), snap => {
+    notesLoaded = true;
+    notes = snap.docs.map(normalizeNoteSnapshot).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    renderNotes();
+  });
 }
 
 function stopStateListener() {
@@ -556,6 +680,9 @@ function initAuthListener() {
       }
     } else {
       stopStateListener();
+      stopNotesListener();
+      notesLoaded = false;
+      notes = [];
       setAuthVisibility(false);
       stopTick();
       cryptoKey = null;
@@ -660,6 +787,7 @@ async function handleAuthSubmit(e) {
 async function completeAuthFlow() {
   await loadAppState();
   startStateListener(auth.currentUser.uid);
+  startNotesListener(auth.currentUser.uid);
   if (!appInitialized) {
     initUI();
     startTick();
@@ -709,6 +837,7 @@ function switchTab(tab) {
     renderCalendar();
     renderDayDetails();
     renderRecentFasts();
+    renderNotes();
   }
   if (tab === "settings") renderSettings();
 }
@@ -879,8 +1008,8 @@ function initButtons() {
     try { await signOut(auth); } catch {}
   });
 
-  $("calendar-prev").addEventListener("click", () => { calendarMonth = addMonths(calendarMonth, -1); renderCalendar(); renderDayDetails(); });
-  $("calendar-next").addEventListener("click", () => { calendarMonth = addMonths(calendarMonth, 1); renderCalendar(); renderDayDetails(); });
+  $("calendar-prev").addEventListener("click", () => { calendarMonth = addMonths(calendarMonth, -1); renderCalendar(); renderDayDetails(); renderNotes(); });
+  $("calendar-next").addEventListener("click", () => { calendarMonth = addMonths(calendarMonth, 1); renderCalendar(); renderDayDetails(); renderNotes(); });
 
   $("default-fast-select").addEventListener("change", e => {
     selectedFastTypeId = e.target.value;
@@ -1339,6 +1468,7 @@ function renderCalendar() {
       selectedDayKey = key;
       renderCalendar();
       renderDayDetails();
+      renderNotes();
     });
 
     grid.appendChild(cell);
@@ -1404,6 +1534,47 @@ function renderDayDetails() {
   });
 }
 
+function renderNotes() {
+  const summary = $("day-notes-summary");
+  const list = $("day-notes-list");
+  if (!summary || !list) return;
+
+  list.innerHTML = "";
+
+  if (!notesLoaded) {
+    summary.textContent = "Loading notes…";
+    return;
+  }
+
+  const dayNotes = notes.filter(note => note.dateKey === selectedDayKey);
+  if (!dayNotes.length) {
+    summary.textContent = "No notes yet.";
+    return;
+  }
+
+  summary.textContent = `${dayNotes.length} note(s)`;
+
+  dayNotes.forEach(note => {
+    const row = document.createElement("div");
+    row.className = "bg-slate-900 rounded-xl px-3 py-3 md:py-2 space-y-1";
+
+    const text = document.createElement("div");
+    text.className = "text-slate-100 whitespace-pre-wrap";
+    text.textContent = note.text || "Untitled note";
+
+    const meta = document.createElement("div");
+    meta.className = "text-slate-400 text-xs md:text-[11px]";
+    const timestamp = note.updatedAt || note.createdAt;
+    const timeLabel = timestamp ? formatTimeShort(new Date(timestamp)) : "Unknown time";
+    const fastLabel = note.fastContext?.typeLabel ? ` • ${note.fastContext.typeLabel} fast` : "";
+    meta.textContent = `${timeLabel}${fastLabel}`;
+
+    row.appendChild(text);
+    row.appendChild(meta);
+    list.appendChild(row);
+  });
+}
+
 function renderRecentFasts() {
   const container = $("recent-fast-list");
   container.innerHTML = "";
@@ -1445,6 +1616,7 @@ function renderAll() {
   updateTimer();
   renderCalendar();
   renderDayDetails();
+  renderNotes();
   renderRecentFasts();
 }
 
