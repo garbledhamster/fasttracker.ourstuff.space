@@ -911,6 +911,8 @@ function startFast() {
     status: "active"
   };
   state.reminders = { endNotified: false, lastHourlyAt: null };
+  selectedDayKey = formatDateKey(new Date(now));
+  calendarMonth = startOfMonth(new Date(now));
   void saveState();
   renderAll();
   showToast("Fast started");
@@ -1174,10 +1176,14 @@ function saveEditedStartTime() {
   af.endTimestamp = af.startTimestamp + plannedMs;
   af.status = "active";
   state.reminders = { endNotified: false, lastHourlyAt: null };
+  selectedDayKey = formatDateKey(new Date(af.startTimestamp));
+  calendarMonth = startOfMonth(new Date(af.startTimestamp));
 
   void saveState();
   closeEditStartModal();
   updateTimer();
+  renderCalendar();
+  renderDayDetails();
   showToast("Start time updated");
 }
 
@@ -1315,7 +1321,7 @@ function renderCalendar() {
   }
 }
 
-function buildDayFastMap() {
+function buildDayFastMap({ includeActive = false } = {}) {
   const map = {};
   state.history.forEach(e => {
     const key = formatDateKey(new Date(e.startTimestamp));
@@ -1323,13 +1329,21 @@ function buildDayFastMap() {
     map[key].entries.push(e);
     map[key].totalHours += e.durationHours || 0;
   });
+  if (includeActive && state.activeFast) {
+    const af = state.activeFast;
+    const key = formatDateKey(new Date(af.startTimestamp));
+    if (!map[key]) map[key] = { entries: [], totalHours: 0 };
+    const elapsedHours = Math.max(0, (Date.now() - af.startTimestamp) / 3600000);
+    map[key].entries.push({ ...af, durationHours: elapsedHours, isActive: true });
+    map[key].totalHours += elapsedHours;
+  }
   return map;
 }
 
 function renderDayDetails() {
   const summary = $("day-summary");
   const list = $("day-fast-list");
-  const map = buildDayFastMap();
+  const map = buildDayFastMap({ includeActive: true });
   const day = map[selectedDayKey];
 
   list.innerHTML = "";
@@ -1348,11 +1362,15 @@ function renderDayDetails() {
     const type = getTypeById(e.typeId);
     const title = document.createElement("div");
     title.className = "text-slate-100";
-    title.textContent = `${type ? type.label : "Custom"} • ${Number(e.durationHours).toFixed(1)}h`;
+    const label = type ? type.label : "Custom";
+    title.textContent = e.isActive
+      ? `Active • ${label} fast`
+      : `${label} • ${Number(e.durationHours).toFixed(1)}h`;
 
     const time = document.createElement("div");
     time.className = "text-slate-400";
-    time.textContent = `${formatTimeShort(new Date(e.startTimestamp))} → ${formatTimeShort(new Date(e.endTimestamp))}`;
+    const timeLabel = `${formatTimeShort(new Date(e.startTimestamp))} → ${formatTimeShort(new Date(e.endTimestamp))}`;
+    time.textContent = e.isActive ? `${timeLabel} (in progress)` : timeLabel;
 
     left.appendChild(title);
     left.appendChild(time);
