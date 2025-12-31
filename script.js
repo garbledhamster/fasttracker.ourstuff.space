@@ -286,7 +286,7 @@ function initFastTypeChips() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.dataset.typeId = type.id;
-    btn.className = "w-full aspect-square flex items-center justify-center text-center leading-tight whitespace-normal rounded-full border text-sm md:text-xs border-slate-700 text-slate-100 bg-slate-900/80";
+    btn.className = "w-[35px] h-[35px] flex items-center justify-center text-center leading-none whitespace-normal rounded-full border text-[11px] md:text-[10px] border-slate-700 text-slate-100 bg-slate-900/80";
     btn.textContent = type.label;
     btn.addEventListener("click", () => {
       pendingTypeId = type.id;
