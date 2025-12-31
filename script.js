@@ -1,4 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js";
 import {
   getAuth,
   onAuthStateChanged,
@@ -161,6 +162,7 @@ if (!firebaseConfig?.apiKey || !firebaseConfig?.authDomain || !firebaseConfig?.p
 }
 
 const firebaseApp = initializeApp(firebaseConfig);
+const analytics = firebaseConfig?.measurementId ? getAnalytics(firebaseApp) : null;
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 
