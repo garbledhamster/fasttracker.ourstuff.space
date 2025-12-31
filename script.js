@@ -452,8 +452,13 @@ function updateNoteEditorMeta() {
   const timeLabel = editingNoteTimestamp ? formatTimeShort(new Date(editingNoteTimestamp)) : "";
   dateEl.textContent = timeLabel ? `${dateLabel} • ${timeLabel}` : dateLabel;
 
-  if (editingNoteContext?.wasActive && editingNoteContext?.fastTypeLabel) {
-    badge.textContent = `Active ${editingNoteContext.fastTypeLabel}`;
+  const isActive = Boolean(editingNoteContext?.wasActive);
+  const elapsedMsAtNote = editingNoteContext?.elapsedMsAtNote;
+  const hasElapsed = isActive && typeof elapsedMsAtNote === "number";
+  if (isActive) {
+    const typeLabel = editingNoteContext?.fastTypeLabel || "fast";
+    const elapsedLabel = hasElapsed ? ` • ${formatElapsedShort(elapsedMsAtNote)} in` : "";
+    badge.textContent = `Active ${typeLabel}${elapsedLabel}`;
     badge.classList.remove("is-muted");
   } else {
     badge.textContent = "No active fast";
@@ -1840,8 +1845,13 @@ function buildNoteCard(note) {
 
   const badge = document.createElement("span");
   badge.className = "note-badge";
-  if (note.fastContext?.wasActive && note.fastContext?.fastTypeLabel) {
-    badge.textContent = `Active ${note.fastContext.fastTypeLabel}`;
+  const isActive = Boolean(note.fastContext?.wasActive);
+  const elapsedMsAtNote = note.fastContext?.elapsedMsAtNote;
+  const hasElapsed = isActive && typeof elapsedMsAtNote === "number";
+  if (isActive) {
+    const typeLabel = note.fastContext?.fastTypeLabel || "fast";
+    const elapsedLabel = hasElapsed ? ` • ${formatElapsedShort(elapsedMsAtNote)} in` : "";
+    badge.textContent = `Active ${typeLabel}${elapsedLabel}`;
   } else {
     badge.textContent = "No active fast";
     badge.classList.add("is-muted");
@@ -1924,6 +1934,16 @@ function formatHMS(ms) {
   const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
   return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+
+function formatElapsedShort(ms) {
+  const totalMinutes = Math.max(0, Math.floor(ms / 60000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours <= 0) {
+    return `${minutes}m`;
+  }
+  return `${hours}h ${minutes}m`;
 }
 
 function formatDateTime(d) {
