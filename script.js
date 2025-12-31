@@ -204,6 +204,11 @@ let stateUnsubscribe = null;
 let notesUnsubscribe = null;
 let notesLoaded = false;
 let notes = [];
+let editingNoteId = null;
+let editingNoteDateKey = null;
+let editingNoteContext = null;
+let editingNoteCreatedAt = null;
+let editingNoteTimestamp = null;
 
 let navHoldTimer = null;
 let navHoldShown = false;
@@ -332,6 +337,81 @@ async function deleteNote(noteId) {
   try {
     await deleteDoc(getNoteDocRef(user.uid, noteId));
   } catch {}
+}
+
+function openNoteEditor(note = null) {
+  const modal = $("note-editor-modal");
+  if (!modal) return;
+  editingNoteId = note?.id || null;
+  editingNoteDateKey = note?.dateKey || selectedDayKey || formatDateKey(new Date());
+  editingNoteContext = note?.fastContext ?? buildFastContextSnapshot();
+  editingNoteCreatedAt = note?.createdAt ?? null;
+  editingNoteTimestamp = note?.updatedAt || note?.createdAt || null;
+
+  $("note-editor-content").value = note?.text || "";
+  updateNoteEditorMeta();
+  $("note-editor-delete").classList.toggle("hidden", !editingNoteId);
+  modal.classList.remove("hidden");
+}
+
+function updateNoteEditorMeta() {
+  const badge = $("note-editor-fast");
+  const dateEl = $("note-editor-date");
+  if (!badge || !dateEl) return;
+
+  const dateObj = parseDateKey(editingNoteDateKey);
+  const dateLabel = dateObj
+    ? dateObj.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+    : "Unknown date";
+  const timeLabel = editingNoteTimestamp ? formatTimeShort(new Date(editingNoteTimestamp)) : "";
+  dateEl.textContent = timeLabel ? `${dateLabel} • ${timeLabel}` : dateLabel;
+
+  if (editingNoteContext?.typeLabel) {
+    badge.textContent = `${editingNoteContext.typeLabel} fast`;
+    badge.classList.remove("is-muted");
+  } else {
+    badge.textContent = "No fast context";
+    badge.classList.add("is-muted");
+  }
+}
+
+function closeNoteEditor() {
+  const modal = $("note-editor-modal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  $("note-editor-content").value = "";
+  editingNoteId = null;
+  editingNoteDateKey = null;
+  editingNoteContext = null;
+  editingNoteCreatedAt = null;
+  editingNoteTimestamp = null;
+}
+
+async function saveNoteEditor() {
+  const text = $("note-editor-content").value.trim();
+  if (!text) {
+    showToast("Add a note before saving");
+    return;
+  }
+  if (editingNoteId) {
+    await updateNote(editingNoteId, {
+      text,
+      dateKey: editingNoteDateKey,
+      fastContext: editingNoteContext,
+      createdAt: editingNoteCreatedAt
+    });
+  } else {
+    await createNote({ text, dateKey: editingNoteDateKey, fastContext: editingNoteContext });
+  }
+  renderNotes();
+  closeNoteEditor();
+}
+
+async function removeNote() {
+  if (!editingNoteId) return;
+  await deleteNote(editingNoteId);
+  renderNotes();
+  closeNoteEditor();
 }
 
 function startNotesListener(uid) {
@@ -824,7 +904,7 @@ function initTabs() {
 }
 
 function switchTab(tab) {
-  ["timer", "history", "settings"].forEach(id => {
+  ["timer", "history", "notes", "settings"].forEach(id => {
     const section = $("tab-" + id);
     const btn = document.querySelector(`nav .nav-btn[data-tab="${id}"]`);
     const active = id === tab;
@@ -839,6 +919,7 @@ function switchTab(tab) {
     renderRecentFasts();
     renderNotes();
   }
+  if (tab === "notes") renderNotes();
   if (tab === "settings") renderSettings();
 }
 
@@ -1030,6 +1111,11 @@ function initButtons() {
   $("edit-start-close").addEventListener("click", closeEditStartModal);
   $("edit-start-now").addEventListener("click", () => { $("edit-start-input").value = toLocalInputValue(new Date()); });
   $("edit-start-save").addEventListener("click", saveEditedStartTime);
+
+  $("new-note-btn").addEventListener("click", () => openNoteEditor());
+  $("note-editor-close").addEventListener("click", closeNoteEditor);
+  $("note-editor-save").addEventListener("click", saveNoteEditor);
+  $("note-editor-delete").addEventListener("click", removeNote);
 
   document.addEventListener("visibilitychange", () => { if (!document.hidden) renderAll(); });
 }
@@ -1535,6 +1621,11 @@ function renderDayDetails() {
 }
 
 function renderNotes() {
+  renderHistoryNotes();
+  renderNotesTab();
+}
+
+function renderHistoryNotes() {
   const summary = $("day-notes-summary");
   const list = $("day-notes-list");
   if (!summary || !list) return;
@@ -1555,24 +1646,85 @@ function renderNotes() {
   summary.textContent = `${dayNotes.length} note(s)`;
 
   dayNotes.forEach(note => {
-    const row = document.createElement("div");
-    row.className = "bg-slate-900 rounded-xl px-3 py-3 md:py-2 space-y-1";
-
-    const text = document.createElement("div");
-    text.className = "text-slate-100 whitespace-pre-wrap";
-    text.textContent = note.text || "Untitled note";
-
-    const meta = document.createElement("div");
-    meta.className = "text-slate-400 text-xs md:text-[11px]";
-    const timestamp = note.updatedAt || note.createdAt;
-    const timeLabel = timestamp ? formatTimeShort(new Date(timestamp)) : "Unknown time";
-    const fastLabel = note.fastContext?.typeLabel ? ` • ${note.fastContext.typeLabel} fast` : "";
-    meta.textContent = `${timeLabel}${fastLabel}`;
-
-    row.appendChild(text);
-    row.appendChild(meta);
-    list.appendChild(row);
+    const card = buildNoteCard(note);
+    list.appendChild(card);
   });
+}
+
+function renderNotesTab() {
+  const list = $("notes-list");
+  const empty = $("notes-empty");
+  const emptyTitle = $("notes-empty-title");
+  const emptyBody = $("notes-empty-body");
+  if (!list || !empty || !emptyTitle || !emptyBody) return;
+
+  list.innerHTML = "";
+
+  if (!notesLoaded) {
+    emptyTitle.textContent = "Loading notes…";
+    emptyBody.textContent = "Your notes will appear here once they sync.";
+    empty.classList.remove("hidden");
+    return;
+  }
+
+  if (!notes.length) {
+    emptyTitle.textContent = "No notes yet";
+    emptyBody.textContent = "Start a new note to track how your fast feels.";
+    empty.classList.remove("hidden");
+    return;
+  }
+
+  empty.classList.add("hidden");
+
+  notes.forEach(note => {
+    const card = buildNoteCard(note);
+    list.appendChild(card);
+  });
+}
+
+function buildNoteCard(note) {
+  const card = document.createElement("button");
+  card.type = "button";
+  card.className = "note-card";
+  card.addEventListener("click", () => openNoteEditor(note));
+
+  const text = document.createElement("div");
+  text.className = "text-slate-100 whitespace-pre-wrap text-sm md:text-xs";
+  text.textContent = note.text || "Untitled note";
+
+  const meta = document.createElement("div");
+  meta.className = "note-meta";
+
+  const date = document.createElement("span");
+  date.textContent = getNoteTimestampLabel(note);
+
+  const badge = document.createElement("span");
+  badge.className = "note-badge";
+  if (note.fastContext?.typeLabel) {
+    badge.textContent = `${note.fastContext.typeLabel} fast`;
+  } else {
+    badge.textContent = "No fast context";
+    badge.classList.add("is-muted");
+  }
+
+  meta.appendChild(date);
+  meta.appendChild(badge);
+
+  card.appendChild(text);
+  card.appendChild(meta);
+  return card;
+}
+
+function getNoteTimestampLabel(note) {
+  const timestamp = note.updatedAt || note.createdAt;
+  if (timestamp) {
+    return formatDateTime(new Date(timestamp));
+  }
+  const dateObj = parseDateKey(note.dateKey);
+  if (dateObj) {
+    return dateObj.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
+  return "Unknown date";
 }
 
 function renderRecentFasts() {
@@ -1655,6 +1807,15 @@ function formatDateKey(d) {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
+}
+
+function parseDateKey(dateKey) {
+  if (!dateKey) return null;
+  const parts = dateKey.split("-");
+  if (parts.length !== 3) return null;
+  const [y, m, d] = parts.map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
 }
 
 async function registerServiceWorker() {
