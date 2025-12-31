@@ -261,11 +261,24 @@ function stopNotesListener() {
   }
 }
 
-function normalizeNoteSnapshot(snap) {
+async function normalizeNoteSnapshot(snap) {
   const data = snap.data() || {};
+  let text = "";
+  if (data?.payload?.iv && data?.payload?.ciphertext) {
+    try {
+      text = await decryptNotePayload(data.payload);
+    } catch (err) {
+      if (err?.message === "missing-key") {
+        throw err;
+      }
+      throw new Error("decrypt-failed");
+    }
+  } else if (typeof data.text === "string") {
+    text = data.text;
+  }
   return {
     id: snap.id,
-    text: typeof data.text === "string" ? data.text : "",
+    text,
     createdAt: typeof data.createdAt === "number" ? data.createdAt : 0,
     updatedAt: typeof data.updatedAt === "number" ? data.updatedAt : 0,
     dateKey: typeof data.dateKey === "string" ? data.dateKey : "",
@@ -321,10 +334,11 @@ function buildFastContext() {
   };
 }
 
-function buildNotePayload({ text, dateKey, fastContext } = {}) {
+async function buildNotePayload({ text, dateKey, fastContext } = {}) {
   const createdAt = Date.now();
+  const payload = await encryptNotePayload((text || "").trim());
   return {
-    text: (text || "").trim(),
+    payload,
     createdAt,
     updatedAt: createdAt,
     dateKey: formatDateKey(new Date(createdAt)),
@@ -332,11 +346,11 @@ function buildNotePayload({ text, dateKey, fastContext } = {}) {
   };
 }
 
-function buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt } = {}) {
+async function buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt } = {}) {
   const payload = {
     updatedAt: Date.now()
   };
-  if (typeof text === "string") payload.text = text.trim();
+  if (typeof text === "string") payload.payload = await encryptNotePayload(text.trim());
   if (typeof dateKey === "string") payload.dateKey = dateKey;
   if (fastContext !== undefined) payload.fastContext = fastContext;
   if (typeof createdAt === "number") payload.createdAt = createdAt;
@@ -346,7 +360,7 @@ function buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt } = {}) 
 async function createNote({ text, dateKey, fastContext } = {}) {
   const user = auth.currentUser;
   if (!user) return null;
-  const payload = buildNotePayload({ text, dateKey, fastContext });
+  const payload = await buildNotePayload({ text, dateKey, fastContext });
   try {
     const docRef = await addDoc(getNotesCollectionRef(user.uid), payload);
     return docRef.id;
@@ -358,7 +372,7 @@ async function createNote({ text, dateKey, fastContext } = {}) {
 async function updateNote(noteId, { text, dateKey, fastContext, createdAt } = {}) {
   const user = auth.currentUser;
   if (!user || !noteId) return;
-  const payload = buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt });
+  const payload = await buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt });
   try {
     await setDoc(getNoteDocRef(user.uid, noteId), payload, { merge: true });
   } catch {}
@@ -426,15 +440,22 @@ async function saveNoteEditor() {
     showToast("Add a note before saving");
     return;
   }
-  if (editingNoteId) {
-    await updateNote(editingNoteId, {
-      text,
-      dateKey: editingNoteDateKey,
-      fastContext: editingNoteContext,
-      createdAt: editingNoteCreatedAt
-    });
-  } else {
-    await createNote({ text, dateKey: editingNoteDateKey, fastContext: editingNoteContext });
+  try {
+    if (editingNoteId) {
+      await updateNote(editingNoteId, {
+        text,
+        dateKey: editingNoteDateKey,
+        fastContext: editingNoteContext,
+        createdAt: editingNoteCreatedAt
+      });
+    } else {
+      await createNote({ text, dateKey: editingNoteDateKey, fastContext: editingNoteContext });
+    }
+  } catch (err) {
+    if (err?.message === "missing-key") {
+      handleNotesDecryptError(err);
+      return;
+    }
   }
   renderNotes();
   closeNoteEditor();
@@ -451,10 +472,15 @@ function startNotesListener(uid) {
   stopNotesListener();
   notesLoaded = false;
   notes = [];
-  notesUnsubscribe = onSnapshot(getNotesCollectionRef(uid), snap => {
-    notesLoaded = true;
-    notes = snap.docs.map(normalizeNoteSnapshot).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-    renderNotes();
+  notesUnsubscribe = onSnapshot(getNotesCollectionRef(uid), async snap => {
+    try {
+      const normalized = await Promise.all(snap.docs.map(normalizeNoteSnapshot));
+      notesLoaded = true;
+      notes = normalized.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      renderNotes();
+    } catch (err) {
+      handleNotesDecryptError(err);
+    }
   });
 }
 
@@ -664,6 +690,48 @@ async function decryptStatePayload(payload) {
   );
   const decoded = new TextDecoder().decode(decryptedBuffer);
   return JSON.parse(decoded);
+}
+
+async function encryptNotePayload(text) {
+  if (!cryptoKey) throw new Error("missing-key");
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encodedText = new TextEncoder().encode(text);
+  const cipherBuffer = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    cryptoKey,
+    encodedText
+  );
+  return {
+    version: ENCRYPTION_VERSION,
+    iv: encodeBase64(iv),
+    ciphertext: encodeBase64(new Uint8Array(cipherBuffer))
+  };
+}
+
+async function decryptNotePayload(payload) {
+  if (!cryptoKey) throw new Error("missing-key");
+  if (!payload?.iv || !payload?.ciphertext) {
+    throw new Error("invalid-payload");
+  }
+  const iv = decodeBase64(payload.iv);
+  const ciphertext = decodeBase64(payload.ciphertext);
+  const decryptedBuffer = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    cryptoKey,
+    ciphertext
+  );
+  return new TextDecoder().decode(decryptedBuffer);
+}
+
+function handleNotesDecryptError(err) {
+  const message = err?.message === "missing-key"
+    ? "missing-password"
+    : err?.message;
+  if (message === "missing-password" || message === "decrypt-failed") {
+    cryptoKey = null;
+    keySalt = null;
+    showReauthPrompt("Please re-enter your password to decrypt your data.");
+  }
 }
 
 async function resolveEncryptedPayload(uid) {
