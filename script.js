@@ -108,6 +108,7 @@ let currentTab = "timer";
 let lastNonNotesTab = "timer";
 let ringEmojiTypeId = null;
 let ringEmojiSelectionKey = null;
+let ringEmojiSelectionDetail = null;
 let ringEmojiLayoutSize = 0;
 let notesOverlayOpen = false;
 let notesPortal = null;
@@ -1582,7 +1583,10 @@ function renderRingEmojis(type, size) {
   });
 
   const hasSelection = milestones.some(m => `${type.id}-${m.hour}` === ringEmojiSelectionKey);
-  if (!hasSelection) ringEmojiSelectionKey = null;
+  if (!hasSelection) {
+    ringEmojiSelectionKey = null;
+    ringEmojiSelectionDetail = null;
+  }
   if (ringEmojiSelectionKey) {
     const selected = milestones.find(m => `${type.id}-${m.hour}` === ringEmojiSelectionKey);
     updateRingEmojiPanel(type, selected);
@@ -1597,8 +1601,26 @@ function renderRingEmojis(type, size) {
 
 function selectRingEmoji(type, milestone) {
   ringEmojiSelectionKey = `${type.id}-${milestone.hour}`;
+  ringEmojiSelectionDetail = getRandomMilestoneDetail(milestone.hour) ?? milestone.detail;
   updateRingEmojiPanel(type, milestone);
   updateRingEmojiSelectionStyles();
+}
+
+function getRandomMilestoneDetail(hour) {
+  const numericHour = Number(hour);
+  const tips = [];
+
+  FAST_TYPES.forEach(type => {
+    const milestones = Array.isArray(type?.milestones) ? type.milestones : [];
+    milestones.forEach(milestone => {
+      if (Number(milestone.hour) === numericHour && milestone.detail) {
+        tips.push(milestone.detail);
+      }
+    });
+  });
+
+  if (!tips.length) return null;
+  return tips[Math.floor(Math.random() * tips.length)];
 }
 
 function updateRingEmojiPanel(type, milestone) {
@@ -1613,7 +1635,7 @@ function updateRingEmojiPanel(type, milestone) {
   }
 
   title.textContent = `Hour ${milestone.hour} · ${milestone.label}`;
-  detail.textContent = milestone.detail;
+  detail.textContent = ringEmojiSelectionDetail ?? milestone.detail;
 }
 
 function updateRingEmojiSelectionStyles() {
@@ -1649,6 +1671,7 @@ function updateRingEmojiProgress(type) {
 
   if (elapsedHours !== null && visibleCount === 0 && milestones.length) {
     ringEmojiSelectionKey = null;
+    ringEmojiSelectionDetail = null;
     if (title && detail) {
       title.textContent = "Milestones unlock as you fast";
       detail.textContent = `First milestone at hour ${milestones[0].hour}.`;
@@ -1660,6 +1683,7 @@ function updateRingEmojiProgress(type) {
     const selectedButton = layer.querySelector(`[data-type-id="${type.id}"][data-hour="${ringEmojiSelectionKey.split("-")[1]}"]`);
     if (!selectedButton || selectedButton.hidden) {
       ringEmojiSelectionKey = null;
+      ringEmojiSelectionDetail = null;
       updateRingEmojiPanel(type, null);
       updateRingEmojiSelectionStyles();
     }
