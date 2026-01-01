@@ -57,7 +57,13 @@ const defaultState = {
     theme: {
       primaryColor: "#06b6d4",
       secondaryColor: "#0891b2",
-      backgroundColor: "#020617"
+      backgroundColor: "#020617",
+      surfaceColor: "#0f172a",
+      surfaceMutedColor: "#1e293b",
+      borderColor: "#1e293b",
+      textColor: "#f8fafc",
+      textMutedColor: "#94a3b8",
+      dangerColor: "#dc2626"
     }
   },
   activeFast: null,
@@ -1444,6 +1450,42 @@ function initButtons() {
     void saveState();
   });
 
+  $("theme-surface-color").addEventListener("input", (event) => {
+    state.settings.theme.surfaceColor = event.target.value;
+    applyThemeColors();
+    void saveState();
+  });
+
+  $("theme-surface-muted-color").addEventListener("input", (event) => {
+    state.settings.theme.surfaceMutedColor = event.target.value;
+    applyThemeColors();
+    void saveState();
+  });
+
+  $("theme-border-color").addEventListener("input", (event) => {
+    state.settings.theme.borderColor = event.target.value;
+    applyThemeColors();
+    void saveState();
+  });
+
+  $("theme-text-color").addEventListener("input", (event) => {
+    state.settings.theme.textColor = event.target.value;
+    applyThemeColors();
+    void saveState();
+  });
+
+  $("theme-text-muted-color").addEventListener("input", (event) => {
+    state.settings.theme.textMutedColor = event.target.value;
+    applyThemeColors();
+    void saveState();
+  });
+
+  $("theme-danger-color").addEventListener("input", (event) => {
+    state.settings.theme.dangerColor = event.target.value;
+    applyThemeColors();
+    void saveState();
+  });
+
   $("export-data").addEventListener("click", exportCSV);
   $("clear-data").addEventListener("click", clearAllData);
   $("sign-out").addEventListener("click", async () => {
@@ -1532,7 +1574,7 @@ function confirmStopFast(event) {
     title: "Stop this fast?",
     message: `Stop and log your ${typeLabel} fast now?`,
     confirmLabel: "Stop fast",
-    confirmClasses: "w-full py-3 md:py-2.5 rounded-xl bg-red-500 text-slate-50 text-sm md:text-xs font-semibold",
+    confirmClasses: "w-full py-3 md:py-2.5 rounded-xl button-danger border text-sm md:text-xs font-semibold",
     onConfirm: stopFastAndLog,
     focusAfterClose: event?.currentTarget
   });
@@ -1557,6 +1599,12 @@ function renderSettings() {
   $("theme-primary-color").value = theme.primaryColor;
   $("theme-secondary-color").value = theme.secondaryColor;
   $("theme-background-color").value = theme.backgroundColor;
+  $("theme-surface-color").value = theme.surfaceColor;
+  $("theme-surface-muted-color").value = theme.surfaceMutedColor;
+  $("theme-border-color").value = theme.borderColor;
+  $("theme-text-color").value = theme.textColor;
+  $("theme-text-muted-color").value = theme.textMutedColor;
+  $("theme-danger-color").value = theme.dangerColor;
   renderAlertsPill();
 }
 
@@ -2375,6 +2423,12 @@ function applyThemeColors() {
   root.style.setProperty("--primary-color", theme.primaryColor);
   root.style.setProperty("--secondary-color", theme.secondaryColor);
   root.style.setProperty("--background-color", theme.backgroundColor);
+  root.style.setProperty("--surface-color", theme.surfaceColor);
+  root.style.setProperty("--surface-muted-color", theme.surfaceMutedColor);
+  root.style.setProperty("--border-color", theme.borderColor);
+  root.style.setProperty("--text-color", theme.textColor);
+  root.style.setProperty("--text-muted-color", theme.textMutedColor);
+  root.style.setProperty("--danger-color", theme.dangerColor);
   const meta = document.querySelector("meta[name='theme-color']");
   if (meta) meta.setAttribute("content", theme.backgroundColor);
 }

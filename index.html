@@ -225,6 +225,30 @@
             <span class="text-muted">Background color</span>
             <input id="theme-background-color" type="color" class="theme-color-input">
           </label>
+          <label class="flex items-center justify-between text-sm md:text-xs">
+            <span class="text-muted">Surface color</span>
+            <input id="theme-surface-color" type="color" class="theme-color-input">
+          </label>
+          <label class="flex items-center justify-between text-sm md:text-xs">
+            <span class="text-muted">Surface muted color</span>
+            <input id="theme-surface-muted-color" type="color" class="theme-color-input">
+          </label>
+          <label class="flex items-center justify-between text-sm md:text-xs">
+            <span class="text-muted">Border color</span>
+            <input id="theme-border-color" type="color" class="theme-color-input">
+          </label>
+          <label class="flex items-center justify-between text-sm md:text-xs">
+            <span class="text-muted">Text color</span>
+            <input id="theme-text-color" type="color" class="theme-color-input">
+          </label>
+          <label class="flex items-center justify-between text-sm md:text-xs">
+            <span class="text-muted">Text muted color</span>
+            <input id="theme-text-muted-color" type="color" class="theme-color-input">
+          </label>
+          <label class="flex items-center justify-between text-sm md:text-xs">
+            <span class="text-muted">Danger color</span>
+            <input id="theme-danger-color" type="color" class="theme-color-input">
+          </label>
           <p class="text-xs md:text-[11px] text-subtle">Colors sync across devices when you’re signed in.</p>
         </div>
 
@@ -350,7 +374,7 @@
       <label for="note-editor-content" class="block text-sm md:text-xs text-muted mb-1">Note content</label>
       <textarea id="note-editor-content" rows="5" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="What do you want to remember?"></textarea>
       <div class="flex gap-2 mt-3">
-        <button id="note-editor-delete" class="flex-1 py-3 md:py-2.5 rounded-xl button-outline border text-sm md:text-xs font-medium text-danger-muted hidden">Delete</button>
+        <button id="note-editor-delete" class="flex-1 py-3 md:py-2.5 rounded-xl button-danger border text-sm md:text-xs font-medium hidden">Delete</button>
         <button id="note-editor-save" class="flex-1 py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold">Save note</button>
       </div>
     </div>
