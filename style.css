@@ -86,3 +86,30 @@ body { -webkit-tap-highlight-color: transparent; }
   text-align: center;
   background: rgba(15, 23, 42, 0.5);
 }
+
+.note-editor-modal {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.note-editor-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 420px);
+  height: 100%;
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+}
+
+.note-editor-backdrop {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.note-editor-modal.is-open .note-editor-panel {
+  transform: translateX(0);
+}
+
+.note-editor-modal.is-open .note-editor-backdrop {
+  opacity: 1;
+}

@@ -203,6 +203,7 @@ let stateUnsubscribe = null;
 let notesUnsubscribe = null;
 let notesLoaded = false;
 let notes = [];
+let noteEditorCloseTimeout = null;
 let editingNoteId = null;
 let editingNoteDateKey = null;
 let editingNoteContext = null;
@@ -428,6 +429,10 @@ async function deleteNote(noteId) {
 function openNoteEditor(note = null) {
   const modal = $("note-editor-modal");
   if (!modal) return;
+  if (noteEditorCloseTimeout) {
+    clearTimeout(noteEditorCloseTimeout);
+    noteEditorCloseTimeout = null;
+  }
   editingNoteId = note?.id || null;
   editingNoteDateKey = note?.dateKey || formatDateKey(new Date());
   editingNoteContext = note?.fastContext ?? buildFastContext();
@@ -438,6 +443,7 @@ function openNoteEditor(note = null) {
   updateNoteEditorMeta();
   $("note-editor-delete").classList.toggle("hidden", !editingNoteId);
   modal.classList.remove("hidden");
+  requestAnimationFrame(() => modal.classList.add("is-open"));
 }
 
 function updateNoteEditorMeta() {
@@ -469,7 +475,11 @@ function updateNoteEditorMeta() {
 function closeNoteEditor() {
   const modal = $("note-editor-modal");
   if (!modal) return;
-  modal.classList.add("hidden");
+  modal.classList.remove("is-open");
+  if (noteEditorCloseTimeout) clearTimeout(noteEditorCloseTimeout);
+  noteEditorCloseTimeout = setTimeout(() => {
+    modal.classList.add("hidden");
+  }, 250);
   $("note-editor-content").value = "";
   editingNoteId = null;
   editingNoteDateKey = null;
