@@ -63,6 +63,19 @@
     textMutedColor: "#a1a1a1"
     dangerColor: "#f92672"
 
+- id: monokaiLight
+  label: Monokai (Light)
+  colors:
+    primaryColor: "#2aa198"
+    secondaryColor: "#6c71c4"
+    backgroundColor: "#faf7ef"
+    surfaceColor: "#fffdf7"
+    surfaceMutedColor: "#f3eee3"
+    borderColor: "#e7decd"
+    textColor: "#2b2b2b"
+    textMutedColor: "#6b6b6b"
+    dangerColor: "#dc322f"
+
 - id: sand
   label: Sand
   colors:
