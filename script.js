@@ -611,7 +611,14 @@ function startStateListener(uid) {
   stopStateListener();
   stateUnsubscribe = onSnapshot(getStateDocRef(uid), async snap => {
     const payload = snap.data()?.payload;
-    if (!payload || !payload.iv || !payload.ciphertext || !cryptoKey) return;
+    if (!payload || !payload.iv || !payload.ciphertext) {
+      state = clone(defaultState);
+      selectedFastTypeId = resolveFastTypeId(state.settings.defaultFastTypeId);
+      pendingTypeId = null;
+      renderAll();
+      return;
+    }
+    if (!cryptoKey) return;
     try {
       const decrypted = await decryptStatePayload(payload);
       state = mergeStateWithDefaults(decrypted);
@@ -1186,12 +1193,11 @@ async function completeAuthFlow() {
   startNotesListener(auth.currentUser.uid);
   if (!appInitialized) {
     initUI();
-    startTick();
     registerServiceWorker();
     appInitialized = true;
-  } else {
-    renderAll();
   }
+  startTick();
+  renderAll();
   needsUnlock = false;
   setAuthVisibility(true);
 }
