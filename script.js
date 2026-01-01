@@ -49,49 +49,24 @@ const NOTES_SCHEMA = Object.freeze({
 
 let FAST_TYPES = [];
 
-const THEME_PRESETS = {
-  midnight: {
-    label: "Midnight",
-    colors: {
-      primaryColor: "#06b6d4",
-      secondaryColor: "#0891b2",
-      backgroundColor: "#020617",
-      surfaceColor: "#0f172a",
-      surfaceMutedColor: "#1e293b",
-      borderColor: "#1e293b",
-      textColor: "#f8fafc",
-      textMutedColor: "#94a3b8",
-      dangerColor: "#dc2626"
-    }
-  },
-  ocean: {
-    label: "Ocean",
-    colors: {
-      primaryColor: "#38bdf8",
-      secondaryColor: "#0ea5e9",
-      backgroundColor: "#071a2b",
-      surfaceColor: "#0b2942",
-      surfaceMutedColor: "#123a5a",
-      borderColor: "#1e3a5f",
-      textColor: "#e0f2fe",
-      textMutedColor: "#94a3b8",
-      dangerColor: "#f97316"
-    }
-  },
-  sunrise: {
-    label: "Sunrise",
-    colors: {
-      primaryColor: "#fb7185",
-      secondaryColor: "#f97316",
-      backgroundColor: "#1f0f1a",
-      surfaceColor: "#2a1523",
-      surfaceMutedColor: "#3b1c2e",
-      borderColor: "#4b2237",
-      textColor: "#fff1f2",
-      textMutedColor: "#fda4af",
-      dangerColor: "#f87171"
-    }
-  }
+const DEFAULT_THEME_ID = "midnight";
+const DEFAULT_THEME_COLORS = {
+  primaryColor: "#06b6d4",
+  secondaryColor: "#0891b2",
+  backgroundColor: "#020617",
+  surfaceColor: "#0f172a",
+  surfaceMutedColor: "#1e293b",
+  borderColor: "#1e293b",
+  textColor: "#f8fafc",
+  textMutedColor: "#94a3b8",
+  dangerColor: "#dc2626"
+};
+
+let THEME_PRESET_LIST = [
+  { id: DEFAULT_THEME_ID, label: "Midnight", colors: { ...DEFAULT_THEME_COLORS } }
+];
+let THEME_PRESETS = {
+  [DEFAULT_THEME_ID]: { label: "Midnight", colors: { ...DEFAULT_THEME_COLORS } }
 };
 
 const defaultState = {
@@ -102,8 +77,8 @@ const defaultState = {
     alertsEnabled: false,
     timeDisplayMode: "elapsed",
     theme: {
-      presetId: "midnight",
-      customColors: { ...THEME_PRESETS.midnight.colors }
+      presetId: DEFAULT_THEME_ID,
+      customColors: { ...DEFAULT_THEME_COLORS }
     }
   },
   activeFast: null,
@@ -179,6 +154,18 @@ function clone(x) { return JSON.parse(JSON.stringify(x)); }
 
 async function initApp() {
   try {
+    const themeData = await loadThemePresets();
+    THEME_PRESET_LIST = themeData.list;
+    THEME_PRESETS = themeData.map;
+    syncThemeDefaults();
+  } catch (err) {
+    console.error("Failed to load theme presets:", err);
+    THEME_PRESET_LIST = [{ id: DEFAULT_THEME_ID, label: "Midnight", colors: { ...DEFAULT_THEME_COLORS } }];
+    THEME_PRESETS = { [DEFAULT_THEME_ID]: { label: "Midnight", colors: { ...DEFAULT_THEME_COLORS } } };
+    syncThemeDefaults();
+  }
+
+  try {
     FAST_TYPES = await loadFastTypes();
   } catch (err) {
     console.error("Failed to load fast types:", err);
@@ -200,6 +187,37 @@ async function initApp() {
   selectedFastTypeId = resolveFastTypeId(selectedFastTypeId);
   initAuthUI();
   initAuthListener();
+}
+
+async function loadThemePresets() {
+  const response = await fetch("./themes.yaml", { cache: "no-store" });
+  if (!response.ok) throw new Error(`themes.yaml request failed (${response.status})`);
+  const text = await response.text();
+  const data = loadYaml(text);
+  if (!Array.isArray(data)) throw new Error("themes.yaml is not a list");
+  const list = data
+    .filter(theme => theme?.id && theme?.colors)
+    .map(theme => ({
+      id: String(theme.id),
+      label: theme.label || String(theme.id),
+      colors: theme.colors
+    }));
+  if (list.length === 0) throw new Error("themes.yaml has no presets");
+  const map = list.reduce((acc, theme) => {
+    acc[theme.id] = { label: theme.label, colors: theme.colors };
+    return acc;
+  }, {});
+  return { list, map };
+}
+
+function syncThemeDefaults() {
+  const fallbackPreset = THEME_PRESET_LIST.find(theme => theme.id === DEFAULT_THEME_ID) || THEME_PRESET_LIST[0];
+  if (!fallbackPreset) return;
+  defaultState.settings.theme.presetId = fallbackPreset.id;
+  defaultState.settings.theme.customColors = { ...fallbackPreset.colors };
+  if (state?.settings?.theme?.presetId === fallbackPreset.id) {
+    state.settings.theme.customColors = { ...fallbackPreset.colors };
+  }
 }
 
 async function loadFastTypes() {
@@ -1754,9 +1772,9 @@ function initSettings() {
 
   const themeSelect = $("theme-preset-select");
   themeSelect.innerHTML = "";
-  Object.entries(THEME_PRESETS).forEach(([id, preset]) => {
+  THEME_PRESET_LIST.forEach((preset) => {
     const option = document.createElement("option");
-    option.value = id;
+    option.value = preset.id;
     option.textContent = preset.label;
     themeSelect.appendChild(option);
   });

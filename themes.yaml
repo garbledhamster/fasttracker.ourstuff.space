@@ -1,0 +1,48 @@
+- id: midnight
+  label: Midnight
+  colors:
+    primaryColor: "#06b6d4"
+    secondaryColor: "#0891b2"
+    backgroundColor: "#020617"
+    surfaceColor: "#0f172a"
+    surfaceMutedColor: "#1e293b"
+    borderColor: "#1e293b"
+    textColor: "#f8fafc"
+    textMutedColor: "#94a3b8"
+    dangerColor: "#dc2626"
+- id: ocean
+  label: Ocean
+  colors:
+    primaryColor: "#38bdf8"
+    secondaryColor: "#0ea5e9"
+    backgroundColor: "#071a2b"
+    surfaceColor: "#0b2942"
+    surfaceMutedColor: "#123a5a"
+    borderColor: "#1e3a5f"
+    textColor: "#e0f2fe"
+    textMutedColor: "#94a3b8"
+    dangerColor: "#f97316"
+- id: sunrise
+  label: Sunrise
+  colors:
+    primaryColor: "#fb7185"
+    secondaryColor: "#f97316"
+    backgroundColor: "#1f0f1a"
+    surfaceColor: "#2a1523"
+    surfaceMutedColor: "#3b1c2e"
+    borderColor: "#4b2237"
+    textColor: "#fff1f2"
+    textMutedColor: "#fda4af"
+    dangerColor: "#f87171"
+- id: light
+  label: Light
+  colors:
+    primaryColor: "#2563eb"
+    secondaryColor: "#1d4ed8"
+    backgroundColor: "#ffffff"
+    surfaceColor: "#f8fafc"
+    surfaceMutedColor: "#f1f5f9"
+    borderColor: "#e2e8f0"
+    textColor: "#0f172a"
+    textMutedColor: "#475569"
+    dangerColor: "#dc2626"
