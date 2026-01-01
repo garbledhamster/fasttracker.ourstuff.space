@@ -7,6 +7,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
+  sendEmailVerification,
+  reload,
   setPersistence,
   browserLocalPersistence,
   browserSessionPersistence
@@ -907,6 +909,17 @@ async function saveState() {
   setEncryptedCache(payload);
 }
 
+async function markUserVerified(user) {
+  if (!user) return;
+  const payload = {
+    email: user.email ?? null,
+    emailVerified: Boolean(user.emailVerified),
+    updatedAt: Date.now()
+  };
+  if (user.emailVerified) payload.verifiedAt = Date.now();
+  try { await setDoc(getUserDocRef(user.uid), payload, { merge: true }); } catch {}
+}
+
 function initUI() {
   initTabs();
   initNavTooltips();
@@ -920,6 +933,14 @@ function initUI() {
 function initAuthListener() {
   onAuthStateChanged(auth, async user => {
     if (user) {
+      if (!user.emailVerified) {
+        stopStateListener();
+        stopNotesListener();
+        notesLoaded = false;
+        notes = [];
+        showVerificationRequired(user);
+        return;
+      }
       try {
         await completeAuthFlow();
       } catch (err) {
@@ -949,10 +970,43 @@ function initAuthListener() {
 function initAuthUI() {
   const form = $("auth-form");
   const toggle = $("auth-toggle");
+  const resendBtn = $("verify-email-resend");
+  const refreshBtn = $("verify-email-refresh");
+  const signOutBtn = $("verify-email-signout");
   form.addEventListener("submit", handleAuthSubmit);
   toggle.addEventListener("click", () => {
     authMode = authMode === "sign-in" ? "sign-up" : "sign-in";
     updateAuthMode();
+  });
+  resendBtn.addEventListener("click", async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      await sendEmailVerification(user);
+      showToast("Verification email sent.");
+    } catch (err) {
+      showToast(err?.message || "Unable to resend verification email.");
+    }
+  });
+  refreshBtn.addEventListener("click", async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      await reload(user);
+    } catch (err) {
+      showToast(err?.message || "Unable to refresh verification status.");
+      return;
+    }
+    if (auth.currentUser?.emailVerified) {
+      await markUserVerified(auth.currentUser);
+      setVerificationPanel({ visible: false });
+      await completeAuthFlow();
+    } else {
+      showToast("Your email is still unverified.");
+    }
+  });
+  signOutBtn.addEventListener("click", async () => {
+    try { await signOut(auth); } catch {}
   });
   updateAuthMode();
 }
@@ -968,6 +1022,7 @@ function updateAuthMode() {
   $("auth-toggle").textContent = isSignUp ? "Sign in" : "Create an account";
   $("auth-error").classList.add("hidden");
   $("auth-error").textContent = "";
+  setVerificationPanel({ visible: false });
 }
 
 function showReauthPrompt(message) {
@@ -979,6 +1034,39 @@ function showReauthPrompt(message) {
   errorEl.textContent = message;
   errorEl.classList.remove("hidden");
   needsUnlock = true;
+  setAuthVisibility(false);
+}
+
+function setAuthFormDisabled(disabled) {
+  const form = $("auth-form");
+  if (!form) return;
+  const controls = form.querySelectorAll("input, button");
+  controls.forEach((control) => {
+    control.disabled = disabled;
+  });
+  form.classList.toggle("opacity-60", disabled);
+  form.classList.toggle("pointer-events-none", disabled);
+  const toggle = $("auth-toggle");
+  toggle.disabled = disabled;
+  toggle.classList.toggle("opacity-60", disabled);
+  toggle.classList.toggle("pointer-events-none", disabled);
+}
+
+function setVerificationPanel({ visible, email = "" } = {}) {
+  const panel = $("verify-email-panel");
+  if (!panel) return;
+  panel.classList.toggle("hidden", !visible);
+  $("verify-email-address").textContent = email || "your inbox";
+  setAuthFormDisabled(visible);
+}
+
+function showVerificationRequired(user) {
+  authMode = "sign-in";
+  updateAuthMode();
+  if (user?.email) $("auth-email").value = user.email;
+  $("auth-error").classList.add("hidden");
+  $("auth-error").textContent = "";
+  setVerificationPanel({ visible: true, email: user?.email || "" });
   setAuthVisibility(false);
 }
 
@@ -1005,8 +1093,26 @@ async function handleAuthSubmit(e) {
 
   try {
     await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
-    if (authMode === "sign-up") await createUserWithEmailAndPassword(auth, email, password);
-    else await signInWithEmailAndPassword(auth, email, password);
+    if (authMode === "sign-up") {
+      await createUserWithEmailAndPassword(auth, email, password);
+      if (auth.currentUser) {
+        try {
+          await setDoc(getUserDocRef(auth.currentUser.uid), {
+            email: auth.currentUser.email ?? email,
+            emailVerified: auth.currentUser.emailVerified,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+          }, { merge: true });
+        } catch {}
+        try {
+          await sendEmailVerification(auth.currentUser);
+        } catch (err) {
+          showToast(err?.message || "Unable to send verification email.");
+        }
+      }
+    } else {
+      await signInWithEmailAndPassword(auth, email, password);
+    }
 
     pendingPassword = password;
     authRememberChoice = remember;
@@ -1030,6 +1136,7 @@ async function handleAuthSubmit(e) {
 }
 
 async function completeAuthFlow() {
+  if (auth.currentUser?.emailVerified) await markUserVerified(auth.currentUser);
   await loadAppState();
   startStateListener(auth.currentUser.uid);
   startNotesListener(auth.currentUser.uid);
