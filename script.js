@@ -1548,7 +1548,7 @@ function renderRingEmojis(type, size) {
   const layer = $("ring-emoji-layer");
   const title = $("ring-emoji-title");
   const detail = $("ring-emoji-detail");
-  if (!layer || !title || !detail) return;
+  if (!layer) return;
 
   ringEmojiTypeId = type.id;
   ringEmojiLayoutSize = size;
@@ -1556,8 +1556,8 @@ function renderRingEmojis(type, size) {
 
   const milestones = Array.isArray(type.milestones) ? type.milestones : [];
   if (!milestones.length || !size) {
-    title.textContent = "Tap an emoji to see what’s happening";
-    detail.textContent = "";
+    if (title) title.textContent = "Tap an emoji to see what’s happening";
+    if (detail) detail.textContent = "";
     return;
   }
 
@@ -1585,8 +1585,8 @@ function renderRingEmojis(type, size) {
     const selected = milestones.find(m => `${type.id}-${m.hour}` === ringEmojiSelectionKey);
     updateRingEmojiPanel(type, selected);
   } else {
-    title.textContent = "Tap an emoji to see what’s happening";
-    detail.textContent = `${type.label} milestones wrap the ring.`;
+    if (title) title.textContent = "Tap an emoji to see what’s happening";
+    if (detail) detail.textContent = `${type.label} milestones wrap the ring.`;
   }
 
   updateRingEmojiSelectionStyles();
@@ -1602,16 +1602,16 @@ function selectRingEmoji(type, milestone) {
 function updateRingEmojiPanel(type, milestone) {
   const title = $("ring-emoji-title");
   const detail = $("ring-emoji-detail");
-  if (!title || !detail) return;
+  if (!title && !detail) return;
 
   if (!milestone) {
-    title.textContent = "Tap an emoji to see what’s happening";
-    detail.textContent = `${type.label} milestones wrap the ring.`;
+    if (title) title.textContent = "Tap an emoji to see what’s happening";
+    if (detail) detail.textContent = `${type.label} milestones wrap the ring.`;
     return;
   }
 
-  title.textContent = `Hour ${milestone.hour} · ${milestone.label}`;
-  detail.textContent = milestone.detail;
+  if (title) title.textContent = `Hour ${milestone.hour} · ${milestone.label}`;
+  if (detail) detail.textContent = milestone.detail;
 }
 
 function updateRingEmojiSelectionStyles() {
@@ -1728,7 +1728,10 @@ function updateTimer() {
   $("meta-start-btn").disabled = false;
   $("meta-start-btn").textContent = formatDateTime(new Date(start));
   $("meta-end").textContent = formatDateTime(new Date(end));
-  $("meta-planned").textContent = (af.plannedDurationHours || Math.round(total / 3600000)) + " h";
+  const plannedEl = $("meta-planned");
+  if (plannedEl) {
+    plannedEl.textContent = (af.plannedDurationHours || Math.round(total / 3600000)) + " h";
+  }
 
   $("start-fast-btn").classList.add("hidden");
   $("stop-fast-btn").classList.remove("hidden");
@@ -1789,7 +1792,8 @@ function renderTimerMetaIdle() {
   const type = getTypeById(selectedFastTypeId);
   $("meta-start-btn").textContent = "—";
   $("meta-end").textContent = "—";
-  $("meta-planned").textContent = (type?.durationHours || 0) + " h";
+  const plannedEl = $("meta-planned");
+  if (plannedEl) plannedEl.textContent = (type?.durationHours || 0) + " h";
 }
 
 async function onAlertsButton() {
