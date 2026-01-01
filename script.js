@@ -121,6 +121,8 @@ let notesBackdrop = null;
 let bodyOverflowBeforeNotes = null;
 let notesSwipeHandlersAttached = false;
 let noteEditorSwipeHandlersAttached = false;
+let pendingConfirmAction = null;
+let pendingConfirmCloseFocus = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   void initApp();
@@ -1399,13 +1401,18 @@ function usePendingFastType() {
 }
 
 function initButtons() {
-  $("start-fast-btn").addEventListener("click", startFast);
-  $("stop-fast-btn").addEventListener("click", stopFastAndLog);
+  $("start-fast-btn").addEventListener("click", confirmStartFast);
+  $("stop-fast-btn").addEventListener("click", confirmStopFast);
 
   $("alerts-btn").addEventListener("click", onAlertsButton);
 
   $("modal-close").addEventListener("click", closeFastTypeModal);
   $("modal-use-type").addEventListener("click", usePendingFastType);
+  $("confirm-fast-close").addEventListener("click", closeConfirmFastModal);
+  $("confirm-fast-cancel").addEventListener("click", closeConfirmFastModal);
+  $("confirm-fast-accept").addEventListener("click", confirmFastAction);
+  const confirmBackdrop = document.querySelector("#confirm-fast-modal .confirm-fast-backdrop");
+  if (confirmBackdrop) confirmBackdrop.addEventListener("click", closeConfirmFastModal);
 
   $("toggle-end-alert").addEventListener("click", () => {
     state.settings.notifyOnEnd = !state.settings.notifyOnEnd;
@@ -1476,6 +1483,60 @@ function initButtons() {
   attachNoteEditorSwipeHandlers();
 
   document.addEventListener("visibilitychange", () => { if (!document.hidden) renderAll(); });
+}
+
+function openConfirmFastModal({ title, message, confirmLabel, confirmClasses, onConfirm, focusAfterClose }) {
+  $("confirm-fast-title").textContent = title;
+  $("confirm-fast-message").textContent = message;
+  $("confirm-fast-accept").textContent = confirmLabel;
+  $("confirm-fast-accept").className = confirmClasses;
+  pendingConfirmAction = onConfirm;
+  pendingConfirmCloseFocus = focusAfterClose || null;
+  $("confirm-fast-modal").classList.remove("hidden");
+}
+
+function closeConfirmFastModal() {
+  $("confirm-fast-modal").classList.add("hidden");
+  pendingConfirmAction = null;
+  if (pendingConfirmCloseFocus) {
+    pendingConfirmCloseFocus.focus();
+  }
+  pendingConfirmCloseFocus = null;
+}
+
+function confirmFastAction() {
+  if (typeof pendingConfirmAction === "function") {
+    pendingConfirmAction();
+  }
+  closeConfirmFastModal();
+}
+
+function confirmStartFast(event) {
+  const type = getTypeById(selectedFastTypeId);
+  if (!type) return;
+  openConfirmFastModal({
+    title: "Start this fast?",
+    message: `Start a ${type.label} fast for ${type.durationHours} hours?`,
+    confirmLabel: "Start fast",
+    confirmClasses: "w-full py-3 md:py-2.5 rounded-xl bg-brand-500 text-slate-950 text-sm md:text-xs font-semibold",
+    onConfirm: startFast,
+    focusAfterClose: event?.currentTarget
+  });
+}
+
+function confirmStopFast(event) {
+  const af = state.activeFast;
+  if (!af) return;
+  const type = getTypeById(af.typeId);
+  const typeLabel = type ? type.label : "current";
+  openConfirmFastModal({
+    title: "Stop this fast?",
+    message: `Stop and log your ${typeLabel} fast now?`,
+    confirmLabel: "Stop fast",
+    confirmClasses: "w-full py-3 md:py-2.5 rounded-xl bg-red-500 text-slate-50 text-sm md:text-xs font-semibold",
+    onConfirm: stopFastAndLog,
+    focusAfterClose: event?.currentTarget
+  });
 }
 
 function initSettings() {
