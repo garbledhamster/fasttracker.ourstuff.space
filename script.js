@@ -210,6 +210,7 @@ let editingNoteDateKey = null;
 let editingNoteContext = null;
 let editingNoteCreatedAt = null;
 let editingNoteOpenedAt = null;
+let editingNoteInitialText = "";
 
 let navHoldTimer = null;
 let navHoldShown = false;
@@ -223,6 +224,7 @@ let notesPortal = null;
 let notesBackdrop = null;
 let bodyOverflowBeforeNotes = null;
 let notesSwipeHandlersAttached = false;
+let noteEditorSwipeHandlersAttached = false;
 
 document.addEventListener("DOMContentLoaded", () => {
   initAuthUI();
@@ -440,10 +442,57 @@ function openNoteEditor(note = null) {
   editingNoteOpenedAt = Date.now();
 
   $("note-editor-content").value = note?.text || "";
+  editingNoteInitialText = $("note-editor-content").value.trim();
   updateNoteEditorMeta();
   $("note-editor-delete").classList.toggle("hidden", !editingNoteId);
   modal.classList.remove("hidden");
   requestAnimationFrame(() => modal.classList.add("is-open"));
+}
+
+function isTouchDevice() {
+  return navigator.maxTouchPoints > 0 || "ontouchstart" in window;
+}
+
+async function handleNoteEditorSwipeDismiss() {
+  const modal = $("note-editor-modal");
+  if (!modal || modal.classList.contains("hidden")) return;
+  const text = $("note-editor-content").value.trim();
+  const hasChanges = text !== editingNoteInitialText;
+  if (hasChanges && text) {
+    const saved = await persistNoteEditor({ closeOnSave: false });
+    if (!saved) return;
+  }
+  closeNoteEditor();
+}
+
+function attachNoteEditorSwipeHandlers() {
+  if (noteEditorSwipeHandlersAttached || !isTouchDevice()) return;
+  const panel = document.querySelector("#note-editor-modal .note-editor-panel");
+  if (!panel) return;
+  noteEditorSwipeHandlersAttached = true;
+
+  let swipeStartX = 0;
+  let swipeStartY = 0;
+
+  panel.addEventListener("touchstart", (event) => {
+    if (!event.touches || event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    swipeStartX = touch.clientX;
+    swipeStartY = touch.clientY;
+  }, { passive: true });
+
+  panel.addEventListener("touchend", async (event) => {
+    const touch = event.changedTouches && event.changedTouches[0];
+    if (!touch) return;
+    const deltaX = touch.clientX - swipeStartX;
+    const deltaY = touch.clientY - swipeStartY;
+    swipeStartX = 0;
+    swipeStartY = 0;
+
+    if (deltaX > 80 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      await handleNoteEditorSwipeDismiss();
+    }
+  }, { passive: true });
 }
 
 function updateNoteEditorMeta() {
@@ -492,13 +541,14 @@ function closeNoteEditor() {
   editingNoteContext = null;
   editingNoteCreatedAt = null;
   editingNoteOpenedAt = null;
+  editingNoteInitialText = "";
 }
 
-async function saveNoteEditor() {
+async function persistNoteEditor({ closeOnSave = true } = {}) {
   const text = $("note-editor-content").value.trim();
   if (!text) {
     showToast("Add a note before saving");
-    return;
+    return false;
   }
   try {
     if (editingNoteId) {
@@ -514,11 +564,16 @@ async function saveNoteEditor() {
   } catch (err) {
     if (err?.message === "missing-key") {
       handleNotesDecryptError(err);
-      return;
+      return false;
     }
   }
   renderNotes();
-  closeNoteEditor();
+  if (closeOnSave) closeNoteEditor();
+  return true;
+}
+
+async function saveNoteEditor() {
+  await persistNoteEditor();
 }
 
 async function removeNote() {
@@ -1445,6 +1500,7 @@ function initButtons() {
   $("note-editor-close").addEventListener("click", closeNoteEditor);
   $("note-editor-save").addEventListener("click", saveNoteEditor);
   $("note-editor-delete").addEventListener("click", removeNote);
+  attachNoteEditorSwipeHandlers();
 
   document.addEventListener("visibilitychange", () => { if (!document.hidden) renderAll(); });
 }
