@@ -2530,7 +2530,7 @@ function buildNoteCard(note) {
   card.addEventListener("click", () => openNoteEditor(note));
 
   const text = document.createElement("div");
-  text.className = "text-slate-100 whitespace-pre-wrap text-sm md:text-xs";
+  text.className = "text-default whitespace-pre-wrap text-sm md:text-xs";
   text.textContent = note.text || "Untitled note";
 
   const meta = document.createElement("div");
