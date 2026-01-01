@@ -1739,7 +1739,7 @@ function confirmStartFast(event) {
     title: "Start this fast?",
     message: `Start a ${type.label} fast for ${type.durationHours} hours?`,
     confirmLabel: "Start fast",
-    confirmClasses: "w-full py-3 md:py-2.5 rounded-xl bg-brand-500 text-slate-950 text-sm md:text-xs font-semibold",
+    confirmClasses: "w-full py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold",
     onConfirm: startFast,
     focusAfterClose: event?.currentTarget
   });
