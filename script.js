@@ -75,6 +75,7 @@ const defaultState = {
     notifyOnEnd: true,
     hourlyReminders: true,
     alertsEnabled: false,
+    showRingEmojis: true,
     timeDisplayMode: "elapsed",
     theme: {
       presetId: DEFAULT_THEME_ID,
@@ -1605,6 +1606,13 @@ function initButtons() {
     renderSettings();
   });
 
+  $("toggle-ring-emojis").addEventListener("click", () => {
+    state.settings.showRingEmojis = !state.settings.showRingEmojis;
+    void saveState();
+    renderSettings();
+    updateTimer();
+  });
+
   $("theme-preset-select").addEventListener("change", (event) => {
     setThemePreset(event.target.value);
     applyThemeColors();
@@ -1790,6 +1798,7 @@ function renderSettings() {
   $("default-fast-select").value = resolveFastTypeId(state.settings.defaultFastTypeId);
   $("toggle-end-alert").classList.toggle("on", !!state.settings.notifyOnEnd);
   $("toggle-hourly-alert").classList.toggle("on", !!state.settings.hourlyReminders);
+  $("toggle-ring-emojis").classList.toggle("on", state.settings.showRingEmojis !== false);
   $("theme-preset-select").value = presetId;
   $("theme-custom-controls").classList.toggle("hidden", presetId !== "custom");
   $("theme-primary-color").value = customTheme.primaryColor;
@@ -1802,6 +1811,20 @@ function renderSettings() {
   $("theme-text-muted-color").value = customTheme.textMutedColor;
   $("theme-danger-color").value = customTheme.dangerColor;
   renderAlertsPill();
+}
+
+function applyRingEmojiVisibility() {
+  const isEnabled = state.settings.showRingEmojis !== false;
+  const layer = $("ring-emoji-layer");
+  const panel = $("ring-emoji-panel");
+  if (layer) layer.classList.toggle("hidden", !isEnabled);
+  if (panel) panel.classList.toggle("hidden", !isEnabled);
+  if (!isEnabled) {
+    ringEmojiTypeId = null;
+    ringEmojiLayoutSize = 0;
+    ringEmojiSelectionKey = null;
+    ringEmojiSelectionDetail = null;
+  }
 }
 
 function startFast() {
@@ -1875,6 +1898,7 @@ function cycleTimeMode() {
 }
 
 function ensureRingEmojis() {
+  if (!state.settings.showRingEmojis) return;
   const type = getActiveType();
   const layer = $("ring-emoji-layer");
   if (!layer || !type) return;
@@ -2040,6 +2064,7 @@ function updateTimer() {
   const typePill = $("timer-type");
 
   ring.setAttribute("stroke-dasharray", String(RING_CIRC));
+  applyRingEmojiVisibility();
   ensureRingEmojis();
 
   const displayMode = state.settings.timeDisplayMode || "elapsed";

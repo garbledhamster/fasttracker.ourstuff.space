@@ -114,7 +114,7 @@
               </div>
             </div>
 
-            <div class="mt-4 rounded-2xl border border-default surface-soft px-4 py-3 text-center">
+            <div id="ring-emoji-panel" class="mt-4 rounded-2xl border border-default surface-soft px-4 py-3 text-center">
               <div id="ring-emoji-title" class="text-sm md:text-xs text-default">Tap an emoji to see what’s happening</div>
               <div id="ring-emoji-detail" class="text-xs md:text-[11px] text-muted mt-1"></div>
             </div>
@@ -218,6 +218,14 @@
             <button id="toggle-hourly-alert" class="switch-btn"></button>
           </label>
           <p class="text-xs md:text-[11px] text-subtle">For best reliability, install the app (Add to Home Screen). Web alerts depend on OS/browser power rules.</p>
+        </div>
+
+        <div class="mt-4 space-y-3">
+          <h2 class="text-xs uppercase tracking-[0.2em] text-subtle mb-1">Display</h2>
+          <label class="flex items-center justify-between text-sm md:text-xs">
+            <span class="text-muted">Show timer emojis</span>
+            <button id="toggle-ring-emojis" class="switch-btn"></button>
+          </label>
         </div>
 
         <div class="mt-4 space-y-3">
