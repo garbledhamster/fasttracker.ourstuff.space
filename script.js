@@ -1409,7 +1409,6 @@ function initButtons() {
   $("modal-close").addEventListener("click", closeFastTypeModal);
   $("modal-use-type").addEventListener("click", usePendingFastType);
   $("confirm-fast-close").addEventListener("click", closeConfirmFastModal);
-  $("confirm-fast-cancel").addEventListener("click", closeConfirmFastModal);
   $("confirm-fast-accept").addEventListener("click", confirmFastAction);
   const confirmBackdrop = document.querySelector("#confirm-fast-modal .confirm-fast-backdrop");
   if (confirmBackdrop) confirmBackdrop.addEventListener("click", closeConfirmFastModal);
