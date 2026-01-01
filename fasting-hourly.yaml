@@ -1,97 +1,100 @@
 notes:
-  - "Timing varies with meal size, sleep, and activity."
+  - "Timing varies with meal size, meal composition (fat/fiber slow emptying), sleep, stress, and activity."
+  - "These are general physiology trends, not medical advice. If you have diabetes, are pregnant, have a history of eating disorders, or take glucose/BP meds, fasting should be clinician-guided."
+  - "Hunger often comes in waves—especially when the gut ‘cleaning cycle’ (MMC) runs—so a hunger spike doesn’t always mean you’re low on energy."
 hours:
   - hour: 1
     emoji: "🍽️"
     label: "Digesting"
     actions:
-      - "Rest-and-digest mode is active while the stomach and pancreas secrete enzymes."
-      - "Rest-and-digest signaling supports active digestion and nutrient breakdown."
-      - "Digestive enzymes and bile are active under parasympathetic control."
-      - "Rest-and-digest is dominant while the stomach breaks down food."
-      - "Digestive enzymes and bile release are active in rest-and-digest mode."
-      - "Active digestion and enzyme secretion dominate."
-      - "Rest-and-digest remains active as the stomach processes food."
-      - "Digestion is active and parasympathetic signaling is high."
+      - "Your nervous system leans ‘rest-and-digest’ (parasympathetic): saliva, stomach acid, and enzymes ramp up to break food into usable parts."
+      - "The stomach churns food mechanically while acid and pepsin start protein breakdown; this turns the meal into a semi-liquid mixture for the small intestine."
+      - "The pancreas prepares digestive enzymes (for carbs, fats, proteins) and the gallbladder releases bile to help emulsify fats so they can be absorbed later."
+      - "Satiety signals (like stretch in the stomach and gut hormones) start rising—this is part of why you feel calmer or sleepy after a large meal."
+
   - hour: 2
     emoji: "🍬"
     label: "Nutrient uptake"
     actions:
-      - "Glucose absorption peaks; insulin guides nutrients into muscle and liver glycogen."
-      - "Blood glucose is still rising; insulin helps store glucose as glycogen."
-      - "Nutrient absorption and insulin activity remain elevated."
-      - "Glucose uptake peaks; insulin promotes storage and replenishes glycogen."
-      - "Glucose absorption is high; insulin supports storage in muscle and liver."
-      - "Glucose absorption and insulin remain elevated."
-      - "Nutrient absorption peaks; insulin supports storage."
-      - "Glucose absorption peaks; insulin guides storage."
+      - "Most absorption happens in the small intestine: sugars become glucose, proteins become amino acids, and fats are packaged for transport."
+      - "Insulin rises to move glucose into cells and rebuild glycogen (stored carbohydrate) in liver and muscle—especially if you were active recently."
+      - "Amino acids support repair and muscle protein building; dietary fats are absorbed more slowly and can keep digestion going longer."
+      - "You may feel a ‘fed’ energy bump now—because blood nutrients are plentiful and storage pathways are active."
+
   - hour: 4
     emoji: "🧹"
     label: "Cleanup mode"
     actions:
-      - "Post-absorptive phase; gastric emptying is mostly complete and insulin is falling."
-      - "The gut starts its cleaning waves (migrating motor complex) as insulin drops."
-      - "Post-absorptive phase; the gut begins cleaning cycles between meals."
-      - "Post-absorptive phase; the gut’s cleaning cycles can resume."
-      - "Post-absorptive phase; migrating motor complex activity may start."
-      - "Post-absorptive phase; gut motility shifts to cleaning cycles."
-      - "Post-absorptive phase; gut cleaning cycles resume."
-      - "Post-absorptive phase; gut cleaning cycles can resume."
+      - "You’re moving into the post-absorptive phase: insulin trends down and the body shifts from ‘store’ signals toward ‘use what’s available.’"
+      - "Gastric emptying is often mostly done by now (but can be slower after a high-fat/high-fiber meal), so the stomach is less busy."
+      - "The migrating motor complex (MMC) can restart—rhythmic ‘sweeping’ contractions that move leftovers and microbes along between meals."
+      - "Those stomach growls or sudden hunger spikes can be MMC activity, not an emergency fuel shortage; frequent snacking can interrupt this cycle."
+
   - hour: 8
     emoji: "🔥"
     label: "Fat release"
     actions:
-      - "Lower insulin allows more fat release for fuel as the overnight fast settles in."
-      - "Glycogen release keeps blood sugar steady while fat use begins to rise."
-      - "Insulin is lower; fat release for energy becomes more noticeable."
-      - "Lower insulin supports more fat release for fuel."
-      - "Insulin is lower and fat use increases."
-      - "Lower insulin supports more fat release for energy."
-      - "Insulin is lower; fat use continues to rise."
-      - "Lower insulin supports more fat release."
+      - "Lower insulin allows more lipolysis: fat cells release fatty acids into the bloodstream for energy."
+      - "The liver helps stabilize blood sugar by releasing some glycogen (stored glucose), especially overnight or between meals."
+      - "Muscle increasingly uses fatty acids at rest; light movement (walking) nudges the body to burn more fat without needing a ‘hard workout.’"
+      - "If you’re under stress or slept poorly, hunger may feel stronger—even though fat release is still happening—because stress hormones affect appetite."
+
   - hour: 12
     emoji: "⚡"
     label: "Fat oxidation"
     actions:
-      - "Fat oxidation increases; early ketones may appear for some people."
-      - "Fat oxidation increases as liver glycogen declines."
-      - "Fat oxidation increases and ketones may begin to rise modestly."
-      - "Fat oxidation rises; ketones may begin to climb modestly."
-      - "Fat oxidation increases; ketone production can begin to rise."
-      - "Fat oxidation and ketones increase modestly."
-      - "Fat oxidation rises as glycogen declines."
+      - "As liver glycogen declines, the body leans harder on beta-oxidation (burning fatty acids) to power organs and muscles."
+      - "The liver may start producing measurable ketones for some people (timing varies widely); ketones are an alternative fuel, especially for the brain."
+      - "Protein is not the main fuel here, but some gluconeogenesis (making glucose from non-carb sources) continues to supply glucose-dependent tissues."
+      - "Many notice steadier energy because the body is less dependent on rapid glucose swings and more on slow, continuous fuel release."
+
   - hour: 14
     emoji: "🌤️"
     label: "Stable energy"
     actions:
-      - "Low insulin supports more reliance on fat and stable morning energy."
+      - "With insulin low and fuel coming steadily from fat, energy can feel more even—fewer cravings triggered by rapid blood-sugar changes."
+      - "Hunger often shows up as predictable waves (ghrelin rhythms); if you wait them out, they frequently fade."
+      - "Hydration and electrolytes matter more now—fat metabolism and lower insulin can increase sodium loss, which can feel like fatigue or headache."
+
   - hour: 16
     emoji: "🌙"
     label: "Deep fat fuel"
     actions:
-      - "Liver glycogen is lower, supporting a deeper shift to fat-based fuel."
-      - "Liver glycogen is lower, supporting longer fat-based fueling."
-      - "Glycogen stores are reduced; fat-based fuel is more prominent."
-      - "Liver glycogen is low; fat-based fueling is dominant."
-      - "Deeper reliance on fat-based fuel."
+      - "Liver glycogen is typically lower, so fat-based fueling becomes more dominant and ketone output often increases (again: variable by person)."
+      - "This is a common ‘second wind’ window: some people feel clearer or more driven due to adrenaline/norepinephrine changes that support alertness."
+      - "Cellular ‘cleanup/recycling’ signaling may increase during longer fasts, but the exact timing and magnitude in humans varies—avoid overpromising here."
+      - "If you feel weak or dizzy, it’s often fluid/salt-related rather than ‘running out of fuel’—your body has plenty of stored energy."
+
   - hour: 18
     emoji: "🧠"
     label: "Steady focus"
     actions:
-      - "Many feel steadier energy and reduced snacking cues."
+      - "Many people report smoother focus as ketones contribute more to brain energy and appetite hormones become less noisy between waves."
+      - "Reduced snacking cues can happen because insulin stays low and you’re not repeatedly re-triggering the fed-state cycle."
+      - "A good learning cue here: notice whether cravings are ‘habit cravings’ (time/place-triggered) vs true hunger (persistent + physical)."
+
   - hour: 20
     emoji: "🧘"
     label: "Discipline window"
     actions:
-      - "Longer fasting window supports appetite discipline before refeed."
+      - "This window often tests routine more than physiology—hunger waves can be strong, but they typically crest and pass."
+      - "It helps to plan your refeed ahead of time: deciding in advance reduces impulsive choices when you’re hungry."
+      - "If you’re going to break the fast soon, aim for a calm re-entry rather than a huge ‘reward’ meal that can cause stomach discomfort."
+
   - hour: 24
     emoji: "💧"
     label: "Hydration focus"
     actions:
-      - "Longer fasts emphasize hydration and a gentle refeed."
-      - "Hydration and electrolytes become more important."
+      - "Longer fasts increase the importance of electrolytes (especially sodium; also potassium/magnesium depending on diet and sweating)."
+      - "Common signals you’re under-salted or under-hydrated: headache, dizziness on standing, fatigue, irritability."
+      - "A gentle refeed is smart: start smaller, chew well, and give your gut 20–30 minutes before deciding you need more."
+      - "If you have medical conditions or take meds that affect blood sugar or blood pressure, this duration can be higher risk without guidance."
+
   - hour: 36
     emoji: "🥣"
     label: "Gentle refeed"
     actions:
-      - "Longer fasts should be broken gently with easy-to-digest foods."
+      - "After longer fasts, digestion may feel ‘sensitive’—not because digestion stops, but because large meals can overwhelm a calmer GI pace."
+      - "Break the fast with easy-to-digest foods (broth/soup, yogurt, eggs, cooked vegetables) and smaller portions first."
+      - "Avoid a huge high-fat/high-sugar meal right away; it can cause GI upset and a big glucose/insulin swing."
+      - "If you’re doing 36+ hour fasts regularly, consider clinician input—especially if you’re lean, very active, or prone to lightheadedness."
