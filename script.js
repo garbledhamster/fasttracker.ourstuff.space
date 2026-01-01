@@ -778,6 +778,9 @@ function mergeStateWithDefaults(parsed) {
   const merged = clone(defaultState);
   const parsedSettings = parsed.settings || {};
   const parsedTheme = parsedSettings.theme || {};
+  if (typeof parsedSettings.showRingEmojis !== "boolean") {
+    parsedSettings.showRingEmojis = defaultState.settings.showRingEmojis;
+  }
   if (parsedTheme.accentColor && !parsedTheme.primaryColor) {
     parsedTheme.primaryColor = parsedTheme.accentColor;
   }
@@ -1898,7 +1901,7 @@ function cycleTimeMode() {
 }
 
 function ensureRingEmojis() {
-  if (!state.settings.showRingEmojis) return;
+  if (state.settings.showRingEmojis === false) return;
   const type = getActiveType();
   const layer = $("ring-emoji-layer");
   if (!layer || !type) return;
