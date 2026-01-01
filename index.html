@@ -213,42 +213,46 @@
 
         <div class="mt-4 space-y-3">
           <h2 class="text-xs uppercase tracking-[0.2em] text-subtle mb-1">Theme</h2>
-          <label class="flex items-center justify-between text-sm md:text-xs">
-            <span class="text-muted">Primary color</span>
-            <input id="theme-primary-color" type="color" class="theme-color-input">
-          </label>
-          <label class="flex items-center justify-between text-sm md:text-xs">
-            <span class="text-muted">Secondary color</span>
-            <input id="theme-secondary-color" type="color" class="theme-color-input">
-          </label>
-          <label class="flex items-center justify-between text-sm md:text-xs">
-            <span class="text-muted">Background color</span>
-            <input id="theme-background-color" type="color" class="theme-color-input">
-          </label>
-          <label class="flex items-center justify-between text-sm md:text-xs">
-            <span class="text-muted">Surface color</span>
-            <input id="theme-surface-color" type="color" class="theme-color-input">
-          </label>
-          <label class="flex items-center justify-between text-sm md:text-xs">
-            <span class="text-muted">Surface muted color</span>
-            <input id="theme-surface-muted-color" type="color" class="theme-color-input">
-          </label>
-          <label class="flex items-center justify-between text-sm md:text-xs">
-            <span class="text-muted">Border color</span>
-            <input id="theme-border-color" type="color" class="theme-color-input">
-          </label>
-          <label class="flex items-center justify-between text-sm md:text-xs">
-            <span class="text-muted">Text color</span>
-            <input id="theme-text-color" type="color" class="theme-color-input">
-          </label>
-          <label class="flex items-center justify-between text-sm md:text-xs">
-            <span class="text-muted">Text muted color</span>
-            <input id="theme-text-muted-color" type="color" class="theme-color-input">
-          </label>
-          <label class="flex items-center justify-between text-sm md:text-xs">
-            <span class="text-muted">Danger color</span>
-            <input id="theme-danger-color" type="color" class="theme-color-input">
-          </label>
+          <label class="block text-sm md:text-xs text-muted">Theme preset</label>
+          <select id="theme-preset-select" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"></select>
+          <div id="theme-custom-controls" class="space-y-3 hidden">
+            <label class="flex items-center justify-between text-sm md:text-xs">
+              <span class="text-muted">Primary color</span>
+              <input id="theme-primary-color" type="color" class="theme-color-input">
+            </label>
+            <label class="flex items-center justify-between text-sm md:text-xs">
+              <span class="text-muted">Secondary color</span>
+              <input id="theme-secondary-color" type="color" class="theme-color-input">
+            </label>
+            <label class="flex items-center justify-between text-sm md:text-xs">
+              <span class="text-muted">Background color</span>
+              <input id="theme-background-color" type="color" class="theme-color-input">
+            </label>
+            <label class="flex items-center justify-between text-sm md:text-xs">
+              <span class="text-muted">Surface color</span>
+              <input id="theme-surface-color" type="color" class="theme-color-input">
+            </label>
+            <label class="flex items-center justify-between text-sm md:text-xs">
+              <span class="text-muted">Surface muted color</span>
+              <input id="theme-surface-muted-color" type="color" class="theme-color-input">
+            </label>
+            <label class="flex items-center justify-between text-sm md:text-xs">
+              <span class="text-muted">Border color</span>
+              <input id="theme-border-color" type="color" class="theme-color-input">
+            </label>
+            <label class="flex items-center justify-between text-sm md:text-xs">
+              <span class="text-muted">Text color</span>
+              <input id="theme-text-color" type="color" class="theme-color-input">
+            </label>
+            <label class="flex items-center justify-between text-sm md:text-xs">
+              <span class="text-muted">Text muted color</span>
+              <input id="theme-text-muted-color" type="color" class="theme-color-input">
+            </label>
+            <label class="flex items-center justify-between text-sm md:text-xs">
+              <span class="text-muted">Danger color</span>
+              <input id="theme-danger-color" type="color" class="theme-color-input">
+            </label>
+          </div>
           <p class="text-xs md:text-[11px] text-subtle">Colors sync across devices when you’re signed in.</p>
         </div>
 

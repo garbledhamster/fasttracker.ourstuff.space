@@ -47,14 +47,10 @@ const NOTES_SCHEMA = Object.freeze({
 
 let FAST_TYPES = [];
 
-const defaultState = {
-  settings: {
-    defaultFastTypeId: "16_8",
-    notifyOnEnd: true,
-    hourlyReminders: true,
-    alertsEnabled: false,
-    timeDisplayMode: "elapsed",
-    theme: {
+const THEME_PRESETS = {
+  midnight: {
+    label: "Midnight",
+    colors: {
       primaryColor: "#06b6d4",
       secondaryColor: "#0891b2",
       backgroundColor: "#020617",
@@ -64,6 +60,48 @@ const defaultState = {
       textColor: "#f8fafc",
       textMutedColor: "#94a3b8",
       dangerColor: "#dc2626"
+    }
+  },
+  ocean: {
+    label: "Ocean",
+    colors: {
+      primaryColor: "#38bdf8",
+      secondaryColor: "#0ea5e9",
+      backgroundColor: "#071a2b",
+      surfaceColor: "#0b2942",
+      surfaceMutedColor: "#123a5a",
+      borderColor: "#1e3a5f",
+      textColor: "#e0f2fe",
+      textMutedColor: "#94a3b8",
+      dangerColor: "#f97316"
+    }
+  },
+  sunrise: {
+    label: "Sunrise",
+    colors: {
+      primaryColor: "#fb7185",
+      secondaryColor: "#f97316",
+      backgroundColor: "#1f0f1a",
+      surfaceColor: "#2a1523",
+      surfaceMutedColor: "#3b1c2e",
+      borderColor: "#4b2237",
+      textColor: "#fff1f2",
+      textMutedColor: "#fda4af",
+      dangerColor: "#f87171"
+    }
+  }
+};
+
+const defaultState = {
+  settings: {
+    defaultFastTypeId: "16_8",
+    notifyOnEnd: true,
+    hourlyReminders: true,
+    alertsEnabled: false,
+    timeDisplayMode: "elapsed",
+    theme: {
+      presetId: "midnight",
+      customColors: { ...THEME_PRESETS.midnight.colors }
     }
   },
   activeFast: null,
@@ -1432,56 +1470,63 @@ function initButtons() {
     renderSettings();
   });
 
+  $("theme-preset-select").addEventListener("change", (event) => {
+    setThemePreset(event.target.value);
+    applyThemeColors();
+    renderSettings();
+    void saveState();
+  });
+
   $("theme-primary-color").addEventListener("input", (event) => {
-    state.settings.theme.primaryColor = event.target.value;
+    setCustomThemeColor("primaryColor", event.target.value);
     applyThemeColors();
     void saveState();
   });
 
   $("theme-secondary-color").addEventListener("input", (event) => {
-    state.settings.theme.secondaryColor = event.target.value;
+    setCustomThemeColor("secondaryColor", event.target.value);
     applyThemeColors();
     void saveState();
   });
 
   $("theme-background-color").addEventListener("input", (event) => {
-    state.settings.theme.backgroundColor = event.target.value;
+    setCustomThemeColor("backgroundColor", event.target.value);
     applyThemeColors();
     void saveState();
   });
 
   $("theme-surface-color").addEventListener("input", (event) => {
-    state.settings.theme.surfaceColor = event.target.value;
+    setCustomThemeColor("surfaceColor", event.target.value);
     applyThemeColors();
     void saveState();
   });
 
   $("theme-surface-muted-color").addEventListener("input", (event) => {
-    state.settings.theme.surfaceMutedColor = event.target.value;
+    setCustomThemeColor("surfaceMutedColor", event.target.value);
     applyThemeColors();
     void saveState();
   });
 
   $("theme-border-color").addEventListener("input", (event) => {
-    state.settings.theme.borderColor = event.target.value;
+    setCustomThemeColor("borderColor", event.target.value);
     applyThemeColors();
     void saveState();
   });
 
   $("theme-text-color").addEventListener("input", (event) => {
-    state.settings.theme.textColor = event.target.value;
+    setCustomThemeColor("textColor", event.target.value);
     applyThemeColors();
     void saveState();
   });
 
   $("theme-text-muted-color").addEventListener("input", (event) => {
-    state.settings.theme.textMutedColor = event.target.value;
+    setCustomThemeColor("textMutedColor", event.target.value);
     applyThemeColors();
     void saveState();
   });
 
   $("theme-danger-color").addEventListener("input", (event) => {
-    state.settings.theme.dangerColor = event.target.value;
+    setCustomThemeColor("dangerColor", event.target.value);
     applyThemeColors();
     void saveState();
   });
@@ -1589,22 +1634,38 @@ function initSettings() {
     o.textContent = `${t.label} (${t.durationHours}h)`;
     sel.appendChild(o);
   });
+
+  const themeSelect = $("theme-preset-select");
+  themeSelect.innerHTML = "";
+  Object.entries(THEME_PRESETS).forEach(([id, preset]) => {
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = preset.label;
+    themeSelect.appendChild(option);
+  });
+  const customOption = document.createElement("option");
+  customOption.value = "custom";
+  customOption.textContent = "Custom";
+  themeSelect.appendChild(customOption);
 }
 
 function renderSettings() {
-  const theme = getThemeSettings();
+  const customTheme = getCustomThemeColors();
+  const presetId = resolveThemePresetId();
   $("default-fast-select").value = resolveFastTypeId(state.settings.defaultFastTypeId);
   $("toggle-end-alert").classList.toggle("on", !!state.settings.notifyOnEnd);
   $("toggle-hourly-alert").classList.toggle("on", !!state.settings.hourlyReminders);
-  $("theme-primary-color").value = theme.primaryColor;
-  $("theme-secondary-color").value = theme.secondaryColor;
-  $("theme-background-color").value = theme.backgroundColor;
-  $("theme-surface-color").value = theme.surfaceColor;
-  $("theme-surface-muted-color").value = theme.surfaceMutedColor;
-  $("theme-border-color").value = theme.borderColor;
-  $("theme-text-color").value = theme.textColor;
-  $("theme-text-muted-color").value = theme.textMutedColor;
-  $("theme-danger-color").value = theme.dangerColor;
+  $("theme-preset-select").value = presetId;
+  $("theme-custom-controls").classList.toggle("hidden", presetId !== "custom");
+  $("theme-primary-color").value = customTheme.primaryColor;
+  $("theme-secondary-color").value = customTheme.secondaryColor;
+  $("theme-background-color").value = customTheme.backgroundColor;
+  $("theme-surface-color").value = customTheme.surfaceColor;
+  $("theme-surface-muted-color").value = customTheme.surfaceMutedColor;
+  $("theme-border-color").value = customTheme.borderColor;
+  $("theme-text-color").value = customTheme.textColor;
+  $("theme-text-muted-color").value = customTheme.textMutedColor;
+  $("theme-danger-color").value = customTheme.dangerColor;
   renderAlertsPill();
 }
 
@@ -2417,6 +2478,57 @@ function renderAll() {
   renderRecentFasts();
 }
 
+function resolveThemePresetId() {
+  const themeState = state.settings.theme || {};
+  if (themeState.presetId === "custom") return "custom";
+  if (themeState.presetId && THEME_PRESETS[themeState.presetId]) return themeState.presetId;
+  if (getLegacyThemeColors(themeState)) return "custom";
+  return defaultState.settings.theme.presetId;
+}
+
+function getLegacyThemeColors(themeState) {
+  const legacyKeys = [
+    "primaryColor",
+    "secondaryColor",
+    "backgroundColor",
+    "surfaceColor",
+    "surfaceMutedColor",
+    "borderColor",
+    "textColor",
+    "textMutedColor",
+    "dangerColor"
+  ];
+  const hasLegacy = legacyKeys.some(key => themeState?.[key]);
+  if (!hasLegacy) return null;
+  return legacyKeys.reduce((acc, key) => {
+    if (themeState?.[key]) acc[key] = themeState[key];
+    return acc;
+  }, {});
+}
+
+function getCustomThemeColors() {
+  const themeState = state.settings.theme || {};
+  const legacyColors = getLegacyThemeColors(themeState);
+  const customColors = themeState.customColors || legacyColors || {};
+  return Object.assign({}, defaultState.settings.theme.customColors, customColors);
+}
+
+function setCustomThemeColor(key, value) {
+  if (!state.settings.theme) state.settings.theme = {};
+  state.settings.theme.presetId = "custom";
+  state.settings.theme.customColors = Object.assign({}, getCustomThemeColors(), { [key]: value });
+}
+
+function setThemePreset(presetId) {
+  if (!state.settings.theme) state.settings.theme = {};
+  if (presetId === "custom") {
+    state.settings.theme.presetId = "custom";
+    state.settings.theme.customColors = getCustomThemeColors();
+    return;
+  }
+  state.settings.theme.presetId = THEME_PRESETS[presetId] ? presetId : defaultState.settings.theme.presetId;
+}
+
 function applyThemeColors() {
   const theme = getThemeSettings();
   const root = document.documentElement;
@@ -2434,7 +2546,11 @@ function applyThemeColors() {
 }
 
 function getThemeSettings() {
-  return Object.assign({}, defaultState.settings.theme, state.settings.theme || {});
+  const presetId = resolveThemePresetId();
+  if (presetId !== "custom" && THEME_PRESETS[presetId]) {
+    return Object.assign({}, THEME_PRESETS[presetId].colors);
+  }
+  return getCustomThemeColors();
 }
 
 function toLocalInputValue(d) {
