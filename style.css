@@ -309,8 +309,9 @@ body.bg-slate-950 {
 }
 
 .fast-type-chip {
-  width: 35px;
-  height: 35px;
+  flex: 1 1 0;
+  max-width: 50px;
+  aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
   justify-content: center;
