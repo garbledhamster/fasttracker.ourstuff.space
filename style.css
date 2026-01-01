@@ -1,12 +1,12 @@
 body { -webkit-tap-highlight-color: transparent; }
 
 #app {
-  width: min(100%, 960px);
+  width: min(100%, 500px);
   margin: 0 auto;
 }
 
 #app > nav {
-  width: min(100%, 960px);
+  width: min(100%, 500px);
   left: 50%;
   right: auto;
   transform: translateX(-50%);
