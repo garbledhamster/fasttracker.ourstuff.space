@@ -43,6 +43,6 @@
     surfaceColor: "#f8fafc"
     surfaceMutedColor: "#f1f5f9"
     borderColor: "#e2e8f0"
-    textColor: "#0f172a"
+    textColor: "#000000"
     textMutedColor: "#475569"
     dangerColor: "#dc2626"
