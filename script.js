@@ -1067,7 +1067,7 @@ function ensureNotesOverlay() {
   drawer.style.right = "0";
   drawer.style.bottom = "0";
   drawer.style.left = "auto";
-  drawer.style.width = "min(520px, 100vw)";
+  drawer.style.width = "min(420px, 100vw)";
   drawer.style.maxWidth = "100vw";
   drawer.style.height = "100%";
   drawer.style.overflow = "auto";
