@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js";
+import { load as loadYaml } from "https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm";
 import {
   getAuth,
   onAuthStateChanged,
@@ -44,438 +45,7 @@ const NOTES_SCHEMA = Object.freeze({
   }
 });
 
-const FAST_TYPES = [
-  {
-    id: "8",
-    label: "8h",
-    durationHours: 8,
-    bullets: [
-      "1h after eating: Rest-and-digest mode is active while the stomach and pancreas secrete enzymes.",
-      "2h after eating: Glucose absorption peaks; insulin guides nutrients into muscle and liver glycogen.",
-      "4h after eating: Post-absorptive phase; gastric emptying is mostly complete and insulin is falling.",
-      "8h after eating: Lower insulin allows more fat release for fuel as the overnight fast settles in.",
-      "Timing varies with meal size, sleep, and activity."
-    ],
-    milestones: [
-      {
-        hour: 1,
-        emoji: "🍽️",
-        label: "Digesting",
-        detail: "1h after eating: Rest-and-digest mode is active while the stomach and pancreas secrete enzymes."
-      },
-      {
-        hour: 2,
-        emoji: "🍬",
-        label: "Nutrient uptake",
-        detail: "2h after eating: Glucose absorption peaks; insulin guides nutrients into muscle and liver glycogen."
-      },
-      {
-        hour: 4,
-        emoji: "🧹",
-        label: "Cleanup mode",
-        detail: "4h after eating: Post-absorptive phase; gastric emptying is mostly complete and insulin is falling."
-      },
-      {
-        hour: 8,
-        emoji: "🔥",
-        label: "Fat release",
-        detail: "8h after eating: Lower insulin allows more fat release for fuel as the overnight fast settles in."
-      }
-    ]
-  },
-  {
-    id: "12_12",
-    label: "12h",
-    durationHours: 12,
-    bullets: [
-      "1h after eating: Rest-and-digest signaling supports active digestion and nutrient breakdown.",
-      "2h after eating: Blood glucose is still rising; insulin helps store glucose as glycogen.",
-      "4h after eating: The gut starts its cleaning waves (migrating motor complex) as insulin drops.",
-      "8h after eating: Glycogen release keeps blood sugar steady while fat use begins to rise.",
-      "12h after eating: Fat oxidation increases; early ketones may appear for some people.",
-      "Timing varies with meal size, sleep, and activity."
-    ],
-    milestones: [
-      {
-        hour: 1,
-        emoji: "🍽️",
-        label: "Digesting",
-        detail: "1h after eating: Rest-and-digest signaling supports active digestion and nutrient breakdown."
-      },
-      {
-        hour: 2,
-        emoji: "🍬",
-        label: "Nutrient uptake",
-        detail: "2h after eating: Blood glucose is still rising; insulin helps store glucose as glycogen."
-      },
-      {
-        hour: 4,
-        emoji: "🧹",
-        label: "Cleanup mode",
-        detail: "4h after eating: The gut starts its cleaning waves (migrating motor complex) as insulin drops."
-      },
-      {
-        hour: 8,
-        emoji: "🔥",
-        label: "Fat release",
-        detail: "8h after eating: Glycogen release keeps blood sugar steady while fat use begins to rise."
-      },
-      {
-        hour: 12,
-        emoji: "⚡",
-        label: "Fat oxidation",
-        detail: "12h after eating: Fat oxidation increases; early ketones may appear for some people."
-      }
-    ]
-  },
-  {
-    id: "14_10",
-    label: "14h",
-    durationHours: 14,
-    bullets: [
-      "1h after eating: Digestive enzymes and bile are active under parasympathetic control.",
-      "2h after eating: Nutrient absorption and insulin activity remain elevated.",
-      "4h after eating: Post-absorptive phase; the gut begins cleaning cycles between meals.",
-      "8h after eating: Insulin is lower; fat release for energy becomes more noticeable.",
-      "12h after eating: Fat oxidation increases as liver glycogen declines.",
-      "14h after eating: Low insulin supports more reliance on fat and stable morning energy.",
-      "Timing varies with meal size, sleep, and activity."
-    ],
-    milestones: [
-      {
-        hour: 1,
-        emoji: "🍽️",
-        label: "Digesting",
-        detail: "1h after eating: Digestive enzymes and bile are active under parasympathetic control."
-      },
-      {
-        hour: 2,
-        emoji: "🍬",
-        label: "Nutrient uptake",
-        detail: "2h after eating: Nutrient absorption and insulin activity remain elevated."
-      },
-      {
-        hour: 4,
-        emoji: "🧹",
-        label: "Cleanup mode",
-        detail: "4h after eating: Post-absorptive phase; the gut begins cleaning cycles between meals."
-      },
-      {
-        hour: 8,
-        emoji: "🔥",
-        label: "Fat release",
-        detail: "8h after eating: Insulin is lower; fat release for energy becomes more noticeable."
-      },
-      {
-        hour: 12,
-        emoji: "⚡",
-        label: "Fat oxidation",
-        detail: "12h after eating: Fat oxidation increases as liver glycogen declines."
-      },
-      {
-        hour: 14,
-        emoji: "🌤️",
-        label: "Stable energy",
-        detail: "14h after eating: Low insulin supports more reliance on fat and stable morning energy."
-      }
-    ]
-  },
-  {
-    id: "16_8",
-    label: "16:8",
-    durationHours: 16,
-    bullets: [
-      "1h after eating: Rest-and-digest is dominant while the stomach breaks down food.",
-      "2h after eating: Glucose uptake peaks; insulin promotes storage and replenishes glycogen.",
-      "4h after eating: Post-absorptive phase; the gut’s cleaning cycles can resume.",
-      "8h after eating: Lower insulin supports more fat release for fuel.",
-      "12h after eating: Fat oxidation increases and ketones may begin to rise modestly.",
-      "16h after eating: Liver glycogen is lower, supporting a deeper shift to fat-based fuel.",
-      "Timing varies with meal size, sleep, and activity."
-    ],
-    milestones: [
-      {
-        hour: 1,
-        emoji: "🍽️",
-        label: "Digesting",
-        detail: "1h after eating: Rest-and-digest is dominant while the stomach breaks down food."
-      },
-      {
-        hour: 2,
-        emoji: "🍬",
-        label: "Nutrient uptake",
-        detail: "2h after eating: Glucose uptake peaks; insulin promotes storage and replenishes glycogen."
-      },
-      {
-        hour: 4,
-        emoji: "🧹",
-        label: "Cleanup mode",
-        detail: "4h after eating: Post-absorptive phase; the gut’s cleaning cycles can resume."
-      },
-      {
-        hour: 8,
-        emoji: "🔥",
-        label: "Fat release",
-        detail: "8h after eating: Lower insulin supports more fat release for fuel."
-      },
-      {
-        hour: 12,
-        emoji: "⚡",
-        label: "Fat oxidation",
-        detail: "12h after eating: Fat oxidation increases and ketones may begin to rise modestly."
-      },
-      {
-        hour: 16,
-        emoji: "🌙",
-        label: "Deep fat fuel",
-        detail: "16h after eating: Liver glycogen is lower, supporting a deeper shift to fat-based fuel."
-      }
-    ]
-  },
-  {
-    id: "18_6",
-    label: "18:6",
-    durationHours: 18,
-    bullets: [
-      "1h after eating: Digestive enzymes and bile release are active in rest-and-digest mode.",
-      "2h after eating: Glucose absorption is high; insulin supports storage in muscle and liver.",
-      "4h after eating: Post-absorptive phase; migrating motor complex activity may start.",
-      "8h after eating: Insulin is lower and fat use increases.",
-      "12h after eating: Fat oxidation rises; ketones may begin to climb modestly.",
-      "16h after eating: Liver glycogen is lower, supporting longer fat-based fueling.",
-      "18h after eating: Many feel steadier energy and reduced snacking cues.",
-      "Timing varies with meal size, sleep, and activity."
-    ],
-    milestones: [
-      {
-        hour: 1,
-        emoji: "🍽️",
-        label: "Digesting",
-        detail: "1h after eating: Digestive enzymes and bile release are active in rest-and-digest mode."
-      },
-      {
-        hour: 2,
-        emoji: "🍬",
-        label: "Nutrient uptake",
-        detail: "2h after eating: Glucose absorption is high; insulin supports storage in muscle and liver."
-      },
-      {
-        hour: 4,
-        emoji: "🧹",
-        label: "Cleanup mode",
-        detail: "4h after eating: Post-absorptive phase; migrating motor complex activity may start."
-      },
-      {
-        hour: 8,
-        emoji: "🔥",
-        label: "Fat release",
-        detail: "8h after eating: Insulin is lower and fat use increases."
-      },
-      {
-        hour: 12,
-        emoji: "⚡",
-        label: "Fat oxidation",
-        detail: "12h after eating: Fat oxidation rises; ketones may begin to climb modestly."
-      },
-      {
-        hour: 16,
-        emoji: "🌙",
-        label: "Deep fat fuel",
-        detail: "16h after eating: Liver glycogen is lower, supporting longer fat-based fueling."
-      },
-      {
-        hour: 18,
-        emoji: "🧠",
-        label: "Steady focus",
-        detail: "18h after eating: Many feel steadier energy and reduced snacking cues."
-      }
-    ]
-  },
-  {
-    id: "20_4",
-    label: "20:4",
-    durationHours: 20,
-    bullets: [
-      "1h after eating: Active digestion and enzyme secretion dominate.",
-      "2h after eating: Glucose absorption and insulin remain elevated.",
-      "4h after eating: Post-absorptive phase; gut motility shifts to cleaning cycles.",
-      "8h after eating: Lower insulin supports more fat release for energy.",
-      "12h after eating: Fat oxidation increases; ketone production can begin to rise.",
-      "16h after eating: Glycogen stores are reduced; fat-based fuel is more prominent.",
-      "20h after eating: Longer fasting window supports appetite discipline before refeed.",
-      "Timing varies with meal size, sleep, and activity."
-    ],
-    milestones: [
-      {
-        hour: 1,
-        emoji: "🍽️",
-        label: "Digesting",
-        detail: "1h after eating: Active digestion and enzyme secretion dominate."
-      },
-      {
-        hour: 2,
-        emoji: "🍬",
-        label: "Nutrient uptake",
-        detail: "2h after eating: Glucose absorption and insulin remain elevated."
-      },
-      {
-        hour: 4,
-        emoji: "🧹",
-        label: "Cleanup mode",
-        detail: "4h after eating: Post-absorptive phase; gut motility shifts to cleaning cycles."
-      },
-      {
-        hour: 8,
-        emoji: "🔥",
-        label: "Fat release",
-        detail: "8h after eating: Lower insulin supports more fat release for energy."
-      },
-      {
-        hour: 12,
-        emoji: "⚡",
-        label: "Fat oxidation",
-        detail: "12h after eating: Fat oxidation increases; ketone production can begin to rise."
-      },
-      {
-        hour: 16,
-        emoji: "🌙",
-        label: "Deep fat fuel",
-        detail: "16h after eating: Glycogen stores are reduced; fat-based fuel is more prominent."
-      },
-      {
-        hour: 20,
-        emoji: "🧘",
-        label: "Discipline window",
-        detail: "20h after eating: Longer fasting window supports appetite discipline before refeed."
-      }
-    ]
-  },
-  {
-    id: "24",
-    label: "24h",
-    durationHours: 24,
-    bullets: [
-      "1h after eating: Rest-and-digest remains active as the stomach processes food.",
-      "2h after eating: Nutrient absorption peaks; insulin supports storage.",
-      "4h after eating: Post-absorptive phase; gut cleaning cycles resume.",
-      "8h after eating: Insulin is lower; fat use continues to rise.",
-      "12h after eating: Fat oxidation and ketones increase modestly.",
-      "16h after eating: Liver glycogen is low; fat-based fueling is dominant.",
-      "24h after eating: Longer fasts emphasize hydration and a gentle refeed.",
-      "Timing varies with meal size, sleep, and activity."
-    ],
-    milestones: [
-      {
-        hour: 1,
-        emoji: "🍽️",
-        label: "Digesting",
-        detail: "1h after eating: Rest-and-digest remains active as the stomach processes food."
-      },
-      {
-        hour: 2,
-        emoji: "🍬",
-        label: "Nutrient uptake",
-        detail: "2h after eating: Nutrient absorption peaks; insulin supports storage."
-      },
-      {
-        hour: 4,
-        emoji: "🧹",
-        label: "Cleanup mode",
-        detail: "4h after eating: Post-absorptive phase; gut cleaning cycles resume."
-      },
-      {
-        hour: 8,
-        emoji: "🔥",
-        label: "Fat release",
-        detail: "8h after eating: Insulin is lower; fat use continues to rise."
-      },
-      {
-        hour: 12,
-        emoji: "⚡",
-        label: "Fat oxidation",
-        detail: "12h after eating: Fat oxidation and ketones increase modestly."
-      },
-      {
-        hour: 16,
-        emoji: "🌙",
-        label: "Deep fat fuel",
-        detail: "16h after eating: Liver glycogen is low; fat-based fueling is dominant."
-      },
-      {
-        hour: 24,
-        emoji: "💧",
-        label: "Hydration focus",
-        detail: "24h after eating: Longer fasts emphasize hydration and a gentle refeed."
-      }
-    ]
-  },
-  {
-    id: "36",
-    label: "36h",
-    durationHours: 36,
-    bullets: [
-      "1h after eating: Digestion is active and parasympathetic signaling is high.",
-      "2h after eating: Glucose absorption peaks; insulin guides storage.",
-      "4h after eating: Post-absorptive phase; gut cleaning cycles can resume.",
-      "8h after eating: Lower insulin supports more fat release.",
-      "12h after eating: Fat oxidation rises as glycogen declines.",
-      "16h after eating: Deeper reliance on fat-based fuel.",
-      "24h after eating: Hydration and electrolytes become more important.",
-      "36h after eating: Longer fasts should be broken gently with easy-to-digest foods.",
-      "Timing varies with meal size, sleep, and activity."
-    ],
-    milestones: [
-      {
-        hour: 1,
-        emoji: "🍽️",
-        label: "Digesting",
-        detail: "1h after eating: Digestion is active and parasympathetic signaling is high."
-      },
-      {
-        hour: 2,
-        emoji: "🍬",
-        label: "Nutrient uptake",
-        detail: "2h after eating: Glucose absorption peaks; insulin guides storage."
-      },
-      {
-        hour: 4,
-        emoji: "🧹",
-        label: "Cleanup mode",
-        detail: "4h after eating: Post-absorptive phase; gut cleaning cycles can resume."
-      },
-      {
-        hour: 8,
-        emoji: "🔥",
-        label: "Fat release",
-        detail: "8h after eating: Lower insulin supports more fat release."
-      },
-      {
-        hour: 12,
-        emoji: "⚡",
-        label: "Fat oxidation",
-        detail: "12h after eating: Fat oxidation rises as glycogen declines."
-      },
-      {
-        hour: 16,
-        emoji: "🌙",
-        label: "Deep fat fuel",
-        detail: "16h after eating: Deeper reliance on fat-based fuel."
-      },
-      {
-        hour: 24,
-        emoji: "💧",
-        label: "Hydration focus",
-        detail: "24h after eating: Hydration and electrolytes become more important."
-      },
-      {
-        hour: 36,
-        emoji: "🥣",
-        label: "Gentle refeed",
-        detail: "36h after eating: Longer fasts should be broken gently with easy-to-digest foods."
-      }
-    ]
-  }
-];
+let FAST_TYPES = [];
 
 const defaultState = {
   settings: {
@@ -502,7 +72,7 @@ const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 
 let state = clone(defaultState);
-let selectedFastTypeId = defaultState.settings.defaultFastTypeId || FAST_TYPES[0].id;
+let selectedFastTypeId = defaultState.settings.defaultFastTypeId;
 let pendingTypeId = null;
 let calendarMonth = startOfMonth(new Date());
 let selectedDayKey = formatDateKey(new Date());
@@ -547,12 +117,53 @@ let notesSwipeHandlersAttached = false;
 let noteEditorSwipeHandlersAttached = false;
 
 document.addEventListener("DOMContentLoaded", () => {
-  initAuthUI();
-  initAuthListener();
+  void initApp();
 });
 
 function $(id) { return document.getElementById(id); }
 function clone(x) { return JSON.parse(JSON.stringify(x)); }
+
+async function initApp() {
+  try {
+    FAST_TYPES = await loadFastTypes();
+  } catch (err) {
+    console.error("Failed to load fast types:", err);
+    FAST_TYPES = [];
+  }
+
+  if (!Array.isArray(FAST_TYPES) || FAST_TYPES.length === 0) {
+    FAST_TYPES = [
+      {
+        id: defaultState.settings.defaultFastTypeId,
+        label: "16:8",
+        durationHours: 16,
+        bullets: [],
+        milestones: []
+      }
+    ];
+  }
+
+  selectedFastTypeId = resolveFastTypeId(selectedFastTypeId);
+  initAuthUI();
+  initAuthListener();
+}
+
+async function loadFastTypes() {
+  const response = await fetch("./fast-types.yaml", { cache: "no-store" });
+  if (!response.ok) throw new Error(`fast-types.yaml request failed (${response.status})`);
+  const text = await response.text();
+  const data = loadYaml(text);
+  if (!Array.isArray(data)) throw new Error("fast-types.yaml is not a list");
+  return data;
+}
+
+function resolveFastTypeId(typeId) {
+  if (!Array.isArray(FAST_TYPES) || FAST_TYPES.length === 0) {
+    return defaultState.settings.defaultFastTypeId;
+  }
+  const found = FAST_TYPES.find(type => type.id === typeId);
+  return found ? found.id : FAST_TYPES[0].id;
+}
 
 function decodeBase64(base64) {
   const binary = atob(base64);
@@ -1413,7 +1024,7 @@ async function completeAuthFlow() {
 
 async function loadAppState() {
   state = await loadState();
-  selectedFastTypeId = state.settings.defaultFastTypeId || FAST_TYPES[0].id;
+  selectedFastTypeId = resolveFastTypeId(state.settings.defaultFastTypeId);
   pendingTypeId = null;
   calendarMonth = startOfMonth(new Date());
   selectedDayKey = formatDateKey(new Date());
@@ -1686,6 +1297,7 @@ function initNavTooltips() {
 }
 
 function getTypeById(id) {
+  if (!Array.isArray(FAST_TYPES) || FAST_TYPES.length === 0) return null;
   return FAST_TYPES.find(t => t.id === id) || FAST_TYPES[0];
 }
 
@@ -1843,7 +1455,7 @@ function initSettings() {
 }
 
 function renderSettings() {
-  $("default-fast-select").value = state.settings.defaultFastTypeId || FAST_TYPES[0].id;
+  $("default-fast-select").value = resolveFastTypeId(state.settings.defaultFastTypeId);
   $("toggle-end-alert").classList.toggle("on", !!state.settings.notifyOnEnd);
   $("toggle-hourly-alert").classList.toggle("on", !!state.settings.hourlyReminders);
   renderAlertsPill();

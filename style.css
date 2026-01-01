@@ -88,7 +88,8 @@ body { -webkit-tap-highlight-color: transparent; }
 }
 
 .ring-emoji-layer {
-  pointer-events: auto;
+  pointer-events: none;
+  z-index: 2;
 }
 
 .ring-emoji-btn {
