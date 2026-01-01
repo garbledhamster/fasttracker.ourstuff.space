@@ -41,7 +41,7 @@
     secondaryColor: "#1d4ed8"
     backgroundColor: "#ffffff"
     surfaceColor: "#f8fafc"
-    surfaceMutedColor: "#000000"
+    surfaceMutedColor: "#f8fafc"
     borderColor: "#e2e8f0"
     textColor: "#000000"
     textMutedColor: "#000000"
