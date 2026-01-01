@@ -1324,8 +1324,8 @@ function setNotesNavActive(on) {
   const notesBtn = document.querySelector('nav .nav-btn[data-tab="notes"]');
   if (!notesBtn) return;
   notesBtn.classList.toggle("nav-btn-active", !!on);
-  notesBtn.classList.toggle("text-slate-100", !!on);
-  notesBtn.classList.toggle("text-slate-500", !on);
+  notesBtn.classList.toggle("text-default", !!on);
+  notesBtn.classList.toggle("text-subtle", !on);
 }
 
 function openNotesDrawer() {
@@ -1427,8 +1427,8 @@ function switchTab(tab) {
     const active = id === tab;
     section.classList.toggle("hidden", !active);
     btn.classList.toggle("nav-btn-active", active);
-    btn.classList.toggle("text-slate-100", active);
-    btn.classList.toggle("text-slate-500", !active);
+    btn.classList.toggle("text-default", active);
+    btn.classList.toggle("text-subtle", !active);
   });
 
   setNotesNavActive(false);
@@ -2443,21 +2443,21 @@ function renderDayDetails() {
 
   day.entries.forEach(e => {
     const row = document.createElement("div");
-    row.className = "flex items-center justify-between bg-slate-900 rounded-xl px-3 py-3 md:py-2";
+    row.className = "flex items-center justify-between surface border border-default rounded-xl px-3 py-3 md:py-2";
 
     const left = document.createElement("div");
     left.className = "flex flex-col text-sm md:text-[11px]";
 
     const type = getTypeById(e.typeId);
     const title = document.createElement("div");
-    title.className = "text-slate-100";
+    title.className = "text-default";
     const label = type ? type.label : "Custom";
     title.textContent = e.isActive
       ? `Active • ${label} fast`
       : `${label} • ${Number(e.durationHours).toFixed(1)}h`;
 
     const time = document.createElement("div");
-    time.className = "text-slate-400";
+    time.className = "text-muted";
     const timeLabel = `${formatTimeShort(new Date(e.startTimestamp))} → ${formatTimeShort(new Date(e.endTimestamp))}`;
     time.textContent = e.isActive ? `${timeLabel} (in progress)` : timeLabel;
 
