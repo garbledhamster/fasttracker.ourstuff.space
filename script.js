@@ -55,8 +55,8 @@ const defaultState = {
     alertsEnabled: false,
     timeDisplayMode: "elapsed",
     theme: {
-      accentColor: "#06b6d4",
-      accentColorStrong: "#0891b2",
+      primaryColor: "#06b6d4",
+      secondaryColor: "#0891b2",
       backgroundColor: "#020617"
     }
   },
@@ -703,8 +703,15 @@ async function unwrapEncryptionKeyFromDevice(uid) {
 function mergeStateWithDefaults(parsed) {
   const merged = clone(defaultState);
   const parsedSettings = parsed.settings || {};
+  const parsedTheme = parsedSettings.theme || {};
+  if (parsedTheme.accentColor && !parsedTheme.primaryColor) {
+    parsedTheme.primaryColor = parsedTheme.accentColor;
+  }
+  if (parsedTheme.accentColorStrong && !parsedTheme.secondaryColor) {
+    parsedTheme.secondaryColor = parsedTheme.accentColorStrong;
+  }
   merged.settings = Object.assign(merged.settings, parsedSettings);
-  merged.settings.theme = Object.assign({}, defaultState.settings.theme, parsedSettings.theme || {});
+  merged.settings.theme = Object.assign({}, defaultState.settings.theme, parsedTheme);
   merged.activeFast = parsed.activeFast || null;
   merged.history = Array.isArray(parsed.history) ? parsed.history : [];
   merged.reminders = Object.assign(merged.reminders, parsed.reminders || {});
@@ -1413,14 +1420,14 @@ function initButtons() {
     renderSettings();
   });
 
-  $("theme-accent-color").addEventListener("input", (event) => {
-    state.settings.theme.accentColor = event.target.value;
+  $("theme-primary-color").addEventListener("input", (event) => {
+    state.settings.theme.primaryColor = event.target.value;
     applyThemeColors();
     void saveState();
   });
 
-  $("theme-accent-strong").addEventListener("input", (event) => {
-    state.settings.theme.accentColorStrong = event.target.value;
+  $("theme-secondary-color").addEventListener("input", (event) => {
+    state.settings.theme.secondaryColor = event.target.value;
     applyThemeColors();
     void saveState();
   });
@@ -1487,8 +1494,8 @@ function renderSettings() {
   $("default-fast-select").value = resolveFastTypeId(state.settings.defaultFastTypeId);
   $("toggle-end-alert").classList.toggle("on", !!state.settings.notifyOnEnd);
   $("toggle-hourly-alert").classList.toggle("on", !!state.settings.hourlyReminders);
-  $("theme-accent-color").value = theme.accentColor;
-  $("theme-accent-strong").value = theme.accentColorStrong;
+  $("theme-primary-color").value = theme.primaryColor;
+  $("theme-secondary-color").value = theme.secondaryColor;
   $("theme-background-color").value = theme.backgroundColor;
   renderAlertsPill();
 }
@@ -2305,8 +2312,8 @@ function renderAll() {
 function applyThemeColors() {
   const theme = getThemeSettings();
   const root = document.documentElement;
-  root.style.setProperty("--accent-color", theme.accentColor);
-  root.style.setProperty("--accent-color-strong", theme.accentColorStrong);
+  root.style.setProperty("--primary-color", theme.primaryColor);
+  root.style.setProperty("--secondary-color", theme.secondaryColor);
   root.style.setProperty("--background-color", theme.backgroundColor);
   const meta = document.querySelector("meta[name='theme-color']");
   if (meta) meta.setAttribute("content", theme.backgroundColor);
