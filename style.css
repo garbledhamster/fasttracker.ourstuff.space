@@ -144,17 +144,6 @@ body { -webkit-tap-highlight-color: transparent; }
   z-index: 10000;
 }
 
-/* Notes backdrop (click off target) */
-.notes-drawer-backdrop {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 0.25s ease;
-  background: rgba(2, 6, 23, 0.72);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-}
-
 /* Notes panel */
 .notes-drawer-panel {
   position: relative;
@@ -168,9 +157,6 @@ body { -webkit-tap-highlight-color: transparent; }
 /* open state */
 .notes-drawer.is-open .notes-drawer-panel {
   transform: translateX(0);
-}
-.notes-drawer.is-open .notes-drawer-backdrop {
-  opacity: 1;
 }
 
 /* Note editor (must be ABOVE the notes drawer) */
