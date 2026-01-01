@@ -2094,7 +2094,6 @@ function updateTimer() {
   $("meta-start-btn").disabled = false;
   $("meta-start-btn").textContent = formatDateTime(new Date(start));
   $("meta-end").textContent = formatDateTime(new Date(end));
-  $("meta-planned").textContent = (af.plannedDurationHours || Math.round(total / 3600000)) + " h";
 
   $("start-fast-btn").classList.add("hidden");
   $("stop-fast-btn").classList.remove("hidden");
@@ -2155,7 +2154,6 @@ function renderTimerMetaIdle() {
   const type = getTypeById(selectedFastTypeId);
   $("meta-start-btn").textContent = "—";
   $("meta-end").textContent = "—";
-  $("meta-planned").textContent = (type?.durationHours || 0) + " h";
 }
 
 async function onAlertsButton() {
