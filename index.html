@@ -91,7 +91,7 @@
         <div class="flex justify-center mt-6 md:mt-4">
           <div class="w-full max-w-md">
             <!-- Bigger ring -->
-            <div class="relative mx-auto w-[22rem] h-[22rem] md:w-[19rem] md:h-[19rem]">
+            <div class="ring-shell relative mx-auto">
               <svg viewBox="0 0 200 200" class="w-full h-full -rotate-90">
                 <circle cx="100" cy="100" r="80" class="progress-ring-track" stroke-width="16" fill="none"></circle>
                 <circle id="progress-ring" cx="100" cy="100" r="80" stroke-width="16" stroke-linecap="round" fill="none" stroke-dasharray="502.6548245743669" stroke-dashoffset="502.6548245743669"></circle>
@@ -141,7 +141,7 @@
 
         <div class="mt-1">
           <h2 class="text-xs uppercase tracking-[0.2em] text-subtle mb-2 text-center">Fast types</h2>
-          <div id="fast-type-chips" class="flex flex-nowrap gap-2 justify-center w-full"></div>
+          <div id="fast-type-chips" class="flex flex-wrap gap-2 justify-center w-full"></div>
           <div class="text-xs md:text-[11px] text-subtle mt-2 text-center">Select a type to preview, then tap “Use this fast type” to apply.</div>
         </div>
       </section>

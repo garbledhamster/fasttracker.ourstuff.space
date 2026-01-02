@@ -38,6 +38,17 @@ body.bg-slate-950 {
   z-index: 20;
 }
 
+.ring-shell {
+  width: min(100%, 22rem);
+  aspect-ratio: 1 / 1;
+}
+
+@media (min-width: 768px) {
+  .ring-shell {
+    width: min(100%, 19rem);
+  }
+}
+
 @media (min-width: 768px) {
   #app > nav {
     width: 100%;
