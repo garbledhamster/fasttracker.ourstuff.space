@@ -30,6 +30,12 @@ body.bg-slate-950 {
   margin: 0 auto;
 }
 
+.modal-sheet {
+  width: min(100%, 500px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 #app > nav {
   width: min(100%, 500px);
   left: 50%;
