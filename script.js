@@ -2583,20 +2583,52 @@ function renderCalendar() {
 
 function buildDayFastMap({ includeActive = false } = {}) {
   const map = {};
+
+  const addSegment = (segment, segmentStart, segmentEnd) => {
+    const dayKey = formatDateKey(new Date(segmentStart));
+    if (!map[dayKey]) map[dayKey] = { entries: [], totalHours: 0 };
+    const hours = Math.max(0, (segmentEnd - segmentStart) / 3600000);
+    if (!hours) return;
+    map[dayKey].entries.push({
+      ...segment,
+      durationHours: Math.round(hours * 100) / 100,
+      displayStartTimestamp: segmentStart,
+      displayEndTimestamp: segmentEnd
+    });
+    map[dayKey].totalHours += hours;
+  };
+
+  const addEntryAcrossDays = (entry, startTs, endTs) => {
+    if (!isFinite(startTs) || !isFinite(endTs) || endTs <= startTs) return;
+    let cursor = new Date(startTs);
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
+    const endDay = new Date(endTs);
+    const endDayStart = new Date(endDay.getFullYear(), endDay.getMonth(), endDay.getDate());
+
+    while (cursor <= endDayStart) {
+      const dayStart = cursor.getTime();
+      const nextDay = new Date(cursor);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const dayEnd = nextDay.getTime();
+      const segmentStart = Math.max(startTs, dayStart);
+      const segmentEnd = Math.min(endTs, dayEnd);
+      if (segmentEnd > segmentStart) {
+        addSegment({ ...entry, sourceEntry: entry }, segmentStart, segmentEnd);
+      }
+      cursor = nextDay;
+    }
+  };
+
   state.history.forEach(e => {
-    const key = formatDateKey(new Date(e.startTimestamp));
-    if (!map[key]) map[key] = { entries: [], totalHours: 0 };
-    map[key].entries.push(e);
-    map[key].totalHours += e.durationHours || 0;
+    addEntryAcrossDays(e, e.startTimestamp, e.endTimestamp);
   });
+
   if (includeActive && state.activeFast) {
     const af = state.activeFast;
-    const key = formatDateKey(new Date(af.startTimestamp));
-    if (!map[key]) map[key] = { entries: [], totalHours: 0 };
-    const elapsedHours = Math.max(0, (Date.now() - af.startTimestamp) / 3600000);
-    map[key].entries.push({ ...af, durationHours: elapsedHours, isActive: true });
-    map[key].totalHours += elapsedHours;
+    const endTs = Date.now();
+    addEntryAcrossDays({ ...af, isActive: true }, af.startTimestamp, endTs);
   }
+
   return map;
 }
 
@@ -2613,6 +2645,9 @@ function renderDayDetails() {
   summary.textContent = `${day.entries.length} fast(s), ${day.totalHours.toFixed(1)} total hours`;
 
   day.entries.forEach(e => {
+    const displayStart = e.displayStartTimestamp ?? e.startTimestamp;
+    const displayEnd = e.displayEndTimestamp ?? e.endTimestamp;
+    const sourceEntry = e.sourceEntry ?? e;
     const row = document.createElement("div");
     row.className = "flex items-center justify-between surface border border-default rounded-xl px-3 py-3 md:py-2";
 
@@ -2629,7 +2664,7 @@ function renderDayDetails() {
 
     const time = document.createElement("div");
     time.className = "text-muted";
-    const timeLabel = `${formatTimeShort(new Date(e.startTimestamp))} → ${formatTimeShort(new Date(e.endTimestamp))}`;
+    const timeLabel = `${formatTimeShort(new Date(displayStart))} → ${formatTimeShort(new Date(displayEnd))}`;
     time.textContent = e.isActive ? `${timeLabel} (in progress)` : timeLabel;
 
     left.appendChild(title);
@@ -2645,13 +2680,13 @@ function renderDayDetails() {
       editBtn.type = "button";
       editBtn.className = "button-outline border text-xs md:text-[11px] px-3 py-2 md:px-2 md:py-1 rounded-full";
       editBtn.textContent = "Edit";
-      editBtn.addEventListener("click", () => openEditHistoryModal(e));
+      editBtn.addEventListener("click", () => openEditHistoryModal(sourceEntry));
 
       const deleteBtn = document.createElement("button");
       deleteBtn.type = "button";
       deleteBtn.className = "button-danger border text-xs md:text-[11px] px-3 py-2 md:px-2 md:py-1 rounded-full";
       deleteBtn.textContent = "Delete";
-      deleteBtn.addEventListener("click", () => deleteHistoryEntry(e.id));
+      deleteBtn.addEventListener("click", () => deleteHistoryEntry(sourceEntry.id));
 
       actions.appendChild(editBtn);
       actions.appendChild(deleteBtn);
