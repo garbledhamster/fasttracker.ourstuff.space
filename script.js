@@ -2648,6 +2648,10 @@ function renderDayDetails() {
     const displayStart = e.displayStartTimestamp ?? e.startTimestamp;
     const displayEnd = e.displayEndTimestamp ?? e.endTimestamp;
     const sourceEntry = e.sourceEntry ?? e;
+    const spansMultipleDays = !isSameLocalDay(
+      new Date(sourceEntry.startTimestamp),
+      new Date(sourceEntry.endTimestamp)
+    );
     const row = document.createElement("div");
     row.className = "flex items-center justify-between surface border border-default rounded-xl px-3 py-3 md:py-2";
 
@@ -2664,7 +2668,9 @@ function renderDayDetails() {
 
     const time = document.createElement("div");
     time.className = "text-muted";
-    const timeLabel = `${formatTimeShort(new Date(displayStart))} → ${formatTimeShort(new Date(displayEnd))}`;
+    const timeLabel = spansMultipleDays
+      ? `${formatDateTimeLong(new Date(displayStart))} → ${formatDateTimeLong(new Date(displayEnd))}`
+      : `${formatTimeShort(new Date(displayStart))} → ${formatTimeShort(new Date(displayEnd))}`;
     time.textContent = e.isActive ? `${timeLabel} (in progress)` : timeLabel;
 
     left.appendChild(title);
@@ -2695,6 +2701,21 @@ function renderDayDetails() {
 
     list.appendChild(row);
   });
+}
+
+function isSameLocalDay(a, b) {
+  return a.getFullYear() === b.getFullYear()
+    && a.getMonth() === b.getMonth()
+    && a.getDate() === b.getDate();
+}
+
+function formatDateTimeLong(date) {
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  const yyyy = date.getFullYear();
+  const hh = String(date.getHours()).padStart(2, "0");
+  const min = String(date.getMinutes()).padStart(2, "0");
+  return `${mm}/${dd}/${yyyy} ${hh}:${min}`;
 }
 
 function renderNotes() {
