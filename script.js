@@ -2180,23 +2180,29 @@ function renderFastButton() {
 
 function renderCalorieButton() {
   const button = $("calorie-btn");
-  const label = $("calorie-label");
-  if (!button || !label) return;
+  const modeLabel = $("calorie-label-mode");
+  const valueLabel = $("calorie-label-value");
+  if (!button || !modeLabel || !valueLabel) return;
 
   const target = getCalorieTarget();
+  const consumed = getCalorieConsumed();
   const remaining = getCalorieRemaining();
   const view = getCalorieView();
   const viewLabel = CALORIE_VIEWS.find(v => v.id === view)?.label ?? "Total";
-  const isMenuActive = currentTab === "calories";
   const isMissingConfig = !target;
 
-  if (isMenuActive) {
-    label.textContent = viewLabel;
-  } else if (isMissingConfig) {
-    label.textContent = "Calories";
-  } else {
-    label.textContent = `${formatCalories(remaining)} left`;
+  let valueText = "Set target";
+  if (!isMissingConfig) {
+    let value = 0;
+    if (view === "total") value = target;
+    else if (view === "consumed") value = consumed;
+    else value = remaining ?? 0;
+    valueText = `${formatCalories(value)} cal`;
   }
+
+  modeLabel.textContent = viewLabel;
+  valueLabel.textContent = valueText;
+  button.setAttribute("aria-pressed", String(currentTab === "calories"));
 
   button.classList.toggle("danger-glow", isMissingConfig);
 }
@@ -3037,7 +3043,7 @@ async function onAlertsButton() {
 
 function renderAlertsPill() {
   const dot = $("alerts-dot");
-  const label = $("alerts-label");
+  const label = $("alerts-label-value");
 
   if (!("Notification" in window)) { dot.className = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-slate-600"; label.textContent = "Unavailable"; return; }
   if (Notification.permission === "denied") { dot.className = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-red-500"; label.textContent = "Blocked"; return; }

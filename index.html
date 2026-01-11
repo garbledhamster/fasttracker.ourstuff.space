@@ -85,12 +85,16 @@
           <span id="fast-label-mode" class="text-[10px] md:text-[9px] uppercase tracking-[0.2em] text-subtle">Fast</span>
           <span id="fast-label-value" class="text-sm md:text-xs font-semibold">00:00:00</span>
         </button>
-        <button id="calorie-btn" class="text-sm md:text-xs px-3 py-2 md:py-1.5 rounded-full border button-outline text-default flex items-center gap-2">
-          <span id="calorie-label">Calories</span>
+        <button id="calorie-btn" class="text-sm md:text-xs px-3 py-2 md:py-1.5 rounded-full border button-outline text-default flex flex-col items-start leading-tight">
+          <span id="calorie-label-mode" class="text-[10px] md:text-[9px] uppercase tracking-[0.2em] text-subtle">Calories</span>
+          <span id="calorie-label-value" class="text-sm md:text-xs font-semibold">Set target</span>
         </button>
-        <button id="alerts-btn" class="text-sm md:text-xs px-3 py-2 md:py-1.5 rounded-full border button-outline text-default flex items-center gap-2">
-          <span id="alerts-dot" class="w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-subtle"></span>
-          <span id="alerts-label">Enable alerts</span>
+        <button id="alerts-btn" class="text-sm md:text-xs px-3 py-2 md:py-1.5 rounded-full border button-outline text-default flex flex-col items-start leading-tight">
+          <span id="alerts-label-mode" class="text-[10px] md:text-[9px] uppercase tracking-[0.2em] text-subtle">Alerts</span>
+          <span class="text-sm md:text-xs font-semibold flex items-center gap-2">
+            <span id="alerts-dot" class="w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-subtle"></span>
+            <span id="alerts-label-value">Enable alerts</span>
+          </span>
         </button>
       </div>
     </header>
