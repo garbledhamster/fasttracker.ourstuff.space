@@ -41,6 +41,11 @@
           <label for="auth-password" class="block text-sm md:text-xs text-muted mb-1">Password</label>
           <input id="auth-password" type="password" autocomplete="current-password" required class="w-full bg-app border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs text-default focus:outline-none focus:ring-1 focus:ring-brand-500">
         </div>
+        <div id="auth-confirm-group" class="hidden">
+          <label for="auth-password-confirm" class="block text-sm md:text-xs text-muted mb-1">Confirm password</label>
+          <input id="auth-password-confirm" type="password" autocomplete="new-password" class="w-full bg-app border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs text-default focus:outline-none focus:ring-1 focus:ring-brand-500">
+          <p id="auth-password-match" class="mt-2 text-xs md:text-[11px] text-subtle hidden"></p>
+        </div>
         <label class="flex items-center gap-2 text-sm md:text-xs text-muted">
           <input id="auth-remember" type="checkbox" class="accent-cyan-400">
           Remember this device

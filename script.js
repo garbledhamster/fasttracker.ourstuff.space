@@ -1450,11 +1450,15 @@ function initAuthUI() {
   const resendBtn = $("verify-email-resend");
   const refreshBtn = $("verify-email-refresh");
   const signOutBtn = $("verify-email-signout");
+  const passwordInput = $("auth-password");
+  const confirmInput = $("auth-password-confirm");
   form.addEventListener("submit", handleAuthSubmit);
   toggle.addEventListener("click", () => {
     authMode = authMode === "sign-in" ? "sign-up" : "sign-in";
     updateAuthMode();
   });
+  passwordInput.addEventListener("input", updatePasswordMatchIndicator);
+  confirmInput.addEventListener("input", updatePasswordMatchIndicator);
   resendBtn.addEventListener("click", async () => {
     const user = auth.currentUser;
     if (!user) return;
@@ -1490,8 +1494,31 @@ function initAuthUI() {
     setAuthFormDisabled(false);
     $("auth-email").value = "";
     $("auth-password").value = "";
+    $("auth-password-confirm").value = "";
   });
   updateAuthMode();
+}
+
+function updatePasswordMatchIndicator() {
+  const isSignUp = authMode === "sign-up";
+  const matchEl = $("auth-password-match");
+  if (!isSignUp) {
+    matchEl.classList.add("hidden");
+    return;
+  }
+
+  const password = $("auth-password").value;
+  const confirmPassword = $("auth-password-confirm").value;
+  if (!password && !confirmPassword) {
+    matchEl.classList.add("hidden");
+    return;
+  }
+
+  const matches = password === confirmPassword;
+  matchEl.textContent = matches ? "Passwords match." : "Passwords do not match.";
+  matchEl.classList.remove("hidden");
+  matchEl.classList.toggle("text-emerald-400", matches);
+  matchEl.classList.toggle("text-rose-400", !matches);
 }
 
 function updateAuthMode() {
@@ -1506,6 +1533,16 @@ function updateAuthMode() {
   $("auth-error").classList.add("hidden");
   $("auth-error").textContent = "";
   setVerificationPanel({ visible: false });
+  const confirmGroup = $("auth-confirm-group");
+  const confirmInput = $("auth-password-confirm");
+  const matchEl = $("auth-password-match");
+  confirmGroup.classList.toggle("hidden", !isSignUp);
+  confirmInput.disabled = !isSignUp;
+  confirmInput.required = isSignUp;
+  confirmInput.value = "";
+  matchEl.classList.add("hidden");
+  matchEl.textContent = "";
+  updatePasswordMatchIndicator();
 }
 
 function showReauthPrompt(message) {
@@ -1572,6 +1609,21 @@ async function handleAuthSubmit(e) {
     errorEl.textContent = "Please enter both an email and password.";
     errorEl.classList.remove("hidden");
     return;
+  }
+  if (authMode === "sign-up") {
+    const confirmPassword = $("auth-password-confirm").value;
+    if (!confirmPassword) {
+      errorEl.textContent = "Please confirm your password.";
+      errorEl.classList.remove("hidden");
+      updatePasswordMatchIndicator();
+      return;
+    }
+    if (password !== confirmPassword) {
+      errorEl.textContent = "Passwords do not match.";
+      errorEl.classList.remove("hidden");
+      updatePasswordMatchIndicator();
+      return;
+    }
   }
 
   try {
