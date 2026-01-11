@@ -195,6 +195,7 @@ let notesSwipeHandlersAttached = false;
 let noteEditorSwipeHandlersAttached = false;
 let pendingConfirmAction = null;
 let pendingConfirmCloseFocus = null;
+let pendingPostFastNote = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   void initApp();
@@ -597,6 +598,23 @@ function buildFastContextAt(timestampMs) {
     fastTypeLabel: type?.label || null,
     startTimestamp: state.activeFast.startTimestamp,
     plannedDurationHours: state.activeFast.plannedDurationHours,
+    elapsedMsAtNote
+  };
+}
+
+function buildFastContextFromFast(fast, timestampMs) {
+  if (!fast) return buildInactiveFastContext();
+  const type = getTypeById(fast.typeId);
+  const elapsedMsAtNote = typeof fast.startTimestamp === "number"
+    ? Math.max(0, (timestampMs ?? Date.now()) - fast.startTimestamp)
+    : null;
+  return {
+    wasActive: true,
+    fastId: fast.id,
+    fastTypeId: fast.typeId,
+    fastTypeLabel: type?.label || null,
+    startTimestamp: fast.startTimestamp,
+    plannedDurationHours: fast.plannedDurationHours,
     elapsedMsAtNote
   };
 }
@@ -2593,6 +2611,11 @@ function initButtons() {
   $("confirm-fast-accept").addEventListener("click", confirmFastAction);
   const confirmBackdrop = document.querySelector("#confirm-fast-modal .confirm-fast-backdrop");
   if (confirmBackdrop) confirmBackdrop.addEventListener("click", closeConfirmFastModal);
+  $("post-fast-note-close").addEventListener("click", closePostFastNoteModal);
+  $("post-fast-note-no").addEventListener("click", closePostFastNoteModal);
+  $("post-fast-note-yes").addEventListener("click", confirmPostFastNote);
+  const postFastNoteBackdrop = document.querySelector("#post-fast-note-modal .post-fast-note-backdrop");
+  if (postFastNoteBackdrop) postFastNoteBackdrop.addEventListener("click", closePostFastNoteModal);
 
   $("calorie-target-drawer-btn").addEventListener("click", openCalorieTargetDrawer);
   $("calorie-goal-drawer-btn").addEventListener("click", openCalorieGoalDrawer);
@@ -2779,6 +2802,36 @@ function confirmFastAction() {
   closeConfirmFastModal();
 }
 
+function openPostFastNoteModal({ fastContext, dateKey, focusAfterClose } = {}) {
+  pendingPostFastNote = {
+    fastContext: fastContext ?? buildInactiveFastContext(),
+    dateKey: dateKey ?? formatDateKey(new Date())
+  };
+  pendingConfirmCloseFocus = focusAfterClose || null;
+  $("post-fast-note-modal").classList.remove("hidden");
+}
+
+function closePostFastNoteModal() {
+  $("post-fast-note-modal").classList.add("hidden");
+  pendingPostFastNote = null;
+  if (pendingConfirmCloseFocus) {
+    pendingConfirmCloseFocus.focus();
+  }
+  pendingConfirmCloseFocus = null;
+}
+
+function confirmPostFastNote() {
+  const noteContext = pendingPostFastNote;
+  closePostFastNoteModal();
+  if (!noteContext) return;
+  openNotesDrawer();
+  openNoteEditor({
+    text: "",
+    dateKey: noteContext.dateKey,
+    fastContext: noteContext.fastContext
+  });
+}
+
 function confirmStartFast(event) {
   const type = getTypeById(selectedFastTypeId);
   if (!type) return;
@@ -2908,16 +2961,16 @@ function startFast() {
 }
 
 function stopFastAndLog() {
-  const af = state.activeFast;
-  if (!af) return;
+  const endedFast = state.activeFast;
+  if (!endedFast) return;
   const now = Date.now();
   const endTs = now;
-  const durHrs = Math.max(0, (endTs - af.startTimestamp) / 3600000);
+  const durHrs = Math.max(0, (endTs - endedFast.startTimestamp) / 3600000);
 
   state.history.unshift({
-    id: af.id,
-    typeId: af.typeId,
-    startTimestamp: af.startTimestamp,
+    id: endedFast.id,
+    typeId: endedFast.typeId,
+    startTimestamp: endedFast.startTimestamp,
     endTimestamp: endTs,
     durationHours: Math.round(durHrs * 100) / 100
   });
@@ -2930,6 +2983,10 @@ function stopFastAndLog() {
   selectedDayKey = formatDateKey(new Date());
   renderAll();
   showToast("Fast logged");
+  openPostFastNoteModal({
+    fastContext: buildFastContextFromFast(endedFast, endTs),
+    dateKey: formatDateKey(new Date(endTs))
+  });
 }
 
 function startTick() {

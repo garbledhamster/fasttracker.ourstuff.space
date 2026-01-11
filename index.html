@@ -529,6 +529,21 @@
     </div>
   </div>
 
+  <div id="post-fast-note-modal" class="fixed inset-0 z-40 hidden">
+    <div class="post-fast-note-backdrop absolute inset-0 bg-black/50"></div>
+    <div class="modal-sheet absolute bottom-0 rounded-t-3xl bg-app border-t border-default p-4">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-base md:text-sm font-medium text-default">Fast logged</div>
+        <button id="post-fast-note-close" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
+      </div>
+      <p class="text-sm md:text-xs text-muted mb-4">Add a note for this fast?</p>
+      <div class="flex gap-2">
+        <button id="post-fast-note-no" class="flex-1 py-3 md:py-2.5 rounded-xl button-outline border text-sm md:text-xs font-semibold">No</button>
+        <button id="post-fast-note-yes" class="flex-1 py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold">Yes</button>
+      </div>
+    </div>
+  </div>
+
   <div id="edit-start-modal" class="fixed inset-0 z-40 hidden">
     <div class="absolute inset-0 bg-black/50"></div>
     <div class="modal-sheet absolute bottom-0 rounded-t-3xl bg-app border-t border-default p-4">
