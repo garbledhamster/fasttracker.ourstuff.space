@@ -386,16 +386,6 @@ function getHourlyActionDetail(hour, { random = false } = {}) {
   return formatHourlyAction(entry.hour, action);
 }
 
-function getTypeBullets(type) {
-  const hours = Array.isArray(type?.milestoneHours) ? type.milestoneHours : [];
-  const bullets = hours
-    .map(hour => getHourlyActionDetail(hour, { random: true }))
-    .filter(Boolean);
-  const notes = Array.isArray(FASTING_HOURLY?.notes) ? FASTING_HOURLY.notes : [];
-  notes.forEach(note => bullets.push(note));
-  return bullets;
-}
-
 function buildMilestones(hours, hourly) {
   if (!Array.isArray(hours)) return [];
   return hours
@@ -2560,14 +2550,6 @@ function applyTypeToActiveFast(typeId) {
 function openFastTypeModal(type) {
   $("modal-type-label").textContent = type.label + " fast";
   $("modal-type-duration").textContent = type.durationHours + " hours";
-  const list = $("modal-bullets");
-  list.innerHTML = "";
-  const bullets = getTypeBullets(type);
-  bullets.forEach(t => {
-    const li = document.createElement("li");
-    li.textContent = t;
-    list.appendChild(li);
-  });
   $("fast-type-modal").classList.remove("hidden");
 }
 
