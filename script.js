@@ -2318,17 +2318,17 @@ function renderCalorieButton() {
   const viewLabel = CALORIE_VIEWS.find(v => v.id === view)?.label ?? "Total";
   const isMissingConfig = !target;
 
-  let valueText = "Set target";
+  let valueText = "Set<br>target";
   if (!isMissingConfig) {
     let value = 0;
     if (view === "total") value = target;
     else if (view === "consumed") value = consumed;
     else value = remaining ?? 0;
-    valueText = `${formatCalories(value)} cal`;
+    valueText = `${formatCalories(value)}<br>cal`;
   }
 
   modeLabel.textContent = viewLabel;
-  valueLabel.textContent = valueText;
+  valueLabel.innerHTML = valueText;
   button.setAttribute("aria-pressed", String(currentTab === "calories"));
 
   button.classList.toggle("danger-glow", isMissingConfig);
