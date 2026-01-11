@@ -28,6 +28,7 @@ body.bg-slate-950 {
 #app {
   width: min(100%, 500px);
   margin: 0 auto;
+  min-height: 100dvh;
 }
 
 .modal-sheet {
@@ -47,6 +48,38 @@ body.bg-slate-950 {
 .ring-shell {
   width: min(100%, 22rem);
   aspect-ratio: 1 / 1;
+}
+
+.tracker-tab {
+  min-height: 0;
+}
+
+.tab-no-scroll {
+  overflow: hidden;
+}
+
+.tab-no-scroll #app,
+.tab-no-scroll #app main {
+  height: 100dvh;
+}
+
+@media (max-width: 640px) {
+  .tracker-tab {
+    gap: clamp(0.75rem, 2.5vh, 1.5rem);
+  }
+
+  .tracker-tab .tracker-ring-wrap {
+    margin-top: clamp(0.5rem, 2vh, 1.25rem);
+  }
+
+  .tracker-tab .ring-shell {
+    width: min(100%, min(18rem, 52vh));
+  }
+
+  .tracker-primary-action {
+    padding-top: 0.85rem;
+    padding-bottom: 0.85rem;
+  }
 }
 
 @media (min-width: 768px) {

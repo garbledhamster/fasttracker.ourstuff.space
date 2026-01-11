@@ -1951,6 +1951,8 @@ function switchTab(tab) {
     btn.classList.toggle("text-subtle", !active);
   });
 
+  document.body.classList.toggle("tab-no-scroll", tab === "timer" || tab === "calories");
+
   setNotesNavActive(false);
 
   if (tab === "history") {
