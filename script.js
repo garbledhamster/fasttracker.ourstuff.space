@@ -3288,34 +3288,36 @@ async function onAlertsButton() {
 function renderAlertsPill() {
   const dot = $("alerts-dot");
   const text = $("alerts-text");
+  const dotBaseClasses = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full";
+  const textBaseClasses = "text-xs md:text-[11px]";
 
   if (!("Notification" in window)) { 
-    dot.className = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-slate-600"; 
+    dot.className = `${dotBaseClasses} bg-slate-600`; 
     text.textContent = "Off";
-    text.className = "text-xs md:text-[11px] text-slate-600";
+    text.className = `${textBaseClasses} text-slate-600`;
     return; 
   }
   if (Notification.permission === "denied") { 
-    dot.className = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-red-500"; 
+    dot.className = `${dotBaseClasses} bg-red-500`; 
     text.textContent = "Off";
-    text.className = "text-xs md:text-[11px] text-red-500";
+    text.className = `${textBaseClasses} text-red-500`;
     return; 
   }
   if (Notification.permission === "default") { 
-    dot.className = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-slate-600"; 
+    dot.className = `${dotBaseClasses} bg-slate-600`; 
     text.textContent = "Off";
-    text.className = "text-xs md:text-[11px] text-slate-600";
+    text.className = `${textBaseClasses} text-slate-600`;
     return; 
   }
   if (state.settings.alertsEnabled) { 
-    dot.className = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-emerald-400"; 
+    dot.className = `${dotBaseClasses} bg-emerald-400`; 
     text.textContent = "On";
-    text.className = "text-xs md:text-[11px] text-emerald-400";
+    text.className = `${textBaseClasses} text-emerald-400`;
   }
   else { 
-    dot.className = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-slate-600"; 
+    dot.className = `${dotBaseClasses} bg-slate-600`; 
     text.textContent = "Off";
-    text.className = "text-xs md:text-[11px] text-slate-600";
+    text.className = `${textBaseClasses} text-slate-600`;
   }
 }
 
