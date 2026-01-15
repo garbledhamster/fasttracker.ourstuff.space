@@ -100,8 +100,9 @@
         </button>
         <button id="alerts-btn" class="header-nav-btn text-sm md:text-xs px-3 py-2 md:py-1.5 rounded-full border button-outline text-default flex flex-col items-center text-center leading-tight">
           <span id="alerts-label-mode" class="text-[10px] md:text-[9px] uppercase tracking-[0.2em] text-subtle w-full text-center">Alerts</span>
-          <span class="header-nav-value text-sm md:text-xs font-semibold flex items-center justify-center w-full">
+          <span class="header-nav-value text-sm md:text-xs font-semibold flex items-center justify-center w-full gap-1">
             <span id="alerts-dot" class="w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-subtle"></span>
+            <span id="alerts-text" class="text-xs md:text-[11px]">Off</span>
           </span>
         </button>
       </div>
@@ -236,13 +237,18 @@
             <div class="flex items-center justify-center gap-3">
               <button id="calorie-target-drawer-btn" type="button" class="fast-type-chip text-[11px] md:text-[10px]" aria-controls="calorie-target-drawer" aria-expanded="false" aria-label="Daily target" title="Daily target">
                 <svg class="h-6 w-6 text-current" viewBox="0 0 16 16" aria-hidden="true">
-                  <path fill="currentColor" d="M6.951 2.154A1.41 1.41 0 0 0 6 3.496q0 .23.067.439a4.5 4.5 0 1 0 5.865 6.253a.6.6 0 0 1 .084.16l.26.8q.137.344.425.576A5.99 5.99 0 0 1 8 14a6 6 0 0 1-.701-11.958zM6.728 4.74q.113.065.243.11l1.061.35c.15.05.29.13.47.29c.11.11.2.24.291.471l.08.242a2 2 0 1 0 1.076 2.24v.062c0 .27.08.532.24.752s.38.38.65.48l.167.055A3.5 3.5 0 1 1 6.728 4.74M13.484 6a.3.3 0 0 1 .286.201l.249.766a1.58 1.58 0 0 0 .999.998l.765.248l.015.004a.303.303 0 0 1 .146.46a.3.3 0 0 1-.146.11l-.765.248a1.58 1.58 0 0 0-.999.998l-.249.766a.302.302 0 0 1-.57 0l-.25-.766a1.58 1.58 0 0 0-.998-1.002l-.765-.248a.303.303 0 0 1-.146-.46a.3.3 0 0 1 .146-.11l.765-.248a1.58 1.58 0 0 0 .984-.998L13.2 6.2a.3.3 0 0 1 .284-.2M8 7a1 1 0 1 1 0 2a1 1 0 0 1 0-2m2.479-7a.42.42 0 0 1 .399.282l.348 1.072a2.2 2.2 0 0 0 1.398 1.396l1.072.349l.022.005a.424.424 0 0 1 0 .797l-1.072.349a2.21 2.21 0 0 0-1.399 1.396L10.9 6.718a.423.423 0 0 1-.643.204l-.02-.015a.43.43 0 0 1-.135-.19l-.348-1.07a2.2 2.2 0 0 0-1.398-1.402l-1.073-.349a.423.423 0 0 1 0-.797l1.072-.349a2.21 2.21 0 0 0 1.377-1.396L10.08.282a.42.42 0 0 1 .4-.282"/>
+                  <path fill="currentColor" d="M13.637 2.363h-.001l1.676.335c.09.018.164.084.19.173a.25.25 0 0 1-.062.249l-1.373 1.374a.876.876 0 0 1-.619.256H12.31L9.45 7.611A1.5 1.5 0 1 1 6.5 8a1.501 1.501 0 0 1 1.889-1.449l2.861-2.862V2.552c0-.232.092-.455.256-.619L12.88.559a.25.25 0 0 1 .249-.062c.089.026.155.1.173.19Z"/>
+                  <path fill="currentColor" d="M2 8a6 6 0 1 0 11.769-1.656a.751.751 0 1 1 1.442-.413a7.502 7.502 0 0 1-12.513 7.371A7.501 7.501 0 0 1 10.069.789a.75.75 0 0 1-.413 1.442A6.001 6.001 0 0 0 2 8Z"/>
+                  <path fill="currentColor" d="M5 8a3.002 3.002 0 0 0 4.699 2.476a3 3 0 0 0 1.28-2.827a.748.748 0 0 1 1.045-.782a.75.75 0 0 1 .445.61A4.5 4.5 0 1 1 8.516 3.53a.75.75 0 1 1-.17 1.49A3 3 0 0 0 5 8Z"/>
                 </svg>
                 <span class="sr-only">Daily Target</span>
               </button>
               <button id="calorie-goal-drawer-btn" type="button" class="fast-type-chip text-[11px] md:text-[10px]" aria-controls="calorie-goal-drawer" aria-expanded="false" aria-label="Goal details" title="Goal details">
-                <svg class="h-6 w-6 text-current" viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="currentColor" d="M13.385 21.846v-8.461h8.461v8.461h-8.461Zm1.269-1.27h5.923v-.684q-.529-.66-1.294-1.045q-.766-.385-1.668-.385q-.902 0-1.667.385q-.765.386-1.294 1.045v.685Zm2.961-2.96q.53 0 .9-.37q.37-.371.37-.9t-.37-.899q-.37-.37-.9-.37q-.528 0-.899.37q-.37.37-.37.9q0 .528.37.898t.9.37ZM12 12Zm-.027-2.5q-1.046 0-1.773.727q-.727.727-.727 1.773q0 .796.415 1.408q.416.611 1.112.904v-1.135q-.238-.2-.383-.532q-.144-.332-.144-.645q0-.625.438-1.063t1.062-.437q.35 0 .635.138q.284.137.484.362h1.154q-.286-.677-.891-1.088q-.605-.412-1.382-.412ZM10.135 21l-.362-2.892q-.479-.145-1.036-.454q-.556-.31-.947-.664l-2.667 1.135l-1.865-3.25l2.305-1.738q-.044-.272-.073-.56q-.028-.287-.028-.558q0-.252.028-.53t.073-.626L3.258 9.125l1.865-3.212L7.771 7.03q.448-.373.97-.673q.52-.3 1.013-.464L10.134 3h3.731l.362 2.912q.575.201 1.016.463q.442.262.909.654l2.725-1.116l1.865 3.212l-2.279 1.721q.02.039.02.077q0 .039.019.077h-1.179q-.025-.125-.04-.234q-.016-.108-.066-.233l2.227-1.683l-.994-1.7l-2.552 1.07q-.454-.499-1.193-.934t-1.4-.578L13 4h-1.994l-.312 2.688q-.756.162-1.39.52q-.633.36-1.26.986L5.55 7.15l-.994 1.7l2.169 1.62q-.125.336-.175.73q-.05.394-.05.82q0 .38.05.755t.156.73l-2.15 1.645l.994 1.7l2.475-1.05q.6.606 1.36 1.002q.76.396 1.615.579V21h-.865Z"/>
+                <svg class="h-6 w-6 text-current" viewBox="0 0 14 14" aria-hidden="true">
+                  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="7" cy="2.5" r="2"/>
+                    <path d="M10.5 8a3.5 3.5 0 0 0-7 0v1.5H5l.5 4h3l.5-4h1.5Z"/>
+                  </g>
                 </svg>
                 <span class="sr-only">Goal Details</span>
               </button>
@@ -396,9 +402,8 @@
 
         <button data-tab="calories" data-label="Calories" class="nav-btn flex-1 flex items-center justify-center text-subtle">
           <div class="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
-            <svg class="w-7 h-7 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-              <path d="M14.5 10c0-.791 1.053-1.001 1.332-.26C16.508 11.53 17 13.134 17 14a5 5 0 0 1-10 0c0-.93.568-2.711 1.322-4.663c.975-2.528 1.463-3.792 2.066-3.86c.192-.022.403.017.575.107c.537.28.537 1.659.537 4.416a1.5 1.5 0 0 0 3 0Z"/>
-              <path d="m11 19l-.263-.657a3.406 3.406 0 0 1 .503-3.393a.973.973 0 0 1 1.52 0c.766.958.958 2.254.503 3.393L13 19"/>
+            <svg class="w-7 h-7 md:w-5 md:h-5" viewBox="0 0 2048 2048" fill="currentColor">
+              <path d="M1280 64q0 179 66 330t190 278t190 278t66 330q0 106-27 204t-78 183t-120 156t-155 120t-184 77t-204 28q-106 0-204-27t-183-78t-156-120t-120-155t-77-184t-28-204q0-84 18-165t52-155t84-141t113-121q7 38 19 78t28 80t38 76t46 67q20 25 52 25q27 0 45-19t19-46q0-11-3-20t-10-18q-28-41-49-81t-37-82t-23-87t-8-95q0-119 45-224t124-183T992 46t224-46h64v64zm-256 1856q133 0 249-50t204-137t137-203t50-250q0-151-56-281t-162-236q-130-131-204-289t-88-342q-83 11-153 50t-123 99t-81 135t-29 160q0 78 23 141t68 126q19 26 29 54t11 62q0 40-15 75t-42 61t-61 42t-75 15q-46 0-81-17t-62-46t-48-65t-40-72q-46 73-68 157t-23 171q0 133 50 249t137 204t203 137t250 50z"/>
             </svg>
             <span class="hidden md:inline text-xs">Calories</span>
           </div>
