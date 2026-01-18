@@ -1,29 +1,29 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js";
 import { load as loadYaml } from "https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import {
+  browserLocalPersistence,
+  browserSessionPersistence,
+  createUserWithEmailAndPassword,
   getAuth,
   onAuthStateChanged,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
+  reload,
   sendEmailVerification,
   sendPasswordResetEmail,
-  reload,
   setPersistence,
-  browserLocalPersistence,
-  browserSessionPersistence
+  signInWithEmailAndPassword,
+  signOut,
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {
-  getFirestore,
-  collection,
-  doc,
   addDoc,
+  collection,
+  deleteDoc,
+  doc,
   getDoc,
   getDocFromServer,
+  getFirestore,
+  onSnapshot,
   setDoc,
-  deleteDoc,
-  onSnapshot
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const ENCRYPTED_CACHE_KEY = "fastingTrackerEncryptedStateV1";
@@ -34,7 +34,7 @@ const DEVICE_KEY_ID = "device-wrap-key";
 const RING_CIRC = 2 * Math.PI * 80;
 const ENCRYPTION_VERSION = 1;
 const PBKDF2_ITERATIONS = 310000;
-const NOTES_SCHEMA = Object.freeze({
+const _NOTES_SCHEMA = Object.freeze({
   text: "",
   createdAt: 0,
   updatedAt: 0,
@@ -46,7 +46,7 @@ const NOTES_SCHEMA = Object.freeze({
     height: null,
     currentWeight: null,
     gender: "",
-    fitnessLevel: ""
+    fitnessLevel: "",
   },
   fastContext: {
     wasActive: false,
@@ -54,7 +54,7 @@ const NOTES_SCHEMA = Object.freeze({
     fastTypeId: null,
     fastTypeLabel: null,
     startTimestamp: null,
-    plannedDurationHours: null
+    plannedDurationHours: null,
   },
   calorieEntry: {
     calories: null,
@@ -66,9 +66,9 @@ const NOTES_SCHEMA = Object.freeze({
       height: null,
       currentWeight: null,
       gender: "",
-      fitnessLevel: ""
-    }
-  }
+      fitnessLevel: "",
+    },
+  },
 });
 
 let FAST_TYPES = [];
@@ -85,20 +85,20 @@ const DEFAULT_THEME_COLORS = {
   borderColor: "#1e293b",
   textColor: "#f8fafc",
   textMutedColor: "#94a3b8",
-  dangerColor: "#dc2626"
+  dangerColor: "#dc2626",
 };
 
 let THEME_PRESET_LIST = [
-  { id: DEFAULT_THEME_ID, label: "Midnight", colors: { ...DEFAULT_THEME_COLORS } }
+  { id: DEFAULT_THEME_ID, label: "Midnight", colors: { ...DEFAULT_THEME_COLORS } },
 ];
 let THEME_PRESETS = {
-  [DEFAULT_THEME_ID]: { label: "Midnight", colors: { ...DEFAULT_THEME_COLORS } }
+  [DEFAULT_THEME_ID]: { label: "Midnight", colors: { ...DEFAULT_THEME_COLORS } },
 };
 
 const CALORIE_VIEWS = [
   { id: "total", label: "Total" },
   { id: "consumed", label: "Consumed" },
-  { id: "left", label: "Left" }
+  { id: "left", label: "Left" },
 ];
 
 const defaultState = {
@@ -120,26 +120,31 @@ const defaultState = {
       unitSystem: "metric",
       target: null,
       consumed: 0,
-      view: "total"
+      view: "total",
     },
     theme: {
       presetId: DEFAULT_THEME_ID,
-      customColors: { ...DEFAULT_THEME_COLORS }
-    }
+      customColors: { ...DEFAULT_THEME_COLORS },
+    },
   },
   activeFast: null,
   history: [],
   reminders: { endNotified: false, lastHourlyAt: null },
-  milestoneTally: {}
+  milestoneTally: {},
 };
 
 const firebaseConfig = window.FIREBASE_CONFIG;
-if (!firebaseConfig?.apiKey || !firebaseConfig?.authDomain || !firebaseConfig?.projectId || !firebaseConfig?.appId) {
+if (
+  !firebaseConfig?.apiKey ||
+  !firebaseConfig?.authDomain ||
+  !firebaseConfig?.projectId ||
+  !firebaseConfig?.appId
+) {
   throw new Error("Missing Firebase configuration. Check firebase-config.js.");
 }
 
 const firebaseApp = initializeApp(firebaseConfig);
-const analytics = firebaseConfig?.measurementId ? getAnalytics(firebaseApp) : null;
+const _analytics = firebaseConfig?.measurementId ? getAnalytics(firebaseApp) : null;
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 
@@ -179,7 +184,7 @@ let suppressNavClickEl = null;
 
 // ✅ NEW: Notes overlay state (opens above other tabs)
 let currentTab = "timer";
-let lastNonNotesTab = "timer";
+let _lastNonNotesTab = "timer";
 let ringEmojiTypeId = null;
 let ringEmojiSelectionKey = null;
 let ringEmojiSelectionDetail = null;
@@ -201,8 +206,12 @@ document.addEventListener("DOMContentLoaded", () => {
   void initApp();
 });
 
-function $(id) { return document.getElementById(id); }
-function clone(x) { return JSON.parse(JSON.stringify(x)); }
+function $(id) {
+  return document.getElementById(id);
+}
+function clone(x) {
+  return JSON.parse(JSON.stringify(x));
+}
 
 async function initApp() {
   try {
@@ -212,8 +221,12 @@ async function initApp() {
     syncThemeDefaults();
   } catch (err) {
     console.error("Failed to load theme presets:", err);
-    THEME_PRESET_LIST = [{ id: DEFAULT_THEME_ID, label: "Midnight", colors: { ...DEFAULT_THEME_COLORS } }];
-    THEME_PRESETS = { [DEFAULT_THEME_ID]: { label: "Midnight", colors: { ...DEFAULT_THEME_COLORS } } };
+    THEME_PRESET_LIST = [
+      { id: DEFAULT_THEME_ID, label: "Midnight", colors: { ...DEFAULT_THEME_COLORS } },
+    ];
+    THEME_PRESETS = {
+      [DEFAULT_THEME_ID]: { label: "Midnight", colors: { ...DEFAULT_THEME_COLORS } },
+    };
     syncThemeDefaults();
   }
 
@@ -244,8 +257,8 @@ async function initApp() {
         id: defaultState.settings.defaultFastTypeId,
         label: "16:8",
         durationHours: 16,
-        milestoneHours: []
-      }
+        milestoneHours: [],
+      },
     ];
   }
 
@@ -263,11 +276,11 @@ async function loadThemePresets() {
   const data = loadYaml(text);
   if (!Array.isArray(data)) throw new Error("themes.yaml is not a list");
   const list = data
-    .filter(theme => theme?.id && theme?.colors)
-    .map(theme => ({
+    .filter((theme) => theme?.id && theme?.colors)
+    .map((theme) => ({
       id: String(theme.id),
       label: theme.label || String(theme.id),
-      colors: theme.colors
+      colors: theme.colors,
     }));
   if (list.length === 0) throw new Error("themes.yaml has no presets");
   const map = list.reduce((acc, theme) => {
@@ -278,7 +291,8 @@ async function loadThemePresets() {
 }
 
 function syncThemeDefaults() {
-  const fallbackPreset = THEME_PRESET_LIST.find(theme => theme.id === DEFAULT_THEME_ID) || THEME_PRESET_LIST[0];
+  const fallbackPreset =
+    THEME_PRESET_LIST.find((theme) => theme.id === DEFAULT_THEME_ID) || THEME_PRESET_LIST[0];
   if (!fallbackPreset) return;
   defaultState.settings.theme.presetId = fallbackPreset.id;
   defaultState.settings.theme.customColors = { ...fallbackPreset.colors };
@@ -313,40 +327,44 @@ async function loadCalorieTips() {
 }
 
 function normalizeFastingHourly(data) {
-  const hours = Array.isArray(data?.hours) ? data.hours : (Array.isArray(data) ? data : []);
-  const notes = Array.isArray(data?.notes) ? data.notes.filter(note => typeof note === "string") : [];
+  const hours = Array.isArray(data?.hours) ? data.hours : Array.isArray(data) ? data : [];
+  const notes = Array.isArray(data?.notes)
+    ? data.notes.filter((note) => typeof note === "string")
+    : [];
   const normalizedHours = hours
-    .filter(entry => entry && Number.isFinite(Number(entry.hour)))
-    .map(entry => ({
+    .filter((entry) => entry && Number.isFinite(Number(entry.hour)))
+    .map((entry) => ({
       hour: Number(entry.hour),
       emoji: typeof entry.emoji === "string" ? entry.emoji : "⏳",
       label: typeof entry.label === "string" ? entry.label : `Hour ${entry.hour}`,
-      actions: Array.isArray(entry.actions) ? entry.actions.filter(action => typeof action === "string") : []
+      actions: Array.isArray(entry.actions)
+        ? entry.actions.filter((action) => typeof action === "string")
+        : [],
     }))
     .sort((a, b) => a.hour - b.hour);
   return { hours: normalizedHours, notes };
 }
 
 function normalizeCalorieTips(data) {
-  const goals = Array.isArray(data?.goals) ? data.goals : (Array.isArray(data) ? data : []);
+  const goals = Array.isArray(data?.goals) ? data.goals : Array.isArray(data) ? data : [];
   const normalizedGoals = goals
-    .map(goal => {
+    .map((goal) => {
       const id = typeof goal?.id === "string" ? goal.id.trim() : "";
       if (!id) return null;
       const tips = Array.isArray(goal?.tips)
         ? goal.tips
-          .filter(tip => tip && typeof tip === "object")
-          .map(tip => ({
-            emoji: typeof tip.emoji === "string" ? tip.emoji : "✨",
-            title: typeof tip.title === "string" ? tip.title : "Quick tip",
-            detail: typeof tip.detail === "string" ? tip.detail : ""
-          }))
-          .filter(tip => tip.title || tip.detail)
+            .filter((tip) => tip && typeof tip === "object")
+            .map((tip) => ({
+              emoji: typeof tip.emoji === "string" ? tip.emoji : "✨",
+              title: typeof tip.title === "string" ? tip.title : "Quick tip",
+              detail: typeof tip.detail === "string" ? tip.detail : "",
+            }))
+            .filter((tip) => tip.title || tip.detail)
         : [];
       return {
         id,
         label: typeof goal?.label === "string" ? goal.label : id,
-        tips
+        tips,
       };
     })
     .filter(Boolean);
@@ -359,7 +377,7 @@ function normalizeCalorieTips(data) {
 
 function hydrateFastTypes(types, hourly) {
   if (!Array.isArray(types)) return [];
-  return types.map(type => {
+  return types.map((type) => {
     const milestoneHours = Array.isArray(type.milestoneHours) ? type.milestoneHours : [];
     const milestones = buildMilestones(milestoneHours, hourly);
     return { ...type, milestoneHours, milestones };
@@ -368,7 +386,7 @@ function hydrateFastTypes(types, hourly) {
 
 function getHourlyEntry(hour) {
   const numericHour = Number(hour);
-  return FASTING_HOURLY.hours.find(entry => entry.hour === numericHour);
+  return FASTING_HOURLY.hours.find((entry) => entry.hour === numericHour);
 }
 
 function formatHourlyAction(hour, action) {
@@ -379,9 +397,8 @@ function getHourlyActionDetail(hour, { random = false } = {}) {
   const entry = getHourlyEntry(hour);
   if (!entry) return null;
   const actions = Array.isArray(entry.actions) ? entry.actions : [];
-  const action = random && actions.length
-    ? actions[Math.floor(Math.random() * actions.length)]
-    : actions[0];
+  const action =
+    random && actions.length ? actions[Math.floor(Math.random() * actions.length)] : actions[0];
   if (!action) return null;
   return formatHourlyAction(entry.hour, action);
 }
@@ -389,8 +406,8 @@ function getHourlyActionDetail(hour, { random = false } = {}) {
 function buildMilestones(hours, hourly) {
   if (!Array.isArray(hours)) return [];
   return hours
-    .map(hour => {
-      const entry = hourly.hours.find(item => item.hour === Number(hour));
+    .map((hour) => {
+      const entry = hourly.hours.find((item) => item.hour === Number(hour));
       if (!entry) return null;
       const baseAction = Array.isArray(entry.actions) ? entry.actions[0] : null;
       const detail = baseAction ? formatHourlyAction(entry.hour, baseAction) : `Hour ${entry.hour}`;
@@ -398,7 +415,7 @@ function buildMilestones(hours, hourly) {
         hour: entry.hour,
         emoji: entry.emoji,
         label: entry.label,
-        detail
+        detail,
       };
     })
     .filter(Boolean);
@@ -408,7 +425,7 @@ function resolveFastTypeId(typeId) {
   if (!Array.isArray(FAST_TYPES) || FAST_TYPES.length === 0) {
     return defaultState.settings.defaultFastTypeId;
   }
-  const found = FAST_TYPES.find(type => type.id === typeId);
+  const found = FAST_TYPES.find((type) => type.id === typeId);
   return found ? found.id : FAST_TYPES[0].id;
 }
 
@@ -485,7 +502,7 @@ async function normalizeNoteSnapshot(snap) {
     dateKey: typeof data.dateKey === "string" ? data.dateKey : "",
     goalContext: normalizeGoalContext(data.goalContext),
     fastContext: normalizeFastContext(data.fastContext, normalizedCreatedAt),
-    calorieEntry
+    calorieEntry,
   };
 }
 
@@ -504,7 +521,7 @@ function normalizeGoalContext(goalContext) {
       height: null,
       currentWeight: null,
       gender: "",
-      fitnessLevel: ""
+      fitnessLevel: "",
     };
   }
 
@@ -517,7 +534,7 @@ function normalizeGoalContext(goalContext) {
     height: normalizeGoalMetric(goalContext.height),
     currentWeight: normalizeGoalMetric(goalContext.currentWeight) ?? legacyWeight,
     gender: typeof goalContext.gender === "string" ? goalContext.gender : "",
-    fitnessLevel: typeof goalContext.fitnessLevel === "string" ? goalContext.fitnessLevel : ""
+    fitnessLevel: typeof goalContext.fitnessLevel === "string" ? goalContext.fitnessLevel : "",
   };
 }
 
@@ -531,7 +548,7 @@ function normalizeCalorieEntry(entry) {
   return {
     calories: normalizedCalories,
     foodNote,
-    goalSnapshot
+    goalSnapshot,
   };
 }
 
@@ -540,17 +557,20 @@ function normalizeFastContext(fastContext, createdAt) {
 
   const legacyTypeId = typeof fastContext.typeId === "string" ? fastContext.typeId : null;
   const legacyTypeLabel = typeof fastContext.typeLabel === "string" ? fastContext.typeLabel : null;
-  const legacyDuration = typeof fastContext.durationHours === "number" ? fastContext.durationHours : null;
-  const wasActive = typeof fastContext.wasActive === "boolean"
-    ? fastContext.wasActive
-    : Boolean(fastContext.fastId || legacyTypeId || legacyTypeLabel);
+  const legacyDuration =
+    typeof fastContext.durationHours === "number" ? fastContext.durationHours : null;
+  const wasActive =
+    typeof fastContext.wasActive === "boolean"
+      ? fastContext.wasActive
+      : Boolean(fastContext.fastId || legacyTypeId || legacyTypeLabel);
   const normalizedCreatedAt = typeof createdAt === "number" ? createdAt : null;
   const startTimestamp = fastContext.startTimestamp ?? null;
-  const elapsedMsAtNote = typeof fastContext.elapsedMsAtNote === "number"
-    ? fastContext.elapsedMsAtNote
-    : (typeof startTimestamp === "number" && typeof normalizedCreatedAt === "number"
-      ? Math.max(0, normalizedCreatedAt - startTimestamp)
-      : null);
+  const elapsedMsAtNote =
+    typeof fastContext.elapsedMsAtNote === "number"
+      ? fastContext.elapsedMsAtNote
+      : typeof startTimestamp === "number" && typeof normalizedCreatedAt === "number"
+        ? Math.max(0, normalizedCreatedAt - startTimestamp)
+        : null;
 
   return {
     wasActive,
@@ -559,7 +579,7 @@ function normalizeFastContext(fastContext, createdAt) {
     fastTypeLabel: fastContext.fastTypeLabel ?? legacyTypeLabel,
     startTimestamp,
     plannedDurationHours: fastContext.plannedDurationHours ?? legacyDuration,
-    elapsedMsAtNote
+    elapsedMsAtNote,
   };
 }
 
@@ -571,16 +591,17 @@ function buildInactiveFastContext() {
     fastTypeLabel: null,
     startTimestamp: null,
     plannedDurationHours: null,
-    elapsedMsAtNote: null
+    elapsedMsAtNote: null,
   };
 }
 
 function buildFastContextAt(timestampMs) {
   if (!state.activeFast) return buildInactiveFastContext();
   const type = getTypeById(state.activeFast.typeId);
-  const elapsedMsAtNote = typeof state.activeFast.startTimestamp === "number"
-    ? Math.max(0, (timestampMs ?? Date.now()) - state.activeFast.startTimestamp)
-    : null;
+  const elapsedMsAtNote =
+    typeof state.activeFast.startTimestamp === "number"
+      ? Math.max(0, (timestampMs ?? Date.now()) - state.activeFast.startTimestamp)
+      : null;
   return {
     wasActive: true,
     fastId: state.activeFast.id,
@@ -588,16 +609,17 @@ function buildFastContextAt(timestampMs) {
     fastTypeLabel: type?.label || null,
     startTimestamp: state.activeFast.startTimestamp,
     plannedDurationHours: state.activeFast.plannedDurationHours,
-    elapsedMsAtNote
+    elapsedMsAtNote,
   };
 }
 
 function buildFastContextFromFast(fast, timestampMs) {
   if (!fast) return buildInactiveFastContext();
   const type = getTypeById(fast.typeId);
-  const elapsedMsAtNote = typeof fast.startTimestamp === "number"
-    ? Math.max(0, (timestampMs ?? Date.now()) - fast.startTimestamp)
-    : null;
+  const elapsedMsAtNote =
+    typeof fast.startTimestamp === "number"
+      ? Math.max(0, (timestampMs ?? Date.now()) - fast.startTimestamp)
+      : null;
   return {
     wasActive: true,
     fastId: fast.id,
@@ -605,7 +627,7 @@ function buildFastContextFromFast(fast, timestampMs) {
     fastTypeLabel: type?.label || null,
     startTimestamp: fast.startTimestamp,
     plannedDurationHours: fast.plannedDurationHours,
-    elapsedMsAtNote
+    elapsedMsAtNote,
   };
 }
 
@@ -623,15 +645,21 @@ function buildGoalContext() {
     height: normalizeGoalMetric(settings.height),
     currentWeight: normalizeGoalMetric(settings.currentWeight),
     gender: typeof settings.gender === "string" ? settings.gender : "",
-    fitnessLevel: typeof settings.fitnessLevel === "string" ? settings.fitnessLevel : ""
+    fitnessLevel: typeof settings.fitnessLevel === "string" ? settings.fitnessLevel : "",
   };
 }
 
-async function buildNotePayload({ text, dateKey, fastContext, goalContext, calorieEntry } = {}) {
+async function buildNotePayload({
+  text,
+  dateKey: _dateKey,
+  fastContext,
+  goalContext,
+  calorieEntry,
+} = {}) {
   const createdAt = Date.now();
   const payload = await encryptNotePayload({
     text: (text || "").trim(),
-    calorieEntry: calorieEntry ?? null
+    calorieEntry: calorieEntry ?? null,
   });
   return {
     payload,
@@ -639,16 +667,23 @@ async function buildNotePayload({ text, dateKey, fastContext, goalContext, calor
     updatedAt: createdAt,
     dateKey: formatDateKey(new Date(createdAt)),
     goalContext: goalContext ?? buildGoalContext(),
-    fastContext: fastContext ?? buildFastContextAt(createdAt)
+    fastContext: fastContext ?? buildFastContextAt(createdAt),
   };
 }
 
-async function buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt, goalContext, calorieEntry } = {}) {
+async function buildNoteUpdatePayload({
+  text,
+  dateKey,
+  fastContext,
+  createdAt,
+  goalContext,
+  calorieEntry,
+} = {}) {
   const payload = { updatedAt: Date.now() };
   if (typeof text === "string" || calorieEntry !== undefined) {
     payload.payload = await encryptNotePayload({
       text: typeof text === "string" ? text.trim() : "",
-      calorieEntry: calorieEntry ?? null
+      calorieEntry: calorieEntry ?? null,
     });
   }
   if (typeof dateKey === "string") payload.dateKey = dateKey;
@@ -662,12 +697,12 @@ async function buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt, g
         ["fastTypeId", fastContext.fastTypeId],
         ["fastTypeLabel", fastContext.fastTypeLabel],
         ["startTimestamp", fastContext.startTimestamp],
-        ["plannedDurationHours", fastContext.plannedDurationHours]
+        ["plannedDurationHours", fastContext.plannedDurationHours],
       ];
       fields.forEach(([key, value]) => {
         if (value !== undefined) payload[`fastContext.${key}`] = value;
       });
-      if (Object.prototype.hasOwnProperty.call(fastContext, "elapsedMsAtNote")) {
+      if (Object.hasOwn(fastContext, "elapsedMsAtNote")) {
         payload["fastContext.elapsedMsAtNote"] = fastContext.elapsedMsAtNote ?? null;
       }
     }
@@ -684,7 +719,7 @@ async function buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt, g
         ["height", resolvedGoalContext.height],
         ["currentWeight", resolvedGoalContext.currentWeight],
         ["gender", resolvedGoalContext.gender],
-        ["fitnessLevel", resolvedGoalContext.fitnessLevel]
+        ["fitnessLevel", resolvedGoalContext.fitnessLevel],
       ];
       fields.forEach(([key, value]) => {
         if (value !== undefined) payload[`goalContext.${key}`] = value;
@@ -710,7 +745,13 @@ async function createNote({ text, dateKey, fastContext, calorieEntry } = {}) {
 async function updateNote(noteId, { text, dateKey, fastContext, createdAt, calorieEntry } = {}) {
   const user = auth.currentUser;
   if (!user || !noteId) return;
-  const payload = await buildNoteUpdatePayload({ text, dateKey, fastContext, createdAt, calorieEntry });
+  const payload = await buildNoteUpdatePayload({
+    text,
+    dateKey,
+    fastContext,
+    createdAt,
+    calorieEntry,
+  });
   try {
     await setDoc(getNoteDocRef(user.uid, noteId), payload, { merge: true });
   } catch {}
@@ -763,7 +804,7 @@ function buildCalorieEntryFromEditor() {
   if (calories === null) return null;
   return {
     calories,
-    goalSnapshot: buildGoalContext()
+    goalSnapshot: buildGoalContext(),
   };
 }
 
@@ -776,8 +817,8 @@ async function handleNoteEditorSwipeDismiss() {
   if (!modal || modal.classList.contains("hidden")) return;
   const text = $("note-editor-content").value.trim();
   const caloriesValue = $("note-editor-calories").value.trim();
-  const hasChanges = text !== editingNoteInitialText
-    || caloriesValue !== editingNoteInitialCalories;
+  const hasChanges =
+    text !== editingNoteInitialText || caloriesValue !== editingNoteInitialCalories;
   const hasContent = Boolean(text) || Boolean(caloriesValue);
   if (hasChanges && hasContent) {
     const saved = await persistNoteEditor({ closeOnSave: false });
@@ -795,25 +836,33 @@ function attachNoteEditorSwipeHandlers() {
   let swipeStartX = 0;
   let swipeStartY = 0;
 
-  panel.addEventListener("touchstart", (event) => {
-    if (!event.touches || event.touches.length !== 1) return;
-    const touch = event.touches[0];
-    swipeStartX = touch.clientX;
-    swipeStartY = touch.clientY;
-  }, { passive: true });
+  panel.addEventListener(
+    "touchstart",
+    (event) => {
+      if (!event.touches || event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      swipeStartX = touch.clientX;
+      swipeStartY = touch.clientY;
+    },
+    { passive: true },
+  );
 
-  panel.addEventListener("touchend", async (event) => {
-    const touch = event.changedTouches && event.changedTouches[0];
-    if (!touch) return;
-    const deltaX = touch.clientX - swipeStartX;
-    const deltaY = touch.clientY - swipeStartY;
-    swipeStartX = 0;
-    swipeStartY = 0;
+  panel.addEventListener(
+    "touchend",
+    async (event) => {
+      const touch = event.changedTouches?.[0];
+      if (!touch) return;
+      const deltaX = touch.clientX - swipeStartX;
+      const deltaY = touch.clientY - swipeStartY;
+      swipeStartX = 0;
+      swipeStartY = 0;
 
-    if (deltaX > 80 && Math.abs(deltaX) > Math.abs(deltaY)) {
-      await handleNoteEditorSwipeDismiss();
-    }
-  }, { passive: true });
+      if (deltaX > 80 && Math.abs(deltaX) > Math.abs(deltaY)) {
+        await handleNoteEditorSwipeDismiss();
+      }
+    },
+    { passive: true },
+  );
 }
 
 function updateNoteEditorMeta() {
@@ -881,14 +930,14 @@ async function persistNoteEditor({ closeOnSave = true } = {}) {
         calorieEntry,
         dateKey: editingNoteDateKey,
         fastContext: editingNoteContext,
-        createdAt: editingNoteCreatedAt
+        createdAt: editingNoteCreatedAt,
       });
     } else {
       await createNote({
         text,
         calorieEntry,
         dateKey: editingNoteDateKey,
-        fastContext: editingNoteContext
+        fastContext: editingNoteContext,
       });
     }
   } catch (err) {
@@ -939,9 +988,10 @@ function startNotesListener(uid) {
 
       const code = err?.code || "";
       if (code === "permission-denied") showToast("Notes blocked by Firestore rules / App Check.");
-      else if (code === "failed-precondition") showToast("Notes failed-precondition (index/AppCheck/offline).");
+      else if (code === "failed-precondition")
+        showToast("Notes failed-precondition (index/AppCheck/offline).");
       else showToast(`Notes failed to load (${code || "unknown error"})`);
-    }
+    },
   );
 }
 
@@ -954,7 +1004,7 @@ function stopStateListener() {
 
 function startStateListener(uid) {
   stopStateListener();
-  stateUnsubscribe = onSnapshot(getStateDocRef(uid), async snap => {
+  stateUnsubscribe = onSnapshot(getStateDocRef(uid), async (snap) => {
     const payload = snap.data()?.payload;
     if (!payload || !payload.iv || !payload.ciphertext) {
       state = clone(defaultState);
@@ -1052,11 +1102,10 @@ async function saveDeviceWrappingKey(key) {
 async function getOrCreateDeviceWrappingKey() {
   const existing = await loadDeviceWrappingKey();
   if (existing) return existing;
-  const key = await crypto.subtle.generateKey(
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["wrapKey", "unwrapKey"]
-  );
+  const key = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, [
+    "wrapKey",
+    "unwrapKey",
+  ]);
   await saveDeviceWrappingKey(key);
   return key;
 }
@@ -1065,16 +1114,14 @@ async function wrapEncryptionKeyForDevice(uid) {
   if (!cryptoKey) return;
   const wrappingKey = await getOrCreateDeviceWrappingKey();
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const wrapped = await crypto.subtle.wrapKey(
-    "raw",
-    cryptoKey,
-    wrappingKey,
-    { name: "AES-GCM", iv }
-  );
+  const wrapped = await crypto.subtle.wrapKey("raw", cryptoKey, wrappingKey, {
+    name: "AES-GCM",
+    iv,
+  });
   setWrappedKeyStorage(uid, {
     version: ENCRYPTION_VERSION,
     iv: encodeBase64(iv),
-    wrappedKey: encodeBase64(new Uint8Array(wrapped))
+    wrappedKey: encodeBase64(new Uint8Array(wrapped)),
   });
 }
 
@@ -1093,7 +1140,7 @@ async function unwrapEncryptionKeyFromDevice(uid) {
       { name: "AES-GCM", iv },
       { name: "AES-GCM", length: 256 },
       true,
-      ["encrypt", "decrypt"]
+      ["encrypt", "decrypt"],
     );
   } catch {
     return null;
@@ -1119,9 +1166,10 @@ function mergeStateWithDefaults(parsed) {
   merged.activeFast = parsed.activeFast || null;
   merged.history = Array.isArray(parsed.history) ? parsed.history : [];
   merged.reminders = Object.assign(merged.reminders, parsed.reminders || {});
-  merged.milestoneTally = parsed?.milestoneTally && typeof parsed.milestoneTally === "object"
-    ? parsed.milestoneTally
-    : {};
+  merged.milestoneTally =
+    parsed?.milestoneTally && typeof parsed.milestoneTally === "object"
+      ? parsed.milestoneTally
+      : {};
   if (merged.activeFast && !Array.isArray(merged.activeFast.milestonesHit)) {
     merged.activeFast.milestonesHit = [];
   }
@@ -1133,7 +1181,7 @@ function normalizeHistoryEntries(entries = []) {
   const entriesById = new Map();
   let changed = false;
 
-  entries.forEach(entry => {
+  entries.forEach((entry) => {
     if (!entry || typeof entry !== "object") return;
 
     const normalized = { ...entry };
@@ -1186,8 +1234,8 @@ function normalizeHistoryEntries(entries = []) {
 }
 
 function mergeTimestamp(existing, incoming, picker) {
-  const hasExisting = isFinite(existing);
-  const hasIncoming = isFinite(incoming);
+  const hasExisting = Number.isFinite(existing);
+  const hasIncoming = Number.isFinite(incoming);
   if (hasExisting && hasIncoming) return picker(existing, incoming);
   if (hasIncoming) return incoming;
   if (hasExisting) return existing;
@@ -1195,7 +1243,7 @@ function mergeTimestamp(existing, incoming, picker) {
 }
 
 function computeDurationHours(startTs, endTs) {
-  if (!isFinite(startTs) || !isFinite(endTs) || endTs <= startTs) return null;
+  if (!Number.isFinite(startTs) || !Number.isFinite(endTs) || endTs <= startTs) return null;
   return Math.round(((endTs - startTs) / 3600000) * 100) / 100;
 }
 
@@ -1205,19 +1253,19 @@ async function deriveKeyFromPassword(password, saltBytes) {
     new TextEncoder().encode(password),
     "PBKDF2",
     false,
-    ["deriveKey"]
+    ["deriveKey"],
   );
   return crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
       salt: saltBytes,
       iterations: PBKDF2_ITERATIONS,
-      hash: "SHA-256"
+      hash: "SHA-256",
     },
     keyMaterial,
     { name: "AES-GCM", length: 256 },
     true,
-    ["encrypt", "decrypt"]
+    ["encrypt", "decrypt"],
   );
 }
 
@@ -1228,12 +1276,12 @@ async function encryptStatePayload() {
   const cipherBuffer = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     cryptoKey,
-    encodedState
+    encodedState,
   );
   return {
     version: ENCRYPTION_VERSION,
     iv: encodeBase64(iv),
-    ciphertext: encodeBase64(new Uint8Array(cipherBuffer))
+    ciphertext: encodeBase64(new Uint8Array(cipherBuffer)),
   };
 }
 
@@ -1244,7 +1292,7 @@ async function decryptStatePayload(payload) {
   const decryptedBuffer = await crypto.subtle.decrypt(
     { name: "AES-GCM", iv },
     cryptoKey,
-    ciphertext
+    ciphertext,
   );
   const decoded = new TextDecoder().decode(decryptedBuffer);
   return JSON.parse(decoded);
@@ -1259,19 +1307,15 @@ async function encryptNotePayload(notePayload) {
   } else if (notePayload && typeof notePayload === "object") {
     serializedPayload = JSON.stringify({
       text: typeof notePayload.text === "string" ? notePayload.text : "",
-      calorieEntry: notePayload.calorieEntry ?? null
+      calorieEntry: notePayload.calorieEntry ?? null,
     });
   }
   const encodedText = new TextEncoder().encode(serializedPayload);
-  const cipherBuffer = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
-    cryptoKey,
-    encodedText
-  );
+  const cipherBuffer = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, cryptoKey, encodedText);
   return {
     version: ENCRYPTION_VERSION,
     iv: encodeBase64(iv),
-    ciphertext: encodeBase64(new Uint8Array(cipherBuffer))
+    ciphertext: encodeBase64(new Uint8Array(cipherBuffer)),
   };
 }
 
@@ -1283,7 +1327,7 @@ async function decryptNotePayload(payload) {
   const decryptedBuffer = await crypto.subtle.decrypt(
     { name: "AES-GCM", iv },
     cryptoKey,
-    ciphertext
+    ciphertext,
   );
   const decoded = new TextDecoder().decode(decryptedBuffer);
   try {
@@ -1325,12 +1369,16 @@ async function resolveUserSalt(uid, payloadSalt) {
 
   if (!storedSalt && payloadSalt) {
     storedSalt = payloadSalt;
-    try { await setDoc(getUserDocRef(uid), { crypto: { salt: storedSalt } }, { merge: true }); } catch {}
+    try {
+      await setDoc(getUserDocRef(uid), { crypto: { salt: storedSalt } }, { merge: true });
+    } catch {}
   }
 
   if (!storedSalt) {
     storedSalt = encodeBase64(crypto.getRandomValues(new Uint8Array(16)));
-    try { await setDoc(getUserDocRef(uid), { crypto: { salt: storedSalt } }, { merge: true }); } catch {}
+    try {
+      await setDoc(getUserDocRef(uid), { crypto: { salt: storedSalt } }, { merge: true });
+    } catch {}
   }
 
   return decodeBase64(storedSalt);
@@ -1390,7 +1438,9 @@ async function saveState() {
   const payload = await encryptStatePayload();
   payload.salt = encodeBase64(keySalt);
 
-  try { await setDoc(getStateDocRef(user.uid), { payload }, { merge: true }); } catch {}
+  try {
+    await setDoc(getStateDocRef(user.uid), { payload }, { merge: true });
+  } catch {}
   setEncryptedCache(payload);
 }
 
@@ -1399,10 +1449,12 @@ async function markUserVerified(user) {
   const payload = {
     email: user.email ?? null,
     emailVerified: Boolean(user.emailVerified),
-    updatedAt: Date.now()
+    updatedAt: Date.now(),
   };
   if (user.emailVerified) payload.verifiedAt = Date.now();
-  try { await setDoc(getUserDocRef(user.uid), payload, { merge: true }); } catch {}
+  try {
+    await setDoc(getUserDocRef(user.uid), payload, { merge: true });
+  } catch {}
 }
 
 function initUI() {
@@ -1417,7 +1469,7 @@ function initUI() {
 }
 
 function initAuthListener() {
-  onAuthStateChanged(auth, async user => {
+  onAuthStateChanged(auth, async (user) => {
     if (user) {
       if (!user.emailVerified) {
         stopStateListener();
@@ -1460,8 +1512,8 @@ function initAuthUI() {
   const resendBtn = $("verify-email-resend");
   const refreshBtn = $("verify-email-refresh");
   const signOutBtn = $("verify-email-signout");
-  const passwordInput = $("auth-password");
-  const confirmInput = $("auth-password-confirm");
+  const _passwordInput = $("auth-password");
+  const _confirmInput = $("auth-password-confirm");
   form.addEventListener("submit", handleAuthSubmit);
   toggle.addEventListener("click", () => {
     authMode = authMode === "sign-in" ? "sign-up" : "sign-in";
@@ -1642,12 +1694,16 @@ async function handleAuthSubmit(e) {
       await createUserWithEmailAndPassword(auth, email, password);
       if (auth.currentUser) {
         try {
-          await setDoc(getUserDocRef(auth.currentUser.uid), {
-            email: auth.currentUser.email ?? email,
-            emailVerified: auth.currentUser.emailVerified,
-            createdAt: Date.now(),
-            updatedAt: Date.now()
-          }, { merge: true });
+          await setDoc(
+            getUserDocRef(auth.currentUser.uid),
+            {
+              email: auth.currentUser.email ?? email,
+              emailVerified: auth.currentUser.emailVerified,
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+            },
+            { merge: true },
+          );
         } catch {}
         try {
           await sendEmailVerification(auth.currentUser);
@@ -1791,35 +1847,47 @@ function ensureNotesOverlay() {
     let swipeStartY = 0;
     let swipeTracking = false;
 
-    notesPortal.addEventListener("touchstart", (e) => {
-      if (!notesOverlayOpen || !e.touches || e.touches.length !== 1) return;
-      const touch = e.touches[0];
-      swipeStartX = touch.clientX;
-      swipeStartY = touch.clientY;
-      swipeTracking = true;
-    }, { passive: true, capture: true });
+    notesPortal.addEventListener(
+      "touchstart",
+      (e) => {
+        if (!notesOverlayOpen || !e.touches || e.touches.length !== 1) return;
+        const touch = e.touches[0];
+        swipeStartX = touch.clientX;
+        swipeStartY = touch.clientY;
+        swipeTracking = true;
+      },
+      { passive: true, capture: true },
+    );
 
-    notesPortal.addEventListener("touchmove", (e) => {
-      if (!swipeTracking || !e.touches || e.touches.length !== 1) return;
-      const touch = e.touches[0];
-      const deltaX = touch.clientX - swipeStartX;
-      const deltaY = Math.abs(touch.clientY - swipeStartY);
-      if (deltaY > 60 && deltaY > Math.abs(deltaX)) {
+    notesPortal.addEventListener(
+      "touchmove",
+      (e) => {
+        if (!swipeTracking || !e.touches || e.touches.length !== 1) return;
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - swipeStartX;
+        const deltaY = Math.abs(touch.clientY - swipeStartY);
+        if (deltaY > 60 && deltaY > Math.abs(deltaX)) {
+          swipeTracking = false;
+        }
+      },
+      { passive: true, capture: true },
+    );
+
+    notesPortal.addEventListener(
+      "touchend",
+      (e) => {
+        if (!swipeTracking || !notesOverlayOpen) return;
+        const touch = e.changedTouches?.[0];
+        if (!touch) return;
+        const deltaX = touch.clientX - swipeStartX;
+        const deltaY = Math.abs(touch.clientY - swipeStartY);
+        if (deltaX > 60 && deltaY < 40) {
+          closeNotesDrawer();
+        }
         swipeTracking = false;
-      }
-    }, { passive: true, capture: true });
-
-    notesPortal.addEventListener("touchend", (e) => {
-      if (!swipeTracking || !notesOverlayOpen) return;
-      const touch = e.changedTouches && e.changedTouches[0];
-      if (!touch) return;
-      const deltaX = touch.clientX - swipeStartX;
-      const deltaY = Math.abs(touch.clientY - swipeStartY);
-      if (deltaX > 60 && deltaY < 40) {
-        closeNotesDrawer();
-      }
-      swipeTracking = false;
-    }, { passive: true, capture: true });
+      },
+      { passive: true, capture: true },
+    );
   }
 
   notesBackdrop.addEventListener("click", () => closeNotesDrawer());
@@ -1848,7 +1916,8 @@ function openNotesDrawer() {
     notesDrawerCloseTimeout = null;
   }
 
-  if (bodyOverflowBeforeNotes === null) bodyOverflowBeforeNotes = document.body.style.overflow || "";
+  if (bodyOverflowBeforeNotes === null)
+    bodyOverflowBeforeNotes = document.body.style.overflow || "";
   document.body.style.overflow = "hidden";
 
   notesPortal.style.display = "block";
@@ -1899,7 +1968,7 @@ function closeNotesDrawer(forceImmediate = false) {
 }
 
 function initTabs() {
-  document.querySelectorAll("nav .nav-btn").forEach(btn => {
+  document.querySelectorAll("nav .nav-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       if (suppressNavClickEl === btn) {
         suppressNavClickEl = null;
@@ -1929,10 +1998,10 @@ function initTabs() {
 
 function switchTab(tab) {
   currentTab = tab;
-  if (tab !== "notes") lastNonNotesTab = tab;
+  if (tab !== "notes") _lastNonNotesTab = tab;
 
-  ["timer", "history", "calories", "settings"].forEach(id => {
-    const section = $("tab-" + id);
+  ["timer", "history", "calories", "settings"].forEach((id) => {
+    const section = $(`tab-${id}`);
     const btn = document.querySelector(`nav .nav-btn[data-tab="${id}"]`);
     const active = id === tab;
     section.classList.toggle("hidden", !active);
@@ -1981,8 +2050,8 @@ function initNavTooltips() {
     x = Math.max(pad, Math.min(window.innerWidth - tw - pad, x));
     let y = r.top - th - 10;
     if (y < pad) y = r.bottom + 10;
-    tooltip.style.left = x + "px";
-    tooltip.style.top = y + "px";
+    tooltip.style.left = `${x}px`;
+    tooltip.style.top = `${y}px`;
   };
 
   const startHold = (btn) => {
@@ -1993,11 +2062,13 @@ function initNavTooltips() {
       navHoldShown = true;
       suppressNavClickEl = btn;
       showFor(btn);
-      setTimeout(() => { if (navHoldShown) hide(); }, 1400);
+      setTimeout(() => {
+        if (navHoldShown) hide();
+      }, 1400);
     }, 420);
   };
 
-  document.querySelectorAll("nav .nav-btn").forEach(btn => {
+  document.querySelectorAll("nav .nav-btn").forEach((btn) => {
     btn.addEventListener("touchstart", () => startHold(btn), { passive: true });
     btn.addEventListener("touchend", hide, { passive: true });
     btn.addEventListener("touchcancel", hide, { passive: true });
@@ -2014,7 +2085,7 @@ function initNavTooltips() {
 
 function getTypeById(id) {
   if (!Array.isArray(FAST_TYPES) || FAST_TYPES.length === 0) return null;
-  return FAST_TYPES.find(t => t.id === id) || FAST_TYPES[0];
+  return FAST_TYPES.find((t) => t.id === id) || FAST_TYPES[0];
 }
 
 function getActiveType() {
@@ -2025,7 +2096,7 @@ function getActiveType() {
 function mergeCalorieSettings(settings) {
   const next = {
     ...defaultState.settings.calories,
-    ...(settings && typeof settings === "object" ? settings : {})
+    ...(settings && typeof settings === "object" ? settings : {}),
   };
   const legacyTarget = Number(next.target);
   if (next.dailyTarget == null && Number.isFinite(legacyTarget) && legacyTarget > 0) {
@@ -2095,7 +2166,7 @@ function getEffectiveCalorieConsumed(dateKey = getCalorieDisplayDateKey()) {
 
 function getCalorieView() {
   const view = getCalorieSettings().view;
-  return CALORIE_VIEWS.some(v => v.id === view) ? view : "total";
+  return CALORIE_VIEWS.some((v) => v.id === view) ? view : "total";
 }
 
 function getCalorieRemaining(consumed = getEffectiveCalorieConsumed()) {
@@ -2137,7 +2208,7 @@ function renderCalorieRing() {
   const consumed = getEffectiveCalorieConsumed(dateKey);
   const remaining = getCalorieRemaining(consumed);
   const view = getCalorieView();
-  const viewLabel = CALORIE_VIEWS.find(v => v.id === view)?.label ?? "Total";
+  const viewLabel = CALORIE_VIEWS.find((v) => v.id === view)?.label ?? "Total";
 
   let value = 0;
   let progress = 0;
@@ -2162,7 +2233,6 @@ function renderCalorieRing() {
       progress = remaining !== null ? Math.min(remaining / target, 1) : 0;
       detailText = `${formatCalories(remaining ?? 0)} left of ${formatCalories(target)}.`;
     }
-
   }
 
   valueEl.textContent = formatCalories(value);
@@ -2205,14 +2275,15 @@ function renderCalorieTipOrbs() {
     calorieTipGoalId = goalId;
     calorieTipLayoutSize = size;
     calorieTipSelectionKey = null;
-    if (panelTitle) panelTitle.textContent = goalId ? "No tips yet" : "Select a goal to see calorie tips";
-    if (panelDetail) panelDetail.textContent = goalId ? "Add tips for this goal in calorie-tips.yaml." : "";
+    if (panelTitle)
+      panelTitle.textContent = goalId ? "No tips yet" : "Select a goal to see calorie tips";
+    if (panelDetail)
+      panelDetail.textContent = goalId ? "Add tips for this goal in calorie-tips.yaml." : "";
     return;
   }
 
-  const shouldRender = !layer.childElementCount
-    || calorieTipGoalId !== goalId
-    || calorieTipLayoutSize !== size;
+  const shouldRender =
+    !layer.childElementCount || calorieTipGoalId !== goalId || calorieTipLayoutSize !== size;
 
   if (shouldRender) {
     renderCalorieTipLayout(bucket, size, goalId);
@@ -2294,7 +2365,7 @@ function updateCalorieTipPanel(bucket, tip) {
 function updateCalorieTipSelectionStyles() {
   const layer = $("calorie-ring-emoji-layer");
   if (!layer) return;
-  layer.querySelectorAll(".ring-emoji-btn").forEach(btn => {
+  layer.querySelectorAll(".ring-emoji-btn").forEach((btn) => {
     const key = btn.dataset.tipKey;
     if (key === calorieTipSelectionKey) btn.classList.add("is-selected");
     else btn.classList.remove("is-selected");
@@ -2325,7 +2396,7 @@ function renderCalorieButton() {
   const consumed = getEffectiveCalorieConsumed(dateKey);
   const remaining = getCalorieRemaining(consumed);
   const view = getCalorieView();
-  const viewLabel = CALORIE_VIEWS.find(v => v.id === view)?.label ?? "Total";
+  const viewLabel = CALORIE_VIEWS.find((v) => v.id === view)?.label ?? "Total";
   const isMissingConfig = !target;
 
   let valueText = "Set target";
@@ -2386,7 +2457,8 @@ function renderCalories() {
     heightLabel.textContent = unitSystem === "imperial" ? "Height (ft/in)" : "Height (cm)";
   }
   if (weightLabel) {
-    weightLabel.textContent = unitSystem === "imperial" ? "Current weight (lb)" : "Current weight (kg)";
+    weightLabel.textContent =
+      unitSystem === "imperial" ? "Current weight (lb)" : "Current weight (kg)";
   }
   if (heightInput) {
     heightInput.placeholder = unitSystem === "imperial" ? "e.g. 5'8\"" : "e.g. 170 cm";
@@ -2395,10 +2467,12 @@ function renderCalories() {
     weightInput.placeholder = unitSystem === "imperial" ? "e.g. 160 lb" : "e.g. 72.5 kg";
   }
   if (heightSubtext) {
-    heightSubtext.textContent = unitSystem === "imperial" ? "Height in feet and inches." : "Height in centimeters.";
+    heightSubtext.textContent =
+      unitSystem === "imperial" ? "Height in feet and inches." : "Height in centimeters.";
   }
   if (weightSubtext) {
-    weightSubtext.textContent = unitSystem === "imperial" ? "Current weight in pounds." : "Current weight in kilograms.";
+    weightSubtext.textContent =
+      unitSystem === "imperial" ? "Current weight in pounds." : "Current weight in kilograms.";
   }
   renderCalorieSummary();
   renderCalorieRing();
@@ -2497,7 +2571,7 @@ function initCalories() {
   if (ringValue) {
     ringValue.addEventListener("click", () => {
       const current = getCalorieView();
-      const index = CALORIE_VIEWS.findIndex(view => view.id === current);
+      const index = CALORIE_VIEWS.findIndex((view) => view.id === current);
       const next = CALORIE_VIEWS[(index + 1) % CALORIE_VIEWS.length]?.id ?? "total";
       const settings = getCalorieSettings();
       settings.view = next;
@@ -2510,7 +2584,7 @@ function initCalories() {
 function initFastTypeChips() {
   const container = $("fast-type-chips");
   container.innerHTML = "";
-  FAST_TYPES.forEach(type => {
+  FAST_TYPES.forEach((type) => {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.dataset.typeId = type.id;
@@ -2528,7 +2602,7 @@ function initFastTypeChips() {
 function highlightSelectedFastType() {
   const chips = document.querySelectorAll("#fast-type-chips button");
   const current = state.activeFast ? state.activeFast.typeId : selectedFastTypeId;
-  chips.forEach(chip => {
+  chips.forEach((chip) => {
     const isActive = chip.dataset.typeId === current;
     if (isActive) {
       chip.classList.add("fast-type-chip--active");
@@ -2550,8 +2624,8 @@ function applyTypeToActiveFast(typeId) {
 }
 
 function openFastTypeModal(type) {
-  $("modal-type-label").textContent = type.label + " fast";
-  $("modal-type-duration").textContent = type.useCase || (type.durationHours + " hours");
+  $("modal-type-label").textContent = `${type.label} fast`;
+  $("modal-type-duration").textContent = type.useCase || `${type.durationHours} hours`;
   $("fast-type-modal").classList.remove("hidden");
 }
 
@@ -2561,7 +2635,10 @@ function closeFastTypeModal() {
 }
 
 function usePendingFastType() {
-  if (!pendingTypeId) { closeFastTypeModal(); return; }
+  if (!pendingTypeId) {
+    closeFastTypeModal();
+    return;
+  }
   selectedFastTypeId = pendingTypeId;
   state.settings.defaultFastTypeId = selectedFastTypeId;
   if (state.activeFast) applyTypeToActiveFast(selectedFastTypeId);
@@ -2598,7 +2675,9 @@ function initButtons() {
   $("post-fast-note-close").addEventListener("click", closePostFastNoteModal);
   $("post-fast-note-no").addEventListener("click", closePostFastNoteModal);
   $("post-fast-note-yes").addEventListener("click", confirmPostFastNote);
-  const postFastNoteBackdrop = document.querySelector("#post-fast-note-modal .post-fast-note-backdrop");
+  const postFastNoteBackdrop = document.querySelector(
+    "#post-fast-note-modal .post-fast-note-backdrop",
+  );
   if (postFastNoteBackdrop) postFastNoteBackdrop.addEventListener("click", closePostFastNoteModal);
 
   $("calorie-target-drawer-btn").addEventListener("click", openCalorieTargetDrawer);
@@ -2606,7 +2685,8 @@ function initButtons() {
   $("calorie-target-close").addEventListener("click", closeCalorieTargetDrawer);
   $("calorie-goal-close").addEventListener("click", closeCalorieGoalDrawer);
   const calorieTargetBackdrop = document.querySelector("#calorie-target-drawer .absolute.inset-0");
-  if (calorieTargetBackdrop) calorieTargetBackdrop.addEventListener("click", closeCalorieTargetDrawer);
+  if (calorieTargetBackdrop)
+    calorieTargetBackdrop.addEventListener("click", closeCalorieTargetDrawer);
   const calorieGoalBackdrop = document.querySelector("#calorie-goal-drawer .absolute.inset-0");
   if (calorieGoalBackdrop) calorieGoalBackdrop.addEventListener("click", closeCalorieGoalDrawer);
 
@@ -2696,13 +2776,25 @@ function initButtons() {
   $("export-data").addEventListener("click", exportCSV);
   $("clear-data").addEventListener("click", clearAllData);
   $("sign-out").addEventListener("click", async () => {
-    try { await signOut(auth); } catch {}
+    try {
+      await signOut(auth);
+    } catch {}
   });
 
-  $("calendar-prev").addEventListener("click", () => { calendarMonth = addMonths(calendarMonth, -1); renderCalendar(); renderDayDetails(); renderNotes(); });
-  $("calendar-next").addEventListener("click", () => { calendarMonth = addMonths(calendarMonth, 1); renderCalendar(); renderDayDetails(); renderNotes(); });
+  $("calendar-prev").addEventListener("click", () => {
+    calendarMonth = addMonths(calendarMonth, -1);
+    renderCalendar();
+    renderDayDetails();
+    renderNotes();
+  });
+  $("calendar-next").addEventListener("click", () => {
+    calendarMonth = addMonths(calendarMonth, 1);
+    renderCalendar();
+    renderDayDetails();
+    renderNotes();
+  });
 
-  $("default-fast-select").addEventListener("change", e => {
+  $("default-fast-select").addEventListener("change", (e) => {
     selectedFastTypeId = e.target.value;
     state.settings.defaultFastTypeId = selectedFastTypeId;
     void saveState();
@@ -2719,12 +2811,18 @@ function initButtons() {
   });
 
   $("edit-start-close").addEventListener("click", closeEditStartModal);
-  $("edit-start-now").addEventListener("click", () => { $("edit-start-input").value = toLocalInputValue(new Date()); });
+  $("edit-start-now").addEventListener("click", () => {
+    $("edit-start-input").value = toLocalInputValue(new Date());
+  });
   $("edit-start-save").addEventListener("click", saveEditedStartTime);
 
   $("edit-history-close").addEventListener("click", closeEditHistoryModal);
-  $("edit-history-start-now").addEventListener("click", () => { $("edit-history-start").value = toLocalInputValue(new Date()); });
-  $("edit-history-end-now").addEventListener("click", () => { $("edit-history-end").value = toLocalInputValue(new Date()); });
+  $("edit-history-start-now").addEventListener("click", () => {
+    $("edit-history-start").value = toLocalInputValue(new Date());
+  });
+  $("edit-history-end-now").addEventListener("click", () => {
+    $("edit-history-end").value = toLocalInputValue(new Date());
+  });
   $("edit-history-save").addEventListener("click", saveEditedHistoryTimes);
   $("edit-history-delete").addEventListener("click", deleteEditedHistoryEntry);
 
@@ -2737,7 +2835,9 @@ function initButtons() {
   $("note-editor-delete").addEventListener("click", removeNote);
   attachNoteEditorSwipeHandlers();
 
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) renderAll(); });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) renderAll();
+  });
 }
 
 function openCalorieTargetDrawer() {
@@ -2760,7 +2860,14 @@ function closeCalorieGoalDrawer() {
   $("calorie-goal-drawer-btn").setAttribute("aria-expanded", "false");
 }
 
-function openConfirmFastModal({ title, message, confirmLabel, confirmClasses, onConfirm, focusAfterClose }) {
+function openConfirmFastModal({
+  title,
+  message,
+  confirmLabel,
+  confirmClasses,
+  onConfirm,
+  focusAfterClose,
+}) {
   $("confirm-fast-title").textContent = title;
   $("confirm-fast-message").textContent = message;
   $("confirm-fast-accept").textContent = confirmLabel;
@@ -2789,7 +2896,7 @@ function confirmFastAction() {
 function openPostFastNoteModal({ fastContext, dateKey, focusAfterClose } = {}) {
   pendingPostFastNote = {
     fastContext: fastContext ?? buildInactiveFastContext(),
-    dateKey: dateKey ?? formatDateKey(new Date())
+    dateKey: dateKey ?? formatDateKey(new Date()),
   };
   pendingConfirmCloseFocus = focusAfterClose || null;
   $("post-fast-note-modal").classList.remove("hidden");
@@ -2812,7 +2919,7 @@ function confirmPostFastNote() {
   openNoteEditor({
     text: "",
     dateKey: noteContext.dateKey,
-    fastContext: noteContext.fastContext
+    fastContext: noteContext.fastContext,
   });
 }
 
@@ -2823,9 +2930,10 @@ function confirmStartFast(event) {
     title: "Start this fast?",
     message: `Start a ${type.label} fast for ${type.durationHours} hours?`,
     confirmLabel: "Start fast",
-    confirmClasses: "w-full py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold",
+    confirmClasses:
+      "w-full py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold",
     onConfirm: startFast,
-    focusAfterClose: event?.currentTarget
+    focusAfterClose: event?.currentTarget,
   });
 }
 
@@ -2838,16 +2946,17 @@ function confirmStopFast(event) {
     title: "Stop this fast?",
     message: `Stop and log your ${typeLabel} fast now?`,
     confirmLabel: "Stop fast",
-    confirmClasses: "w-full py-3 md:py-2.5 rounded-xl button-danger border text-sm md:text-xs font-semibold",
+    confirmClasses:
+      "w-full py-3 md:py-2.5 rounded-xl button-danger border text-sm md:text-xs font-semibold",
     onConfirm: stopFastAndLog,
-    focusAfterClose: event?.currentTarget
+    focusAfterClose: event?.currentTarget,
   });
 }
 
 function initSettings() {
   const sel = $("default-fast-select");
   sel.innerHTML = "";
-  FAST_TYPES.forEach(t => {
+  FAST_TYPES.forEach((t) => {
     const o = document.createElement("option");
     o.value = t.id;
     o.textContent = `${t.label} (${t.durationHours}h)`;
@@ -2928,13 +3037,13 @@ function startFast() {
   const type = getTypeById(selectedFastTypeId);
   const now = Date.now();
   state.activeFast = {
-    id: "fast_" + now,
+    id: `fast_${now}`,
     typeId: type.id,
     startTimestamp: now,
     plannedDurationHours: type.durationHours,
     endTimestamp: now + type.durationHours * 3600000,
     status: "active",
-    milestonesHit: []
+    milestonesHit: [],
   };
   state.reminders = { endNotified: false, lastHourlyAt: null };
   selectedDayKey = formatDateKey(new Date(now));
@@ -2956,7 +3065,7 @@ function stopFastAndLog() {
     typeId: endedFast.typeId,
     startTimestamp: endedFast.startTimestamp,
     endTimestamp: endTs,
-    durationHours: Math.round(durHrs * 100) / 100
+    durationHours: Math.round(durHrs * 100) / 100,
   });
 
   state.activeFast = null;
@@ -2969,7 +3078,7 @@ function stopFastAndLog() {
   showToast("Fast logged");
   openPostFastNoteModal({
     fastContext: buildFastContextFromFast(endedFast, endTs),
-    dateKey: formatDateKey(new Date(endTs))
+    dateKey: formatDateKey(new Date(endTs)),
   });
 }
 
@@ -3004,7 +3113,8 @@ function ensureRingEmojis() {
   const layer = $("ring-emoji-layer");
   if (!layer || !type) return;
   const size = layer.clientWidth;
-  const shouldRender = !layer.childElementCount || ringEmojiTypeId !== type.id || ringEmojiLayoutSize !== size;
+  const shouldRender =
+    !layer.childElementCount || ringEmojiTypeId !== type.id || ringEmojiLayoutSize !== size;
   if (shouldRender) {
     renderRingEmojis(type, size);
   } else {
@@ -3032,7 +3142,7 @@ function renderRingEmojis(type, size) {
   const radius = Math.max(size / 2 - 18, 0);
   const center = size / 2;
 
-  milestones.forEach(milestone => {
+  milestones.forEach((milestone) => {
     const angle = (milestone.hour / type.durationHours) * 360 - 90;
     const rad = angle * (Math.PI / 180);
     const btn = document.createElement("button");
@@ -3047,13 +3157,13 @@ function renderRingEmojis(type, size) {
     layer.appendChild(btn);
   });
 
-  const hasSelection = milestones.some(m => `${type.id}-${m.hour}` === ringEmojiSelectionKey);
+  const hasSelection = milestones.some((m) => `${type.id}-${m.hour}` === ringEmojiSelectionKey);
   if (!hasSelection) {
     ringEmojiSelectionKey = null;
     ringEmojiSelectionDetail = null;
   }
   if (ringEmojiSelectionKey) {
-    const selected = milestones.find(m => `${type.id}-${m.hour}` === ringEmojiSelectionKey);
+    const selected = milestones.find((m) => `${type.id}-${m.hour}` === ringEmojiSelectionKey);
     updateRingEmojiPanel(type, selected);
   } else {
     title.textContent = "Tap an orb to see what’s happening";
@@ -3093,7 +3203,7 @@ function updateRingEmojiPanel(type, milestone) {
 function updateRingEmojiSelectionStyles() {
   const layer = $("ring-emoji-layer");
   if (!layer) return;
-  layer.querySelectorAll(".ring-emoji-btn").forEach(btn => {
+  layer.querySelectorAll(".ring-emoji-btn").forEach((btn) => {
     const key = `${btn.dataset.typeId}-${btn.dataset.hour}`;
     if (key === ringEmojiSelectionKey) btn.classList.add("is-selected");
     else btn.classList.remove("is-selected");
@@ -3106,9 +3216,9 @@ function updateRingEmojiProgress(type) {
   const elapsedHours = state.activeFast
     ? Math.max(0, (Date.now() - state.activeFast.startTimestamp) / 3600000)
     : null;
-  const milestones = Array.isArray(type?.milestones) ? type.milestones : [];
+  const _milestones = Array.isArray(type?.milestones) ? type.milestones : [];
 
-  layer.querySelectorAll(".ring-emoji-btn").forEach(btn => {
+  layer.querySelectorAll(".ring-emoji-btn").forEach((btn) => {
     const hour = Number(btn.dataset.hour);
     const isActive = elapsedHours !== null && elapsedHours >= hour;
     const isUpcoming = elapsedHours !== null && elapsedHours < hour;
@@ -3119,7 +3229,9 @@ function updateRingEmojiProgress(type) {
   });
 
   if (ringEmojiSelectionKey) {
-    const selectedButton = layer.querySelector(`[data-type-id="${type.id}"][data-hour="${ringEmojiSelectionKey.split("-")[1]}"]`);
+    const selectedButton = layer.querySelector(
+      `[data-type-id="${type.id}"][data-hour="${ringEmojiSelectionKey.split("-")[1]}"]`,
+    );
     if (!selectedButton || selectedButton.hidden) {
       ringEmojiSelectionKey = null;
       ringEmojiSelectionDetail = null;
@@ -3144,7 +3256,7 @@ function updateTimer() {
 
   const displayMode = state.settings.timeDisplayMode || "elapsed";
   const type = getActiveType();
-  typePill.textContent = type ? (type.label + " fast") : "No fast selected";
+  typePill.textContent = type ? `${type.label} fast` : "No fast selected";
 
   highlightSelectedFastType();
 
@@ -3201,7 +3313,7 @@ function updateTimer() {
 
   if (now < end) {
     status.textContent = "FASTING";
-    header.textContent = "Ends " + formatTimeShort(new Date(end));
+    header.textContent = `Ends ${formatTimeShort(new Date(end))}`;
   } else {
     status.textContent = "COMPLETE";
     header.textContent = "Fast complete";
@@ -3241,7 +3353,7 @@ function trackMilestoneProgress(type) {
   }
   const elapsedHours = Math.max(0, (Date.now() - state.activeFast.startTimestamp) / 3600000);
   let updated = false;
-  milestones.forEach(milestone => {
+  milestones.forEach((milestone) => {
     if (elapsedHours < milestone.hour) return;
     if (state.activeFast.milestonesHit.includes(milestone.hour)) return;
     state.activeFast.milestonesHit.push(milestone.hour);
@@ -3253,18 +3365,28 @@ function trackMilestoneProgress(type) {
 }
 
 function renderTimerMetaIdle() {
-  const type = getTypeById(selectedFastTypeId);
+  const _type = getTypeById(selectedFastTypeId);
   $("meta-start-btn").textContent = "—";
   $("meta-end").textContent = "—";
 }
 
 async function onAlertsButton() {
-  if (!("Notification" in window)) { showToast("Notifications not supported"); return; }
-  if (Notification.permission === "denied") { showToast("Alerts blocked in browser settings"); return; }
+  if (!("Notification" in window)) {
+    showToast("Notifications not supported");
+    return;
+  }
+  if (Notification.permission === "denied") {
+    showToast("Alerts blocked in browser settings");
+    return;
+  }
 
   if (Notification.permission === "default") {
     const res = await Notification.requestPermission();
-    if (res !== "granted") { showToast("Permission not granted"); renderAlertsPill(); return; }
+    if (res !== "granted") {
+      showToast("Permission not granted");
+      renderAlertsPill();
+      return;
+    }
     state.settings.alertsEnabled = true;
     void saveState();
     renderAlertsPill();
@@ -3291,31 +3413,30 @@ function renderAlertsPill() {
   const dotBaseClasses = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full";
   const textBaseClasses = "text-xs md:text-[11px]";
 
-  if (!("Notification" in window)) { 
-    dot.className = `${dotBaseClasses} bg-slate-600`; 
+  if (!("Notification" in window)) {
+    dot.className = `${dotBaseClasses} bg-slate-600`;
     text.textContent = "Off";
     text.className = `${textBaseClasses} text-slate-600`;
-    return; 
+    return;
   }
-  if (Notification.permission === "denied") { 
-    dot.className = `${dotBaseClasses} bg-red-500`; 
+  if (Notification.permission === "denied") {
+    dot.className = `${dotBaseClasses} bg-red-500`;
     text.textContent = "Off";
     text.className = `${textBaseClasses} text-red-500`;
-    return; 
+    return;
   }
-  if (Notification.permission === "default") { 
-    dot.className = `${dotBaseClasses} bg-slate-600`; 
+  if (Notification.permission === "default") {
+    dot.className = `${dotBaseClasses} bg-slate-600`;
     text.textContent = "Off";
     text.className = `${textBaseClasses} text-slate-600`;
-    return; 
+    return;
   }
-  if (state.settings.alertsEnabled) { 
-    dot.className = `${dotBaseClasses} bg-emerald-400`; 
+  if (state.settings.alertsEnabled) {
+    dot.className = `${dotBaseClasses} bg-emerald-400`;
     text.textContent = "On";
     text.className = `${textBaseClasses} text-emerald-400`;
-  }
-  else { 
-    dot.className = `${dotBaseClasses} bg-slate-600`; 
+  } else {
+    dot.className = `${dotBaseClasses} bg-slate-600`;
     text.textContent = "Off";
     text.className = `${textBaseClasses} text-slate-600`;
   }
@@ -3326,18 +3447,20 @@ async function sendNotification(title, body) {
   if (Notification.permission !== "granted") return;
 
   try {
-    if (swReg && swReg.showNotification) {
+    if (swReg?.showNotification) {
       await swReg.showNotification(title, {
         body,
         icon: "assets/favicon/android-chrome-192x192.png",
         badge: "assets/favicon/android-chrome-192x192.png",
-        tag: "fasting-tracker"
+        tag: "fasting-tracker",
       });
       return;
     }
   } catch {}
 
-  try { new Notification(title, { body }); } catch {}
+  try {
+    new Notification(title, { body });
+  } catch {}
 }
 
 function handleAlerts() {
@@ -3351,7 +3474,8 @@ function handleAlerts() {
   const endTs = af.endTimestamp;
 
   if (!state.reminders.endNotified && now >= endTs) {
-    if (state.settings.notifyOnEnd) sendNotification("Fast complete", "You reached your fasting goal.");
+    if (state.settings.notifyOnEnd)
+      sendNotification("Fast complete", "You reached your fasting goal.");
     state.reminders.endNotified = true;
     state.reminders.lastHourlyAt = now;
     void saveState();
@@ -3374,14 +3498,22 @@ function openEditStartModal() {
   $("edit-start-modal").classList.remove("hidden");
 }
 
-function closeEditStartModal() { $("edit-start-modal").classList.add("hidden"); }
+function closeEditStartModal() {
+  $("edit-start-modal").classList.add("hidden");
+}
 
 function saveEditedStartTime() {
   if (!state.activeFast) return;
   const v = $("edit-start-input").value;
-  if (!v) { showToast("Invalid time"); return; }
+  if (!v) {
+    showToast("Invalid time");
+    return;
+  }
   const d = new Date(v);
-  if (!isFinite(d.getTime())) { showToast("Invalid time"); return; }
+  if (!Number.isFinite(d.getTime())) {
+    showToast("Invalid time");
+    return;
+  }
 
   const af = state.activeFast;
   const plannedMs = (af.plannedDurationHours || getActiveType().durationHours || 0) * 3600000;
@@ -3415,16 +3547,22 @@ function closeEditHistoryModal() {
 
 function saveEditedHistoryTimes() {
   if (!editingHistoryId) return;
-  const entry = state.history.find(item => item.id === editingHistoryId);
-  if (!entry) { closeEditHistoryModal(); return; }
+  const entry = state.history.find((item) => item.id === editingHistoryId);
+  if (!entry) {
+    closeEditHistoryModal();
+    return;
+  }
 
   const startValue = $("edit-history-start").value;
   const endValue = $("edit-history-end").value;
-  if (!startValue || !endValue) { showToast("Invalid time"); return; }
+  if (!startValue || !endValue) {
+    showToast("Invalid time");
+    return;
+  }
 
   const startDate = new Date(startValue);
   const endDate = new Date(endValue);
-  if (!isFinite(startDate.getTime()) || !isFinite(endDate.getTime())) {
+  if (!Number.isFinite(startDate.getTime()) || !Number.isFinite(endDate.getTime())) {
     showToast("Invalid time");
     return;
   }
@@ -3456,11 +3594,11 @@ function deleteEditedHistoryEntry() {
 
 function deleteHistoryEntry(entryId) {
   if (!entryId) return;
-  const entry = state.history.find(item => item.id === entryId);
+  const entry = state.history.find((item) => item.id === entryId);
   if (!entry) return;
   if (!confirm("Delete this fast? This cannot be undone.")) return;
 
-  state.history = state.history.filter(item => item.id !== entryId);
+  state.history = state.history.filter((item) => item.id !== entryId);
   if (editingHistoryId === entryId) closeEditHistoryModal();
   void saveState();
   renderCalendar();
@@ -3479,20 +3617,23 @@ function showToast(msg) {
 
 function exportCSV() {
   const rows = [];
-  rows.push(["id","typeId","typeLabel","startISO","endISO","durationHours"].join(","));
+  rows.push(["id", "typeId", "typeLabel", "startISO", "endISO", "durationHours"].join(","));
   for (const e of state.history) {
     const type = getTypeById(e.typeId);
     const startISO = new Date(e.startTimestamp).toISOString();
     const endISO = new Date(e.endTimestamp).toISOString();
-    const duration = (typeof e.durationHours === "number" ? e.durationHours : Number(e.durationHours)) || 0;
-    rows.push([
-      csvCell(e.id),
-      csvCell(e.typeId),
-      csvCell(type?.label || ""),
-      csvCell(startISO),
-      csvCell(endISO),
-      csvCell(duration.toFixed(2))
-    ].join(","));
+    const duration =
+      (typeof e.durationHours === "number" ? e.durationHours : Number(e.durationHours)) || 0;
+    rows.push(
+      [
+        csvCell(e.id),
+        csvCell(e.typeId),
+        csvCell(type?.label || ""),
+        csvCell(startISO),
+        csvCell(endISO),
+        csvCell(duration.toFixed(2)),
+      ].join(","),
+    );
   }
   const csv = rows.join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -3509,7 +3650,7 @@ function exportCSV() {
 
 function csvCell(v) {
   const s = String(v ?? "");
-  if (/[",\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
+  if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
   return s;
 }
 
@@ -3531,7 +3672,10 @@ function initCalendar() {
 function renderCalendar() {
   const label = $("calendar-label");
   const grid = $("calendar-grid");
-  label.textContent = calendarMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  label.textContent = calendarMonth.toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
   grid.innerHTML = "";
 
   const first = startOfMonth(calendarMonth);
@@ -3546,9 +3690,12 @@ function renderCalendar() {
   for (let i = 0; i < 42; i++) {
     const cell = document.createElement("button");
     cell.type = "button";
-    cell.className = "calendar-day aspect-square flex flex-col items-center justify-center text-[12px] md:text-[11px]";
+    cell.className =
+      "calendar-day aspect-square flex flex-col items-center justify-center text-[12px] md:text-[11px]";
 
-    let dayNum, date, isCurrent = false;
+    let dayNum,
+      date,
+      isCurrent = false;
 
     if (i < startWeekday) {
       dayNum = daysInPrev - startWeekday + i + 1;
@@ -3589,7 +3736,7 @@ function renderCalendar() {
     if (hasFast) {
       const tiny = document.createElement("span");
       tiny.className = "calendar-day-hours mt-0.5 text-[10px] md:text-[9px]";
-      tiny.textContent = Math.round(data.totalHours) + "h";
+      tiny.textContent = `${Math.round(data.totalHours)}h`;
       cell.appendChild(tiny);
     }
 
@@ -3616,13 +3763,13 @@ function buildDayFastMap({ includeActive = false } = {}) {
       durationHours,
       displayStartTimestamp: startTs,
       displayEndTimestamp: endTs,
-      sourceEntry: entry
+      sourceEntry: entry,
     });
     map[dayKey].totalHours += durationHours;
   };
 
   const addEntryAcrossDays = (entry, startTs, endTs) => {
-    if (!isFinite(startTs) || !isFinite(endTs) || endTs <= startTs) return;
+    if (!Number.isFinite(startTs) || !Number.isFinite(endTs) || endTs <= startTs) return;
     let cursor = new Date(startTs);
     cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
     const endDay = new Date(endTs);
@@ -3640,7 +3787,7 @@ function buildDayFastMap({ includeActive = false } = {}) {
     }
   };
 
-  state.history.forEach(e => {
+  state.history.forEach((e) => {
     addEntryAcrossDays(e, e.startTimestamp, e.endTimestamp);
   });
 
@@ -3661,15 +3808,19 @@ function renderDayDetails() {
 
   list.innerHTML = "";
 
-  if (!day) { summary.textContent = "No fasts logged"; return; }
+  if (!day) {
+    summary.textContent = "No fasts logged";
+    return;
+  }
 
   const dayNoteCalories = getNoteCaloriesForDateKey(selectedDayKey);
-  const calorieSummary = Number.isFinite(dayNoteCalories) && dayNoteCalories > 0
-    ? `, ${formatCalories(dayNoteCalories)} calories`
-    : "";
+  const calorieSummary =
+    Number.isFinite(dayNoteCalories) && dayNoteCalories > 0
+      ? `, ${formatCalories(dayNoteCalories)} calories`
+      : "";
   summary.textContent = `${day.entries.length} fast(s), ${day.totalHours.toFixed(1)} total hours${calorieSummary}`;
 
-  day.entries.forEach(e => {
+  day.entries.forEach((e) => {
     const displayStart = e.displayStartTimestamp ?? e.startTimestamp;
     const displayEnd = e.displayEndTimestamp ?? e.endTimestamp;
     const sourceEntry = e.sourceEntry ?? e;
@@ -3677,7 +3828,8 @@ function renderDayDetails() {
     const actualEnd = new Date(sourceEntry.endTimestamp);
     const spansMultipleDays = !isSameLocalDay(actualStart, actualEnd);
     const row = document.createElement("div");
-    row.className = "flex items-center justify-between surface border border-default rounded-xl px-3 py-3 md:py-2";
+    row.className =
+      "flex items-center justify-between surface border border-default rounded-xl px-3 py-3 md:py-2";
 
     const left = document.createElement("div");
     left.className = "flex flex-col text-sm md:text-[11px]";
@@ -3708,13 +3860,15 @@ function renderDayDetails() {
 
       const editBtn = document.createElement("button");
       editBtn.type = "button";
-      editBtn.className = "button-outline border text-xs md:text-[11px] px-3 py-2 md:px-2 md:py-1 rounded-full";
+      editBtn.className =
+        "button-outline border text-xs md:text-[11px] px-3 py-2 md:px-2 md:py-1 rounded-full";
       editBtn.textContent = "Edit";
       editBtn.addEventListener("click", () => openEditHistoryModal(sourceEntry));
 
       const deleteBtn = document.createElement("button");
       deleteBtn.type = "button";
-      deleteBtn.className = "button-danger border text-xs md:text-[11px] px-3 py-2 md:px-2 md:py-1 rounded-full";
+      deleteBtn.className =
+        "button-danger border text-xs md:text-[11px] px-3 py-2 md:px-2 md:py-1 rounded-full";
       deleteBtn.textContent = "Delete";
       deleteBtn.addEventListener("click", () => deleteHistoryEntry(sourceEntry.id));
 
@@ -3728,9 +3882,11 @@ function renderDayDetails() {
 }
 
 function isSameLocalDay(a, b) {
-  return a.getFullYear() === b.getFullYear()
-    && a.getMonth() === b.getMonth()
-    && a.getDate() === b.getDate();
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
 }
 
 function formatDateTimeLong(date) {
@@ -3762,18 +3918,21 @@ function renderHistoryNotes() {
     return;
   }
 
-  const dayNotes = notes.filter(note => note.dateKey === selectedDayKey);
+  const dayNotes = notes.filter((note) => note.dateKey === selectedDayKey);
   if (!dayNotes.length) {
     summary.textContent = "No notes yet.";
     return;
   }
 
   const dayNoteCalories = getNoteCaloriesForDateKey(selectedDayKey);
-  const calorieSummary = Number.isFinite(dayNoteCalories) && dayNoteCalories > 0
-    ? `, ${formatCalories(dayNoteCalories)} calories`
-    : "";
+  const calorieSummary =
+    Number.isFinite(dayNoteCalories) && dayNoteCalories > 0
+      ? `, ${formatCalories(dayNoteCalories)} calories`
+      : "";
   summary.textContent = `${dayNotes.length} note(s)${calorieSummary}`;
-  dayNotes.forEach(note => list.appendChild(buildNoteCard(note)));
+  dayNotes.forEach((note) => {
+    list.appendChild(buildNoteCard(note));
+  });
 }
 
 function renderNotesTab() {
@@ -3800,7 +3959,9 @@ function renderNotesTab() {
   }
 
   empty.classList.add("hidden");
-  notes.forEach(note => list.appendChild(buildNoteCard(note)));
+  notes.forEach((note) => {
+    list.appendChild(buildNoteCard(note));
+  });
 }
 
 function buildNoteCard(note) {
@@ -3872,7 +4033,12 @@ function buildNoteCard(note) {
 
 function getNoteTimestampLabel(note) {
   const dateObj = parseDateKey(note.dateKey);
-  if (dateObj) return dateObj.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  if (dateObj)
+    return dateObj.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   return "Unknown date";
 }
 
@@ -3887,9 +4053,10 @@ function renderRecentFasts() {
     return;
   }
 
-  state.history.slice(0, 10).forEach(e => {
+  state.history.slice(0, 10).forEach((e) => {
     const row = document.createElement("div");
-    row.className = "flex items-center justify-between surface border border-default rounded-xl px-3 py-3 md:py-2";
+    row.className =
+      "flex items-center justify-between surface border border-default rounded-xl px-3 py-3 md:py-2";
 
     const left = document.createElement("div");
     left.className = "flex flex-col text-sm md:text-[11px]";
@@ -3941,9 +4108,9 @@ function getLegacyThemeColors(themeState) {
     "borderColor",
     "textColor",
     "textMutedColor",
-    "dangerColor"
+    "dangerColor",
   ];
-  const hasLegacy = legacyKeys.some(key => themeState?.[key]);
+  const hasLegacy = legacyKeys.some((key) => themeState?.[key]);
   if (!hasLegacy) return null;
   return legacyKeys.reduce((acc, key) => {
     if (themeState?.[key]) acc[key] = themeState[key];
@@ -3971,7 +4138,9 @@ function setThemePreset(presetId) {
     state.settings.theme.customColors = getCustomThemeColors();
     return;
   }
-  state.settings.theme.presetId = THEME_PRESETS[presetId] ? presetId : defaultState.settings.theme.presetId;
+  state.settings.theme.presetId = THEME_PRESETS[presetId]
+    ? presetId
+    : defaultState.settings.theme.presetId;
 }
 
 function applyThemeColors() {
@@ -3999,7 +4168,7 @@ function getThemeSettings() {
 }
 
 function toLocalInputValue(d) {
-  const pad = n => String(n).padStart(2, "0");
+  const pad = (n) => String(n).padStart(2, "0");
   const yyyy = d.getFullYear();
   const mm = pad(d.getMonth() + 1);
   const dd = pad(d.getDate());
@@ -4013,7 +4182,7 @@ function formatHMS(ms) {
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
-  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
 function formatElapsedShort(ms) {
@@ -4025,16 +4194,27 @@ function formatElapsedShort(ms) {
 }
 
 function formatDateTime(d) {
-  return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function formatTimeShort(d) {
   return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
-function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
-function getDaysInMonth(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); }
-function addMonths(d, amount) { return new Date(d.getFullYear(), d.getMonth() + amount, 1); }
+function startOfMonth(d) {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+function getDaysInMonth(d) {
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+}
+function addMonths(d, amount) {
+  return new Date(d.getFullYear(), d.getMonth() + amount, 1);
+}
 
 function formatDateKey(d) {
   const y = d.getFullYear();
@@ -4054,5 +4234,7 @@ function parseDateKey(dateKey) {
 
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
-  try { swReg = await navigator.serviceWorker.register("./sw.js"); } catch {}
+  try {
+    swReg = await navigator.serviceWorker.register("./sw.js");
+  } catch {}
 }

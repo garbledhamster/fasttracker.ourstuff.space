@@ -90,15 +90,15 @@
         <p id="header-subtitle" class="text-sm md:text-xs text-muted">No active fast</p>
       </div>
       <div class="flex items-center gap-2">
-        <button id="fast-btn" class="header-nav-btn text-sm md:text-xs px-3 py-2 md:py-1.5 rounded-full border button-outline text-default flex flex-col items-center text-center leading-tight">
+        <button id="fast-btn" type="button" class="header-nav-btn text-sm md:text-xs px-3 py-2 md:py-1.5 rounded-full border button-outline text-default flex flex-col items-center text-center leading-tight">
           <span id="fast-label-mode" class="text-[10px] md:text-[9px] uppercase tracking-[0.2em] text-subtle w-full text-center">Fast</span>
           <span id="fast-label-value" class="header-nav-value text-sm md:text-xs font-semibold w-full text-center">00:00:00</span>
         </button>
-        <button id="calorie-btn" class="header-nav-btn text-sm md:text-xs px-3 py-2 md:py-1.5 rounded-full border button-outline text-default flex flex-col items-center text-center leading-tight">
+        <button id="calorie-btn" type="button" class="header-nav-btn text-sm md:text-xs px-3 py-2 md:py-1.5 rounded-full border button-outline text-default flex flex-col items-center text-center leading-tight">
           <span id="calorie-label-mode" class="text-[10px] md:text-[9px] uppercase tracking-[0.2em] text-subtle w-full text-center">Calories</span>
           <span id="calorie-label-value" class="header-nav-value text-sm md:text-xs font-semibold w-full text-center">Set target</span>
         </button>
-        <button id="alerts-btn" class="header-nav-btn text-sm md:text-xs px-3 py-2 md:py-1.5 rounded-full border button-outline text-default flex flex-col items-center text-center leading-tight">
+        <button id="alerts-btn" type="button" class="header-nav-btn text-sm md:text-xs px-3 py-2 md:py-1.5 rounded-full border button-outline text-default flex flex-col items-center text-center leading-tight">
           <span id="alerts-label-mode" class="text-[10px] md:text-[9px] uppercase tracking-[0.2em] text-subtle w-full text-center">Alerts</span>
           <span class="header-nav-value text-sm md:text-xs font-semibold flex items-center justify-center w-full gap-1">
             <span id="alerts-dot" class="w-2 h-2 md:w-1.5 md:h-1.5 rounded-full bg-subtle"></span>
@@ -126,7 +126,7 @@
                   <div id="timer-type" class="text-sm md:text-xs px-3 py-1 md:px-2 md:py-0.5 rounded-full">No fast selected</div>
                 </div>
 
-                <button id="timer-main" class="text-5xl md:text-4xl font-semibold tracking-tight px-3 py-2 rounded-2xl pressable-surface">00:00:00</button>
+                <button id="timer-main" type="button" class="text-5xl md:text-4xl font-semibold tracking-tight px-3 py-2 rounded-2xl pressable-surface">00:00:00</button>
                 <div id="timer-mode" class="text-xs md:text-[11px] uppercase tracking-[0.2em] text-subtle mt-1">Time Fasted</div>
                 <div id="timer-sub" class="text-sm md:text-xs text-muted mt-2 md:mt-1">Tap time to change view</div>
 
@@ -145,7 +145,7 @@
             <div class="mt-4 flex items-start justify-between gap-3 text-sm md:text-xs text-muted">
               <div class="flex flex-col">
                 <div class="text-[11px] md:text-[10px] uppercase tracking-[0.2em] text-subtle">Started</div>
-                <button id="meta-start-btn" class="text-left text-default underline underline-offset-4 decoration-muted disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed" disabled>—</button>
+                <button id="meta-start-btn" type="button" class="text-left text-default underline underline-offset-4 decoration-muted disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed" disabled>—</button>
               </div>
               <div class="flex flex-col items-end">
                 <div class="text-[11px] md:text-[10px] uppercase tracking-[0.2em] text-subtle">Target end</div>
@@ -157,8 +157,8 @@
         </div>
 
         <div class="space-y-3 w-full max-w-md mx-auto">
-          <button id="start-fast-btn" class="tracker-primary-action w-full py-4 md:py-3 rounded-full button-primary font-semibold text-base md:text-sm">Start Fast</button>
-          <button id="stop-fast-btn" class="tracker-primary-action w-full py-4 md:py-3 rounded-full button-secondary border text-default font-semibold text-base md:text-sm hidden">Stop Fast</button>
+          <button id="start-fast-btn" type="button" class="tracker-primary-action w-full py-4 md:py-3 rounded-full button-primary font-semibold text-base md:text-sm">Start Fast</button>
+          <button id="stop-fast-btn" type="button" class="tracker-primary-action w-full py-4 md:py-3 rounded-full button-secondary border text-default font-semibold text-base md:text-sm hidden">Stop Fast</button>
         </div>
 
         <div class="mt-1">
@@ -171,9 +171,9 @@
       <section id="tab-history" class="h-full flex-col gap-4 hidden">
         <div class="mb-4">
           <div class="flex items-center justify-between mb-2">
-            <button id="calendar-prev" class="p-3 md:p-2 rounded-full button-outline border text-sm md:text-xs">&lt;</button>
+            <button id="calendar-prev" type="button" class="p-3 md:p-2 rounded-full button-outline border text-sm md:text-xs">&lt;</button>
             <div id="calendar-label" class="text-base md:text-sm font-medium text-default"></div>
-            <button id="calendar-next" class="p-3 md:p-2 rounded-full button-outline border text-sm md:text-xs">&gt;</button>
+            <button id="calendar-next" type="button" class="p-3 md:p-2 rounded-full button-outline border text-sm md:text-xs">&gt;</button>
           </div>
           <div class="grid grid-cols-7 gap-1 text-[11px] md:text-[10px] text-center text-subtle mb-1">
             <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
@@ -266,7 +266,7 @@
               <h2 class="text-base md:text-sm font-medium text-default">Notes</h2>
               <p class="text-sm md:text-xs text-muted">Capture reflections, cravings, or wins alongside your fasts.</p>
             </div>
-            <button id="new-note-btn" class="w-full py-4 md:py-3 rounded-full button-primary font-semibold text-base md:text-sm">New note</button>
+            <button id="new-note-btn" type="button" class="w-full py-4 md:py-3 rounded-full button-primary font-semibold text-base md:text-sm">New note</button>
           </div>
 
           <div class="notes-drawer-content flex-1 min-h-0 overflow-y-auto pt-4">
@@ -293,11 +293,11 @@
           <h2 class="text-xs uppercase tracking-[0.2em] text-subtle mb-1">Alerts</h2>
           <label class="flex items-center justify-between text-sm md:text-xs">
             <span class="text-muted">Alert when fast ends</span>
-            <button id="toggle-end-alert" class="switch-btn"></button>
+            <button id="toggle-end-alert" type="button" class="switch-btn" aria-label="Toggle end alert"></button>
           </label>
           <label class="flex items-center justify-between text-sm md:text-xs">
             <span class="text-muted">Hourly reminder after end</span>
-            <button id="toggle-hourly-alert" class="switch-btn"></button>
+            <button id="toggle-hourly-alert" type="button" class="switch-btn" aria-label="Toggle hourly alert"></button>
           </label>
           <p class="text-xs md:text-[11px] text-subtle">For best reliability, install the app (Add to Home Screen). Web alerts depend on OS/browser power rules.</p>
         </div>
@@ -306,7 +306,7 @@
           <h2 class="text-xs uppercase tracking-[0.2em] text-subtle mb-1">Display</h2>
           <label class="flex items-center justify-between text-sm md:text-xs">
             <span class="text-muted">Show tip orbs</span>
-            <button id="toggle-ring-emojis" class="switch-btn"></button>
+            <button id="toggle-ring-emojis" type="button" class="switch-btn" aria-label="Toggle ring emojis"></button>
           </label>
         </div>
 
@@ -368,64 +368,64 @@
 
         <div class="mt-4 space-y-3">
           <h2 class="text-xs uppercase tracking-[0.2em] text-subtle mb-1">Data</h2>
-          <button id="export-data" class="w-full py-3 md:py-2.5 rounded-xl button-outline border text-sm md:text-xs font-medium">Export history (CSV)</button>
-          <button id="clear-data" class="w-full py-3 md:py-2.5 rounded-xl button-danger border text-sm md:text-xs font-medium">Clear all data</button>
+          <button id="export-data" type="button" class="w-full py-3 md:py-2.5 rounded-xl button-outline border text-sm md:text-xs font-medium">Export history (CSV)</button>
+          <button id="clear-data" type="button" class="w-full py-3 md:py-2.5 rounded-xl button-danger border text-sm md:text-xs font-medium">Clear all data</button>
         </div>
 
         <div class="mt-4 space-y-3">
           <h2 class="text-xs uppercase tracking-[0.2em] text-subtle mb-1">Account</h2>
-          <button id="sign-out" class="w-full py-3 md:py-2.5 rounded-xl button-outline border text-sm md:text-xs font-medium">Sign out</button>
+          <button id="sign-out" type="button" class="w-full py-3 md:py-2.5 rounded-xl button-outline border text-sm md:text-xs font-medium">Sign out</button>
         </div>
       </section>
     </main>
 
     <nav class="fixed bottom-0 md:bottom-auto md:top-0 inset-x-0 border-t md:border-t-0 md:border-b border-default surface-appbar backdrop-blur pb-[env(safe-area-inset-bottom)] md:pb-0 md:pt-[env(safe-area-inset-top)]">
       <div class="flex h-20 md:h-14">
-        <button data-tab="timer" data-label="Timer" class="nav-btn flex-1 flex items-center justify-center text-default nav-btn-active">
-          <div class="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+        <button type="button" data-tab="timer" data-label="Timer" class="nav-btn flex-1 flex items-center justify-center text-default nav-btn-active">
+          <span class="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
             <svg class="w-7 h-7 md:w-5 md:h-5" viewBox="0 0 20 20" fill="currentColor">
               <path d="M16.32 7.1A8 8 0 1 1 9 4.06V2h2v2.06c1.46.18 2.8.76 3.9 1.62l1.46-1.46l1.42 1.42l-1.46 1.45zM10 18a6 6 0 1 0 0-12a6 6 0 0 0 0 12zM7 0h6v2H7V0zm5.12 8.46l1.42 1.42L10 13.4L8.59 12l3.53-3.54z"/>
             </svg>
             <span class="hidden md:inline text-xs">Timer</span>
-          </div>
+          </span>
         </button>
 
-        <button data-tab="history" data-label="History" class="nav-btn flex-1 flex items-center justify-center text-subtle">
-          <div class="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+        <button type="button" data-tab="history" data-label="History" class="nav-btn flex-1 flex items-center justify-center text-subtle">
+          <span class="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
             <svg class="w-7 h-7 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
               <path d="M12 8v4l2 2"/>
               <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/>
             </svg>
             <span class="hidden md:inline text-xs">History</span>
-          </div>
+          </span>
         </button>
 
-        <button data-tab="calories" data-label="Calories" class="nav-btn flex-1 flex items-center justify-center text-subtle">
-          <div class="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+        <button type="button" data-tab="calories" data-label="Calories" class="nav-btn flex-1 flex items-center justify-center text-subtle">
+          <span class="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
             <svg class="w-7 h-7 md:w-5 md:h-5" viewBox="0 0 2048 2048" fill="currentColor">
               <path d="M1280 64q0 179 66 330t190 278t190 278t66 330q0 106-27 204t-78 183t-120 156t-155 120t-184 77t-204 28q-106 0-204-27t-183-78t-156-120t-120-155t-77-184t-28-204q0-84 18-165t52-155t84-141t113-121q7 38 19 78t28 80t38 76t46 67q20 25 52 25q27 0 45-19t19-46q0-11-3-20t-10-18q-28-41-49-81t-37-82t-23-87t-8-95q0-119 45-224t124-183T992 46t224-46h64v64zm-256 1856q133 0 249-50t204-137t137-203t50-250q0-151-56-281t-162-236q-130-131-204-289t-88-342q-83 11-153 50t-123 99t-81 135t-29 160q0 78 23 141t68 126q19 26 29 54t11 62q0 40-15 75t-42 61t-61 42t-75 15q-46 0-81-17t-62-46t-48-65t-40-72q-46 73-68 157t-23 171q0 133 50 249t137 204t203 137t250 50z"/>
             </svg>
             <span class="hidden md:inline text-xs">Calories</span>
-          </div>
+          </span>
         </button>
 
-        <button data-tab="notes" data-label="Notes" class="nav-btn flex-1 flex items-center justify-center text-subtle">
-          <div class="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+        <button type="button" data-tab="notes" data-label="Notes" class="nav-btn flex-1 flex items-center justify-center text-subtle">
+          <span class="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
             <svg class="w-7 h-7 md:w-5 md:h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M16 14H8a1 1 0 0 0 0 2h8a1 1 0 0 0 0-2Zm0-4h-6a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2Zm4-6h-3V3a1 1 0 0 0-2 0v1h-2V3a1 1 0 0 0-2 0v1H9V3a1 1 0 0 0-2 0v1H4a1 1 0 0 0-1 1v14a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3V5a1 1 0 0 0-1-1Zm-1 15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6h2v1a1 1 0 0 0 2 0V6h2v1a1 1 0 0 0 2 0V6h2v1a1 1 0 0 0 2 0V6h2Z"/>
             </svg>
             <span class="hidden md:inline text-xs">Notes</span>
-          </div>
+          </span>
         </button>
 
-        <button data-tab="settings" data-label="Settings" class="nav-btn flex-1 flex items-center justify-center text-subtle">
-          <div class="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+        <button type="button" data-tab="settings" data-label="Settings" class="nav-btn flex-1 flex items-center justify-center text-subtle">
+          <span class="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
             <svg class="w-7 h-7 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
               <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c1 .608 2.296.07 2.572-1.065z"/>
               <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0"/>
             </svg>
             <span class="hidden md:inline text-xs">Settings</span>
-          </div>
+          </span>
         </button>
       </div>
     </nav>
@@ -436,7 +436,7 @@
     <div class="modal-sheet absolute bottom-0 rounded-t-3xl bg-app border-t border-default p-4">
       <div class="flex items-center justify-between mb-3">
         <div class="text-base md:text-sm font-medium text-default">Daily target</div>
-        <button id="calorie-target-close" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
+        <button id="calorie-target-close" type="button" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
       </div>
       <div class="space-y-3">
         <div>
@@ -456,7 +456,7 @@
     <div class="modal-sheet absolute bottom-0 rounded-t-3xl bg-app border-t border-default p-4 max-h-[70vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-3">
         <div class="text-base md:text-sm font-medium text-default">Goal details</div>
-        <button id="calorie-goal-close" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
+        <button id="calorie-goal-close" type="button" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
       </div>
       <div class="grid gap-3 md:grid-cols-2">
         <div>
@@ -515,9 +515,9 @@
           <div id="modal-type-label" class="text-base md:text-sm font-medium text-default"></div>
           <div id="modal-type-duration" class="text-xs md:text-[11px] text-muted"></div>
         </div>
-        <button id="modal-close" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
+        <button id="modal-close" type="button" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
       </div>
-      <button id="modal-use-type" class="w-full py-3 md:py-2.5 rounded-full button-primary text-sm md:text-xs font-semibold">Use this fast type</button>
+      <button id="modal-use-type" type="button" class="w-full py-3 md:py-2.5 rounded-full button-primary text-sm md:text-xs font-semibold">Use this fast type</button>
     </div>
   </div>
 
@@ -526,11 +526,11 @@
     <div class="modal-sheet absolute bottom-0 rounded-t-3xl bg-app border-t border-default p-4">
       <div class="flex items-center justify-between mb-2">
         <div id="confirm-fast-title" class="text-base md:text-sm font-medium text-default">Start this fast?</div>
-        <button id="confirm-fast-close" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
+        <button id="confirm-fast-close" type="button" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
       </div>
       <p id="confirm-fast-message" class="text-sm md:text-xs text-muted mb-4"></p>
       <div class="flex gap-2">
-        <button id="confirm-fast-accept" class="flex-1 py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold">Confirm</button>
+        <button id="confirm-fast-accept" type="button" class="flex-1 py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold">Confirm</button>
       </div>
     </div>
   </div>
@@ -540,12 +540,12 @@
     <div class="modal-sheet absolute bottom-0 rounded-t-3xl bg-app border-t border-default p-4">
       <div class="flex items-center justify-between mb-2">
         <div class="text-base md:text-sm font-medium text-default">Fast logged</div>
-        <button id="post-fast-note-close" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
+        <button id="post-fast-note-close" type="button" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
       </div>
       <p class="text-sm md:text-xs text-muted mb-4">Add a note for this fast?</p>
       <div class="flex gap-2">
-        <button id="post-fast-note-no" class="flex-1 py-3 md:py-2.5 rounded-xl button-outline border text-sm md:text-xs font-semibold">No</button>
-        <button id="post-fast-note-yes" class="flex-1 py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold">Yes</button>
+        <button id="post-fast-note-no" type="button" class="flex-1 py-3 md:py-2.5 rounded-xl button-outline border text-sm md:text-xs font-semibold">No</button>
+        <button id="post-fast-note-yes" type="button" class="flex-1 py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold">Yes</button>
       </div>
     </div>
   </div>
@@ -555,13 +555,13 @@
     <div class="modal-sheet absolute bottom-0 rounded-t-3xl bg-app border-t border-default p-4">
       <div class="flex items-center justify-between mb-3">
         <div class="text-base md:text-sm font-medium text-default">Edit start time</div>
-        <button id="edit-start-close" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
+        <button id="edit-start-close" type="button" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
       </div>
       <label class="block text-sm md:text-xs text-muted mb-1">Start time</label>
       <input id="edit-start-input" type="datetime-local" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
       <div class="flex gap-2 mt-3">
-        <button id="edit-start-now" class="flex-1 py-3 md:py-2.5 rounded-xl button-outline border text-sm md:text-xs font-medium">Set to now</button>
-        <button id="edit-start-save" class="flex-1 py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold">Save</button>
+        <button id="edit-start-now" type="button" class="flex-1 py-3 md:py-2.5 rounded-xl button-outline border text-sm md:text-xs font-medium">Set to now</button>
+        <button id="edit-start-save" type="button" class="flex-1 py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold">Save</button>
       </div>
       <div class="text-xs md:text-[11px] text-subtle mt-2">End time updates automatically to keep the planned duration.</div>
     </div>
@@ -572,21 +572,21 @@
     <div class="modal-sheet absolute bottom-0 rounded-t-3xl bg-app border-t border-default p-4">
       <div class="flex items-center justify-between mb-3">
         <div class="text-base md:text-sm font-medium text-default">Edit completed fast</div>
-        <button id="edit-history-close" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
+        <button id="edit-history-close" type="button" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
       </div>
       <label class="block text-sm md:text-xs text-muted mb-1">Start time</label>
       <input id="edit-history-start" type="datetime-local" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
       <div class="flex gap-2 mt-2">
-        <button id="edit-history-start-now" class="flex-1 py-3 md:py-2.5 rounded-xl button-outline border text-sm md:text-xs font-medium">Set start to now</button>
+        <button id="edit-history-start-now" type="button" class="flex-1 py-3 md:py-2.5 rounded-xl button-outline border text-sm md:text-xs font-medium">Set start to now</button>
       </div>
       <label class="block text-sm md:text-xs text-muted mb-1 mt-3">End time</label>
       <input id="edit-history-end" type="datetime-local" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
       <div class="flex gap-2 mt-2">
-        <button id="edit-history-end-now" class="flex-1 py-3 md:py-2.5 rounded-xl button-outline border text-sm md:text-xs font-medium">Set end to now</button>
-        <button id="edit-history-save" class="flex-1 py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold">Save</button>
+        <button id="edit-history-end-now" type="button" class="flex-1 py-3 md:py-2.5 rounded-xl button-outline border text-sm md:text-xs font-medium">Set end to now</button>
+        <button id="edit-history-save" type="button" class="flex-1 py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold">Save</button>
       </div>
       <div class="flex gap-2 mt-2">
-        <button id="edit-history-delete" class="flex-1 py-3 md:py-2.5 rounded-xl button-danger border text-sm md:text-xs font-medium">Delete fast</button>
+        <button id="edit-history-delete" type="button" class="flex-1 py-3 md:py-2.5 rounded-xl button-danger border text-sm md:text-xs font-medium">Delete fast</button>
       </div>
       <div class="text-xs md:text-[11px] text-subtle mt-2">Duration updates automatically when you save.</div>
     </div>
@@ -597,7 +597,7 @@
     <div class="note-editor-panel bg-app border-l border-default p-4 rounded-l-3xl shadow-2xl">
       <div class="flex items-center justify-between mb-3">
         <div class="text-base md:text-sm font-medium text-default">Note</div>
-        <button id="note-editor-close" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
+        <button id="note-editor-close" type="button" class="text-sm md:text-xs px-3 py-2 md:px-2 md:py-1 rounded-full button-outline border">Close</button>
       </div>
       <div class="flex flex-wrap items-center gap-2 mb-3">
         <span id="note-editor-fast" class="note-badge"></span>
@@ -608,8 +608,8 @@
       <label for="note-editor-calories" class="block text-sm md:text-xs text-muted mb-1 mt-3">Calories</label>
       <input id="note-editor-calories" type="number" min="0" step="1" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="0">
       <div class="flex gap-2 mt-3">
-        <button id="note-editor-delete" class="flex-1 py-3 md:py-2.5 rounded-xl button-danger border text-sm md:text-xs font-medium hidden">Delete</button>
-        <button id="note-editor-save" class="flex-1 py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold">Save note</button>
+        <button id="note-editor-delete" type="button" class="flex-1 py-3 md:py-2.5 rounded-xl button-danger border text-sm md:text-xs font-medium hidden">Delete</button>
+        <button id="note-editor-save" type="button" class="flex-1 py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold">Save note</button>
       </div>
     </div>
   </div>

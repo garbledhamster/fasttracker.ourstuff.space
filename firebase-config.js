@@ -5,5 +5,5 @@ window.FIREBASE_CONFIG = {
   storageBucket: "fast-tracker-fc496.firebasestorage.app",
   messagingSenderId: "521497212834",
   appId: "1:521497212834:web:475a98cc004554279d24fb",
-  measurementId: "G-5CNSN114MK"
+  measurementId: "G-5CNSN114MK",
 };
