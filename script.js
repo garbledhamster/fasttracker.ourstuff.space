@@ -2,28 +2,28 @@ import { load as loadYaml } from "https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+es
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import {
-  browserLocalPersistence,
-  browserSessionPersistence,
-  createUserWithEmailAndPassword,
-  getAuth,
-  onAuthStateChanged,
-  reload,
-  sendEmailVerification,
-  sendPasswordResetEmail,
-  setPersistence,
-  signInWithEmailAndPassword,
-  signOut,
+	browserLocalPersistence,
+	browserSessionPersistence,
+	createUserWithEmailAndPassword,
+	getAuth,
+	onAuthStateChanged,
+	reload,
+	sendEmailVerification,
+	sendPasswordResetEmail,
+	setPersistence,
+	signInWithEmailAndPassword,
+	signOut,
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  getDocFromServer,
-  getFirestore,
-  onSnapshot,
-  setDoc,
+	addDoc,
+	collection,
+	deleteDoc,
+	doc,
+	getDoc,
+	getDocFromServer,
+	getFirestore,
+	onSnapshot,
+	setDoc,
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const ENCRYPTED_CACHE_KEY = "fastingTrackerEncryptedStateV1";
@@ -35,40 +35,40 @@ const RING_CIRC = 2 * Math.PI * 80;
 const ENCRYPTION_VERSION = 1;
 const PBKDF2_ITERATIONS = 310000;
 const _NOTES_SCHEMA = Object.freeze({
-  text: "",
-  createdAt: 0,
-  updatedAt: 0,
-  dateKey: "YYYY-MM-DD",
-  goalContext: {
-    dailyTarget: null,
-    goal: "",
-    age: null,
-    height: null,
-    currentWeight: null,
-    gender: "",
-    fitnessLevel: "",
-  },
-  fastContext: {
-    wasActive: false,
-    fastId: null,
-    fastTypeId: null,
-    fastTypeLabel: null,
-    startTimestamp: null,
-    plannedDurationHours: null,
-  },
-  calorieEntry: {
-    calories: null,
-    foodNote: "",
-    goalSnapshot: {
-      dailyTarget: null,
-      goal: "",
-      age: null,
-      height: null,
-      currentWeight: null,
-      gender: "",
-      fitnessLevel: "",
-    },
-  },
+	text: "",
+	createdAt: 0,
+	updatedAt: 0,
+	dateKey: "YYYY-MM-DD",
+	goalContext: {
+		dailyTarget: null,
+		goal: "",
+		age: null,
+		height: null,
+		currentWeight: null,
+		gender: "",
+		fitnessLevel: "",
+	},
+	fastContext: {
+		wasActive: false,
+		fastId: null,
+		fastTypeId: null,
+		fastTypeLabel: null,
+		startTimestamp: null,
+		plannedDurationHours: null,
+	},
+	calorieEntry: {
+		calories: null,
+		foodNote: "",
+		goalSnapshot: {
+			dailyTarget: null,
+			goal: "",
+			age: null,
+			height: null,
+			currentWeight: null,
+			gender: "",
+			fitnessLevel: "",
+		},
+	},
 });
 
 let FAST_TYPES = [];
@@ -77,74 +77,83 @@ let CALORIE_TIPS = { goals: [], map: {} };
 
 const DEFAULT_THEME_ID = "midnight";
 const DEFAULT_THEME_COLORS = {
-  primaryColor: "#06b6d4",
-  secondaryColor: "#0891b2",
-  backgroundColor: "#020617",
-  surfaceColor: "#0f172a",
-  surfaceMutedColor: "#1e293b",
-  borderColor: "#1e293b",
-  textColor: "#f8fafc",
-  textMutedColor: "#94a3b8",
-  dangerColor: "#dc2626",
+	primaryColor: "#06b6d4",
+	secondaryColor: "#0891b2",
+	backgroundColor: "#020617",
+	surfaceColor: "#0f172a",
+	surfaceMutedColor: "#1e293b",
+	borderColor: "#1e293b",
+	textColor: "#f8fafc",
+	textMutedColor: "#94a3b8",
+	dangerColor: "#dc2626",
 };
 
 let THEME_PRESET_LIST = [
-  { id: DEFAULT_THEME_ID, label: "Midnight", colors: { ...DEFAULT_THEME_COLORS } },
+	{
+		id: DEFAULT_THEME_ID,
+		label: "Midnight",
+		colors: { ...DEFAULT_THEME_COLORS },
+	},
 ];
 let THEME_PRESETS = {
-  [DEFAULT_THEME_ID]: { label: "Midnight", colors: { ...DEFAULT_THEME_COLORS } },
+	[DEFAULT_THEME_ID]: {
+		label: "Midnight",
+		colors: { ...DEFAULT_THEME_COLORS },
+	},
 };
 
 const CALORIE_VIEWS = [
-  { id: "total", label: "Total" },
-  { id: "consumed", label: "Consumed" },
-  { id: "left", label: "Left" },
+	{ id: "total", label: "Total" },
+	{ id: "consumed", label: "Consumed" },
+	{ id: "left", label: "Left" },
 ];
 
 const defaultState = {
-  settings: {
-    defaultFastTypeId: "16_8",
-    notifyOnEnd: true,
-    hourlyReminders: true,
-    alertsEnabled: false,
-    showRingEmojis: true,
-    timeDisplayMode: "elapsed",
-    calories: {
-      dailyTarget: null,
-      goal: "",
-      age: null,
-      height: null,
-      currentWeight: null,
-      gender: "",
-      fitnessLevel: "",
-      unitSystem: "metric",
-      target: null,
-      consumed: 0,
-      view: "total",
-    },
-    theme: {
-      presetId: DEFAULT_THEME_ID,
-      customColors: { ...DEFAULT_THEME_COLORS },
-    },
-  },
-  activeFast: null,
-  history: [],
-  reminders: { endNotified: false, lastHourlyAt: null },
-  milestoneTally: {},
+	settings: {
+		defaultFastTypeId: "16_8",
+		notifyOnEnd: true,
+		hourlyReminders: true,
+		alertsEnabled: false,
+		showRingEmojis: true,
+		timeDisplayMode: "elapsed",
+		calories: {
+			dailyTarget: null,
+			goal: "",
+			age: null,
+			height: null,
+			currentWeight: null,
+			gender: "",
+			fitnessLevel: "",
+			unitSystem: "metric",
+			target: null,
+			consumed: 0,
+			view: "total",
+		},
+		theme: {
+			presetId: DEFAULT_THEME_ID,
+			customColors: { ...DEFAULT_THEME_COLORS },
+		},
+	},
+	activeFast: null,
+	history: [],
+	reminders: { endNotified: false, lastHourlyAt: null },
+	milestoneTally: {},
 };
 
 const firebaseConfig = window.FIREBASE_CONFIG;
 if (
-  !firebaseConfig?.apiKey ||
-  !firebaseConfig?.authDomain ||
-  !firebaseConfig?.projectId ||
-  !firebaseConfig?.appId
+	!firebaseConfig?.apiKey ||
+	!firebaseConfig?.authDomain ||
+	!firebaseConfig?.projectId ||
+	!firebaseConfig?.appId
 ) {
-  throw new Error("Missing Firebase configuration. Check firebase-config.js.");
+	throw new Error("Missing Firebase configuration. Check firebase-config.js.");
 }
 
 const firebaseApp = initializeApp(firebaseConfig);
-const _analytics = firebaseConfig?.measurementId ? getAnalytics(firebaseApp) : null;
+const _analytics = firebaseConfig?.measurementId
+	? getAnalytics(firebaseApp)
+	: null;
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 
@@ -203,4038 +212,4292 @@ let pendingConfirmCloseFocus = null;
 let pendingPostFastNote = null;
 
 document.addEventListener("DOMContentLoaded", () => {
-  void initApp();
+	void initApp();
 });
 
 function $(id) {
-  return document.getElementById(id);
+	return document.getElementById(id);
 }
 function clone(x) {
-  return JSON.parse(JSON.stringify(x));
+	return JSON.parse(JSON.stringify(x));
 }
 
 async function initApp() {
-  try {
-    const themeData = await loadThemePresets();
-    THEME_PRESET_LIST = themeData.list;
-    THEME_PRESETS = themeData.map;
-    syncThemeDefaults();
-  } catch (err) {
-    console.error("Failed to load theme presets:", err);
-    THEME_PRESET_LIST = [
-      { id: DEFAULT_THEME_ID, label: "Midnight", colors: { ...DEFAULT_THEME_COLORS } },
-    ];
-    THEME_PRESETS = {
-      [DEFAULT_THEME_ID]: { label: "Midnight", colors: { ...DEFAULT_THEME_COLORS } },
-    };
-    syncThemeDefaults();
-  }
+	try {
+		const themeData = await loadThemePresets();
+		THEME_PRESET_LIST = themeData.list;
+		THEME_PRESETS = themeData.map;
+		syncThemeDefaults();
+	} catch (err) {
+		console.error("Failed to load theme presets:", err);
+		THEME_PRESET_LIST = [
+			{
+				id: DEFAULT_THEME_ID,
+				label: "Midnight",
+				colors: { ...DEFAULT_THEME_COLORS },
+			},
+		];
+		THEME_PRESETS = {
+			[DEFAULT_THEME_ID]: {
+				label: "Midnight",
+				colors: { ...DEFAULT_THEME_COLORS },
+			},
+		};
+		syncThemeDefaults();
+	}
 
-  try {
-    FASTING_HOURLY = await loadFastingHourly();
-  } catch (err) {
-    console.error("Failed to load fasting-hourly.yaml:", err);
-    FASTING_HOURLY = { hours: [], notes: [] };
-  }
+	try {
+		FASTING_HOURLY = await loadFastingHourly();
+	} catch (err) {
+		console.error("Failed to load fasting-hourly.yaml:", err);
+		FASTING_HOURLY = { hours: [], notes: [] };
+	}
 
-  try {
-    FAST_TYPES = await loadFastTypes();
-  } catch (err) {
-    console.error("Failed to load fast types:", err);
-    FAST_TYPES = [];
-  }
+	try {
+		FAST_TYPES = await loadFastTypes();
+	} catch (err) {
+		console.error("Failed to load fast types:", err);
+		FAST_TYPES = [];
+	}
 
-  try {
-    CALORIE_TIPS = await loadCalorieTips();
-  } catch (err) {
-    console.error("Failed to load calorie-tips.yaml:", err);
-    CALORIE_TIPS = { goals: [], map: {} };
-  }
+	try {
+		CALORIE_TIPS = await loadCalorieTips();
+	} catch (err) {
+		console.error("Failed to load calorie-tips.yaml:", err);
+		CALORIE_TIPS = { goals: [], map: {} };
+	}
 
-  if (!Array.isArray(FAST_TYPES) || FAST_TYPES.length === 0) {
-    FAST_TYPES = [
-      {
-        id: defaultState.settings.defaultFastTypeId,
-        label: "16:8",
-        durationHours: 16,
-        milestoneHours: [],
-      },
-    ];
-  }
+	if (!Array.isArray(FAST_TYPES) || FAST_TYPES.length === 0) {
+		FAST_TYPES = [
+			{
+				id: defaultState.settings.defaultFastTypeId,
+				label: "16:8",
+				durationHours: 16,
+				milestoneHours: [],
+			},
+		];
+	}
 
-  FAST_TYPES = hydrateFastTypes(FAST_TYPES, FASTING_HOURLY);
+	FAST_TYPES = hydrateFastTypes(FAST_TYPES, FASTING_HOURLY);
 
-  selectedFastTypeId = resolveFastTypeId(selectedFastTypeId);
-  initAuthUI();
-  initAuthListener();
+	selectedFastTypeId = resolveFastTypeId(selectedFastTypeId);
+	initAuthUI();
+	initAuthListener();
 }
 
 async function loadThemePresets() {
-  const response = await fetch("./themes.yaml", { cache: "no-store" });
-  if (!response.ok) throw new Error(`themes.yaml request failed (${response.status})`);
-  const text = await response.text();
-  const data = loadYaml(text);
-  if (!Array.isArray(data)) throw new Error("themes.yaml is not a list");
-  const list = data
-    .filter((theme) => theme?.id && theme?.colors)
-    .map((theme) => ({
-      id: String(theme.id),
-      label: theme.label || String(theme.id),
-      colors: theme.colors,
-    }));
-  if (list.length === 0) throw new Error("themes.yaml has no presets");
-  const map = list.reduce((acc, theme) => {
-    acc[theme.id] = { label: theme.label, colors: theme.colors };
-    return acc;
-  }, {});
-  return { list, map };
+	const response = await fetch("./themes.yaml", { cache: "no-store" });
+	if (!response.ok)
+		throw new Error(`themes.yaml request failed (${response.status})`);
+	const text = await response.text();
+	const data = loadYaml(text);
+	if (!Array.isArray(data)) throw new Error("themes.yaml is not a list");
+	const list = data
+		.filter((theme) => theme?.id && theme?.colors)
+		.map((theme) => ({
+			id: String(theme.id),
+			label: theme.label || String(theme.id),
+			colors: theme.colors,
+		}));
+	if (list.length === 0) throw new Error("themes.yaml has no presets");
+	const map = list.reduce((acc, theme) => {
+		acc[theme.id] = { label: theme.label, colors: theme.colors };
+		return acc;
+	}, {});
+	return { list, map };
 }
 
 function syncThemeDefaults() {
-  const fallbackPreset =
-    THEME_PRESET_LIST.find((theme) => theme.id === DEFAULT_THEME_ID) || THEME_PRESET_LIST[0];
-  if (!fallbackPreset) return;
-  defaultState.settings.theme.presetId = fallbackPreset.id;
-  defaultState.settings.theme.customColors = { ...fallbackPreset.colors };
-  if (state?.settings?.theme?.presetId === fallbackPreset.id) {
-    state.settings.theme.customColors = { ...fallbackPreset.colors };
-  }
+	const fallbackPreset =
+		THEME_PRESET_LIST.find((theme) => theme.id === DEFAULT_THEME_ID) ||
+		THEME_PRESET_LIST[0];
+	if (!fallbackPreset) return;
+	defaultState.settings.theme.presetId = fallbackPreset.id;
+	defaultState.settings.theme.customColors = { ...fallbackPreset.colors };
+	if (state?.settings?.theme?.presetId === fallbackPreset.id) {
+		state.settings.theme.customColors = { ...fallbackPreset.colors };
+	}
 }
 
 async function loadFastTypes() {
-  const response = await fetch("./fast-types.yaml", { cache: "no-store" });
-  if (!response.ok) throw new Error(`fast-types.yaml request failed (${response.status})`);
-  const text = await response.text();
-  const data = loadYaml(text);
-  if (!Array.isArray(data)) throw new Error("fast-types.yaml is not a list");
-  return data;
+	const response = await fetch("./fast-types.yaml", { cache: "no-store" });
+	if (!response.ok)
+		throw new Error(`fast-types.yaml request failed (${response.status})`);
+	const text = await response.text();
+	const data = loadYaml(text);
+	if (!Array.isArray(data)) throw new Error("fast-types.yaml is not a list");
+	return data;
 }
 
 async function loadFastingHourly() {
-  const response = await fetch("./fasting-hourly.yaml", { cache: "no-store" });
-  if (!response.ok) throw new Error(`fasting-hourly.yaml request failed (${response.status})`);
-  const text = await response.text();
-  const data = loadYaml(text);
-  return normalizeFastingHourly(data);
+	const response = await fetch("./fasting-hourly.yaml", { cache: "no-store" });
+	if (!response.ok)
+		throw new Error(`fasting-hourly.yaml request failed (${response.status})`);
+	const text = await response.text();
+	const data = loadYaml(text);
+	return normalizeFastingHourly(data);
 }
 
 async function loadCalorieTips() {
-  const response = await fetch("./calorie-tips.yaml", { cache: "no-store" });
-  if (!response.ok) throw new Error(`calorie-tips.yaml request failed (${response.status})`);
-  const text = await response.text();
-  const data = loadYaml(text);
-  return normalizeCalorieTips(data);
+	const response = await fetch("./calorie-tips.yaml", { cache: "no-store" });
+	if (!response.ok)
+		throw new Error(`calorie-tips.yaml request failed (${response.status})`);
+	const text = await response.text();
+	const data = loadYaml(text);
+	return normalizeCalorieTips(data);
 }
 
 function normalizeFastingHourly(data) {
-  const hours = Array.isArray(data?.hours) ? data.hours : Array.isArray(data) ? data : [];
-  const notes = Array.isArray(data?.notes)
-    ? data.notes.filter((note) => typeof note === "string")
-    : [];
-  const normalizedHours = hours
-    .filter((entry) => entry && Number.isFinite(Number(entry.hour)))
-    .map((entry) => ({
-      hour: Number(entry.hour),
-      emoji: typeof entry.emoji === "string" ? entry.emoji : "⏳",
-      label: typeof entry.label === "string" ? entry.label : `Hour ${entry.hour}`,
-      actions: Array.isArray(entry.actions)
-        ? entry.actions.filter((action) => typeof action === "string")
-        : [],
-    }))
-    .sort((a, b) => a.hour - b.hour);
-  return { hours: normalizedHours, notes };
+	const hours = Array.isArray(data?.hours)
+		? data.hours
+		: Array.isArray(data)
+			? data
+			: [];
+	const notes = Array.isArray(data?.notes)
+		? data.notes.filter((note) => typeof note === "string")
+		: [];
+	const normalizedHours = hours
+		.filter((entry) => entry && Number.isFinite(Number(entry.hour)))
+		.map((entry) => ({
+			hour: Number(entry.hour),
+			emoji: typeof entry.emoji === "string" ? entry.emoji : "⏳",
+			label:
+				typeof entry.label === "string" ? entry.label : `Hour ${entry.hour}`,
+			actions: Array.isArray(entry.actions)
+				? entry.actions.filter((action) => typeof action === "string")
+				: [],
+		}))
+		.sort((a, b) => a.hour - b.hour);
+	return { hours: normalizedHours, notes };
 }
 
 function normalizeCalorieTips(data) {
-  const goals = Array.isArray(data?.goals) ? data.goals : Array.isArray(data) ? data : [];
-  const normalizedGoals = goals
-    .map((goal) => {
-      const id = typeof goal?.id === "string" ? goal.id.trim() : "";
-      if (!id) return null;
-      const tips = Array.isArray(goal?.tips)
-        ? goal.tips
-            .filter((tip) => tip && typeof tip === "object")
-            .map((tip) => ({
-              emoji: typeof tip.emoji === "string" ? tip.emoji : "✨",
-              title: typeof tip.title === "string" ? tip.title : "Quick tip",
-              detail: typeof tip.detail === "string" ? tip.detail : "",
-            }))
-            .filter((tip) => tip.title || tip.detail)
-        : [];
-      return {
-        id,
-        label: typeof goal?.label === "string" ? goal.label : id,
-        tips,
-      };
-    })
-    .filter(Boolean);
-  const map = normalizedGoals.reduce((acc, goal) => {
-    acc[goal.id] = goal;
-    return acc;
-  }, {});
-  return { goals: normalizedGoals, map };
+	const goals = Array.isArray(data?.goals)
+		? data.goals
+		: Array.isArray(data)
+			? data
+			: [];
+	const normalizedGoals = goals
+		.map((goal) => {
+			const id = typeof goal?.id === "string" ? goal.id.trim() : "";
+			if (!id) return null;
+			const tips = Array.isArray(goal?.tips)
+				? goal.tips
+						.filter((tip) => tip && typeof tip === "object")
+						.map((tip) => ({
+							emoji: typeof tip.emoji === "string" ? tip.emoji : "✨",
+							title: typeof tip.title === "string" ? tip.title : "Quick tip",
+							detail: typeof tip.detail === "string" ? tip.detail : "",
+						}))
+						.filter((tip) => tip.title || tip.detail)
+				: [];
+			return {
+				id,
+				label: typeof goal?.label === "string" ? goal.label : id,
+				tips,
+			};
+		})
+		.filter(Boolean);
+	const map = normalizedGoals.reduce((acc, goal) => {
+		acc[goal.id] = goal;
+		return acc;
+	}, {});
+	return { goals: normalizedGoals, map };
 }
 
 function hydrateFastTypes(types, hourly) {
-  if (!Array.isArray(types)) return [];
-  return types.map((type) => {
-    const milestoneHours = Array.isArray(type.milestoneHours) ? type.milestoneHours : [];
-    const milestones = buildMilestones(milestoneHours, hourly);
-    return { ...type, milestoneHours, milestones };
-  });
+	if (!Array.isArray(types)) return [];
+	return types.map((type) => {
+		const milestoneHours = Array.isArray(type.milestoneHours)
+			? type.milestoneHours
+			: [];
+		const milestones = buildMilestones(milestoneHours, hourly);
+		return { ...type, milestoneHours, milestones };
+	});
 }
 
 function getHourlyEntry(hour) {
-  const numericHour = Number(hour);
-  return FASTING_HOURLY.hours.find((entry) => entry.hour === numericHour);
+	const numericHour = Number(hour);
+	return FASTING_HOURLY.hours.find((entry) => entry.hour === numericHour);
 }
 
 function formatHourlyAction(hour, action) {
-  return `${hour}h after eating: ${action}`;
+	return `${hour}h after eating: ${action}`;
 }
 
 function getHourlyActionDetail(hour, { random = false } = {}) {
-  const entry = getHourlyEntry(hour);
-  if (!entry) return null;
-  const actions = Array.isArray(entry.actions) ? entry.actions : [];
-  const action =
-    random && actions.length ? actions[Math.floor(Math.random() * actions.length)] : actions[0];
-  if (!action) return null;
-  return formatHourlyAction(entry.hour, action);
+	const entry = getHourlyEntry(hour);
+	if (!entry) return null;
+	const actions = Array.isArray(entry.actions) ? entry.actions : [];
+	const action =
+		random && actions.length
+			? actions[Math.floor(Math.random() * actions.length)]
+			: actions[0];
+	if (!action) return null;
+	return formatHourlyAction(entry.hour, action);
 }
 
 function buildMilestones(hours, hourly) {
-  if (!Array.isArray(hours)) return [];
-  return hours
-    .map((hour) => {
-      const entry = hourly.hours.find((item) => item.hour === Number(hour));
-      if (!entry) return null;
-      const baseAction = Array.isArray(entry.actions) ? entry.actions[0] : null;
-      const detail = baseAction ? formatHourlyAction(entry.hour, baseAction) : `Hour ${entry.hour}`;
-      return {
-        hour: entry.hour,
-        emoji: entry.emoji,
-        label: entry.label,
-        detail,
-      };
-    })
-    .filter(Boolean);
+	if (!Array.isArray(hours)) return [];
+	return hours
+		.map((hour) => {
+			const entry = hourly.hours.find((item) => item.hour === Number(hour));
+			if (!entry) return null;
+			const baseAction = Array.isArray(entry.actions) ? entry.actions[0] : null;
+			const detail = baseAction
+				? formatHourlyAction(entry.hour, baseAction)
+				: `Hour ${entry.hour}`;
+			return {
+				hour: entry.hour,
+				emoji: entry.emoji,
+				label: entry.label,
+				detail,
+			};
+		})
+		.filter(Boolean);
 }
 
 function resolveFastTypeId(typeId) {
-  if (!Array.isArray(FAST_TYPES) || FAST_TYPES.length === 0) {
-    return defaultState.settings.defaultFastTypeId;
-  }
-  const found = FAST_TYPES.find((type) => type.id === typeId);
-  return found ? found.id : FAST_TYPES[0].id;
+	if (!Array.isArray(FAST_TYPES) || FAST_TYPES.length === 0) {
+		return defaultState.settings.defaultFastTypeId;
+	}
+	const found = FAST_TYPES.find((type) => type.id === typeId);
+	return found ? found.id : FAST_TYPES[0].id;
 }
 
 function decodeBase64(base64) {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
+	const binary = atob(base64);
+	const bytes = new Uint8Array(binary.length);
+	for (let i = 0; i < binary.length; i++) {
+		bytes[i] = binary.charCodeAt(i);
+	}
+	return bytes;
 }
 
 function encodeBase64(bytes) {
-  let binary = "";
-  bytes.forEach((b) => {
-    binary += String.fromCharCode(b);
-  });
-  return btoa(binary);
+	let binary = "";
+	bytes.forEach((b) => {
+		binary += String.fromCharCode(b);
+	});
+	return btoa(binary);
 }
 
 function getStateDocRef(uid) {
-  return doc(db, "users", uid, "fastingState", "state");
+	return doc(db, "users", uid, "fastingState", "state");
 }
 
 function getUserDocRef(uid) {
-  return doc(db, "users", uid);
+	return doc(db, "users", uid);
 }
 
 function getNotesCollectionRef(uid) {
-  return collection(db, "users", uid, "notes");
+	return collection(db, "users", uid, "notes");
 }
 
 function getNoteDocRef(uid, noteId) {
-  return doc(db, "users", uid, "notes", noteId);
+	return doc(db, "users", uid, "notes", noteId);
 }
 
 function stopNotesListener() {
-  if (notesUnsubscribe) {
-    notesUnsubscribe();
-    notesUnsubscribe = null;
-  }
+	if (notesUnsubscribe) {
+		notesUnsubscribe();
+		notesUnsubscribe = null;
+	}
 }
 
 async function normalizeNoteSnapshot(snap) {
-  const data = snap.data() || {};
-  let text = "";
-  let calorieEntry = null;
-  if (data?.payload?.iv && data?.payload?.ciphertext) {
-    try {
-      const decrypted = await decryptNotePayload(data.payload);
-      if (typeof decrypted === "string") {
-        text = decrypted;
-      } else if (decrypted && typeof decrypted === "object") {
-        if (typeof decrypted.text === "string") text = decrypted.text;
-        calorieEntry = normalizeCalorieEntry(decrypted.calorieEntry);
-      }
-    } catch (err) {
-      if (err?.message === "missing-key") throw err;
-      throw new Error("decrypt-failed");
-    }
-  } else if (typeof data.text === "string") {
-    text = data.text;
-  }
-  if (!calorieEntry) calorieEntry = normalizeCalorieEntry(data.calorieEntry);
-  if (!text && calorieEntry?.foodNote) {
-    text = calorieEntry.foodNote;
-  }
-  const normalizedCreatedAt = typeof data.createdAt === "number" ? data.createdAt : 0;
-  return {
-    id: snap.id,
-    text,
-    createdAt: normalizedCreatedAt,
-    updatedAt: typeof data.updatedAt === "number" ? data.updatedAt : 0,
-    dateKey: typeof data.dateKey === "string" ? data.dateKey : "",
-    goalContext: normalizeGoalContext(data.goalContext),
-    fastContext: normalizeFastContext(data.fastContext, normalizedCreatedAt),
-    calorieEntry,
-  };
+	const data = snap.data() || {};
+	let text = "";
+	let calorieEntry = null;
+	if (data?.payload?.iv && data?.payload?.ciphertext) {
+		try {
+			const decrypted = await decryptNotePayload(data.payload);
+			if (typeof decrypted === "string") {
+				text = decrypted;
+			} else if (decrypted && typeof decrypted === "object") {
+				if (typeof decrypted.text === "string") text = decrypted.text;
+				calorieEntry = normalizeCalorieEntry(decrypted.calorieEntry);
+			}
+		} catch (err) {
+			if (err?.message === "missing-key") throw err;
+			throw new Error("decrypt-failed");
+		}
+	} else if (typeof data.text === "string") {
+		text = data.text;
+	}
+	if (!calorieEntry) calorieEntry = normalizeCalorieEntry(data.calorieEntry);
+	if (!text && calorieEntry?.foodNote) {
+		text = calorieEntry.foodNote;
+	}
+	const normalizedCreatedAt =
+		typeof data.createdAt === "number" ? data.createdAt : 0;
+	return {
+		id: snap.id,
+		text,
+		createdAt: normalizedCreatedAt,
+		updatedAt: typeof data.updatedAt === "number" ? data.updatedAt : 0,
+		dateKey: typeof data.dateKey === "string" ? data.dateKey : "",
+		goalContext: normalizeGoalContext(data.goalContext),
+		fastContext: normalizeFastContext(data.fastContext, normalizedCreatedAt),
+		calorieEntry,
+	};
 }
 
 function normalizeGoalMetric(value) {
-  const num = Number(value);
-  if (!Number.isFinite(num) || num < 0) return null;
-  return num;
+	const num = Number(value);
+	if (!Number.isFinite(num) || num < 0) return null;
+	return num;
 }
 
 function normalizeGoalContext(goalContext) {
-  if (!goalContext || typeof goalContext !== "object") {
-    return {
-      dailyTarget: null,
-      goal: "",
-      age: null,
-      height: null,
-      currentWeight: null,
-      gender: "",
-      fitnessLevel: "",
-    };
-  }
+	if (!goalContext || typeof goalContext !== "object") {
+		return {
+			dailyTarget: null,
+			goal: "",
+			age: null,
+			height: null,
+			currentWeight: null,
+			gender: "",
+			fitnessLevel: "",
+		};
+	}
 
-  const dailyTarget = normalizeGoalMetric(goalContext.dailyTarget);
-  const legacyWeight = normalizeGoalMetric(goalContext.bmi);
-  return {
-    dailyTarget: dailyTarget && dailyTarget > 0 ? dailyTarget : null,
-    goal: typeof goalContext.goal === "string" ? goalContext.goal : "",
-    age: normalizeGoalMetric(goalContext.age),
-    height: normalizeGoalMetric(goalContext.height),
-    currentWeight: normalizeGoalMetric(goalContext.currentWeight) ?? legacyWeight,
-    gender: typeof goalContext.gender === "string" ? goalContext.gender : "",
-    fitnessLevel: typeof goalContext.fitnessLevel === "string" ? goalContext.fitnessLevel : "",
-  };
+	const dailyTarget = normalizeGoalMetric(goalContext.dailyTarget);
+	const legacyWeight = normalizeGoalMetric(goalContext.bmi);
+	return {
+		dailyTarget: dailyTarget && dailyTarget > 0 ? dailyTarget : null,
+		goal: typeof goalContext.goal === "string" ? goalContext.goal : "",
+		age: normalizeGoalMetric(goalContext.age),
+		height: normalizeGoalMetric(goalContext.height),
+		currentWeight:
+			normalizeGoalMetric(goalContext.currentWeight) ?? legacyWeight,
+		gender: typeof goalContext.gender === "string" ? goalContext.gender : "",
+		fitnessLevel:
+			typeof goalContext.fitnessLevel === "string"
+				? goalContext.fitnessLevel
+				: "",
+	};
 }
 
 function normalizeCalorieEntry(entry) {
-  if (!entry || typeof entry !== "object") return null;
-  const calories = Number(entry.calories);
-  const normalizedCalories = Number.isFinite(calories) && calories >= 0 ? calories : null;
-  const foodNote = typeof entry.foodNote === "string" ? entry.foodNote : "";
-  const goalSnapshot = entry.goalSnapshot ? normalizeGoalContext(entry.goalSnapshot) : null;
-  if (normalizedCalories === null && !foodNote) return null;
-  return {
-    calories: normalizedCalories,
-    foodNote,
-    goalSnapshot,
-  };
+	if (!entry || typeof entry !== "object") return null;
+	const calories = Number(entry.calories);
+	const normalizedCalories =
+		Number.isFinite(calories) && calories >= 0 ? calories : null;
+	const foodNote = typeof entry.foodNote === "string" ? entry.foodNote : "";
+	const goalSnapshot = entry.goalSnapshot
+		? normalizeGoalContext(entry.goalSnapshot)
+		: null;
+	if (normalizedCalories === null && !foodNote) return null;
+	return {
+		calories: normalizedCalories,
+		foodNote,
+		goalSnapshot,
+	};
 }
 
 function normalizeFastContext(fastContext, createdAt) {
-  if (!fastContext || typeof fastContext !== "object") return buildInactiveFastContext();
+	if (!fastContext || typeof fastContext !== "object")
+		return buildInactiveFastContext();
 
-  const legacyTypeId = typeof fastContext.typeId === "string" ? fastContext.typeId : null;
-  const legacyTypeLabel = typeof fastContext.typeLabel === "string" ? fastContext.typeLabel : null;
-  const legacyDuration =
-    typeof fastContext.durationHours === "number" ? fastContext.durationHours : null;
-  const wasActive =
-    typeof fastContext.wasActive === "boolean"
-      ? fastContext.wasActive
-      : Boolean(fastContext.fastId || legacyTypeId || legacyTypeLabel);
-  const normalizedCreatedAt = typeof createdAt === "number" ? createdAt : null;
-  const startTimestamp = fastContext.startTimestamp ?? null;
-  const elapsedMsAtNote =
-    typeof fastContext.elapsedMsAtNote === "number"
-      ? fastContext.elapsedMsAtNote
-      : typeof startTimestamp === "number" && typeof normalizedCreatedAt === "number"
-        ? Math.max(0, normalizedCreatedAt - startTimestamp)
-        : null;
+	const legacyTypeId =
+		typeof fastContext.typeId === "string" ? fastContext.typeId : null;
+	const legacyTypeLabel =
+		typeof fastContext.typeLabel === "string" ? fastContext.typeLabel : null;
+	const legacyDuration =
+		typeof fastContext.durationHours === "number"
+			? fastContext.durationHours
+			: null;
+	const wasActive =
+		typeof fastContext.wasActive === "boolean"
+			? fastContext.wasActive
+			: Boolean(fastContext.fastId || legacyTypeId || legacyTypeLabel);
+	const normalizedCreatedAt = typeof createdAt === "number" ? createdAt : null;
+	const startTimestamp = fastContext.startTimestamp ?? null;
+	const elapsedMsAtNote =
+		typeof fastContext.elapsedMsAtNote === "number"
+			? fastContext.elapsedMsAtNote
+			: typeof startTimestamp === "number" &&
+					typeof normalizedCreatedAt === "number"
+				? Math.max(0, normalizedCreatedAt - startTimestamp)
+				: null;
 
-  return {
-    wasActive,
-    fastId: fastContext.fastId ?? null,
-    fastTypeId: fastContext.fastTypeId ?? legacyTypeId,
-    fastTypeLabel: fastContext.fastTypeLabel ?? legacyTypeLabel,
-    startTimestamp,
-    plannedDurationHours: fastContext.plannedDurationHours ?? legacyDuration,
-    elapsedMsAtNote,
-  };
+	return {
+		wasActive,
+		fastId: fastContext.fastId ?? null,
+		fastTypeId: fastContext.fastTypeId ?? legacyTypeId,
+		fastTypeLabel: fastContext.fastTypeLabel ?? legacyTypeLabel,
+		startTimestamp,
+		plannedDurationHours: fastContext.plannedDurationHours ?? legacyDuration,
+		elapsedMsAtNote,
+	};
 }
 
 function buildInactiveFastContext() {
-  return {
-    wasActive: false,
-    fastId: null,
-    fastTypeId: null,
-    fastTypeLabel: null,
-    startTimestamp: null,
-    plannedDurationHours: null,
-    elapsedMsAtNote: null,
-  };
+	return {
+		wasActive: false,
+		fastId: null,
+		fastTypeId: null,
+		fastTypeLabel: null,
+		startTimestamp: null,
+		plannedDurationHours: null,
+		elapsedMsAtNote: null,
+	};
 }
 
 function buildFastContextAt(timestampMs) {
-  if (!state.activeFast) return buildInactiveFastContext();
-  const type = getTypeById(state.activeFast.typeId);
-  const elapsedMsAtNote =
-    typeof state.activeFast.startTimestamp === "number"
-      ? Math.max(0, (timestampMs ?? Date.now()) - state.activeFast.startTimestamp)
-      : null;
-  return {
-    wasActive: true,
-    fastId: state.activeFast.id,
-    fastTypeId: state.activeFast.typeId,
-    fastTypeLabel: type?.label || null,
-    startTimestamp: state.activeFast.startTimestamp,
-    plannedDurationHours: state.activeFast.plannedDurationHours,
-    elapsedMsAtNote,
-  };
+	if (!state.activeFast) return buildInactiveFastContext();
+	const type = getTypeById(state.activeFast.typeId);
+	const elapsedMsAtNote =
+		typeof state.activeFast.startTimestamp === "number"
+			? Math.max(
+					0,
+					(timestampMs ?? Date.now()) - state.activeFast.startTimestamp,
+				)
+			: null;
+	return {
+		wasActive: true,
+		fastId: state.activeFast.id,
+		fastTypeId: state.activeFast.typeId,
+		fastTypeLabel: type?.label || null,
+		startTimestamp: state.activeFast.startTimestamp,
+		plannedDurationHours: state.activeFast.plannedDurationHours,
+		elapsedMsAtNote,
+	};
 }
 
 function buildFastContextFromFast(fast, timestampMs) {
-  if (!fast) return buildInactiveFastContext();
-  const type = getTypeById(fast.typeId);
-  const elapsedMsAtNote =
-    typeof fast.startTimestamp === "number"
-      ? Math.max(0, (timestampMs ?? Date.now()) - fast.startTimestamp)
-      : null;
-  return {
-    wasActive: true,
-    fastId: fast.id,
-    fastTypeId: fast.typeId,
-    fastTypeLabel: type?.label || null,
-    startTimestamp: fast.startTimestamp,
-    plannedDurationHours: fast.plannedDurationHours,
-    elapsedMsAtNote,
-  };
+	if (!fast) return buildInactiveFastContext();
+	const type = getTypeById(fast.typeId);
+	const elapsedMsAtNote =
+		typeof fast.startTimestamp === "number"
+			? Math.max(0, (timestampMs ?? Date.now()) - fast.startTimestamp)
+			: null;
+	return {
+		wasActive: true,
+		fastId: fast.id,
+		fastTypeId: fast.typeId,
+		fastTypeLabel: type?.label || null,
+		startTimestamp: fast.startTimestamp,
+		plannedDurationHours: fast.plannedDurationHours,
+		elapsedMsAtNote,
+	};
 }
 
 function buildFastContext() {
-  return buildFastContextAt(Date.now());
+	return buildFastContextAt(Date.now());
 }
 
 function buildGoalContext() {
-  const settings = getCalorieSettings();
-  const dailyTarget = getCalorieTarget();
-  return {
-    dailyTarget,
-    goal: typeof settings.goal === "string" ? settings.goal : "",
-    age: normalizeGoalMetric(settings.age),
-    height: normalizeGoalMetric(settings.height),
-    currentWeight: normalizeGoalMetric(settings.currentWeight),
-    gender: typeof settings.gender === "string" ? settings.gender : "",
-    fitnessLevel: typeof settings.fitnessLevel === "string" ? settings.fitnessLevel : "",
-  };
+	const settings = getCalorieSettings();
+	const dailyTarget = getCalorieTarget();
+	return {
+		dailyTarget,
+		goal: typeof settings.goal === "string" ? settings.goal : "",
+		age: normalizeGoalMetric(settings.age),
+		height: normalizeGoalMetric(settings.height),
+		currentWeight: normalizeGoalMetric(settings.currentWeight),
+		gender: typeof settings.gender === "string" ? settings.gender : "",
+		fitnessLevel:
+			typeof settings.fitnessLevel === "string" ? settings.fitnessLevel : "",
+	};
 }
 
 async function buildNotePayload({
-  text,
-  dateKey: _dateKey,
-  fastContext,
-  goalContext,
-  calorieEntry,
+	text,
+	dateKey: _dateKey,
+	fastContext,
+	goalContext,
+	calorieEntry,
 } = {}) {
-  const createdAt = Date.now();
-  const payload = await encryptNotePayload({
-    text: (text || "").trim(),
-    calorieEntry: calorieEntry ?? null,
-  });
-  return {
-    payload,
-    createdAt,
-    updatedAt: createdAt,
-    dateKey: formatDateKey(new Date(createdAt)),
-    goalContext: goalContext ?? buildGoalContext(),
-    fastContext: fastContext ?? buildFastContextAt(createdAt),
-  };
+	const createdAt = Date.now();
+	const payload = await encryptNotePayload({
+		text: (text || "").trim(),
+		calorieEntry: calorieEntry ?? null,
+	});
+	return {
+		payload,
+		createdAt,
+		updatedAt: createdAt,
+		dateKey: formatDateKey(new Date(createdAt)),
+		goalContext: goalContext ?? buildGoalContext(),
+		fastContext: fastContext ?? buildFastContextAt(createdAt),
+	};
 }
 
 async function buildNoteUpdatePayload({
-  text,
-  dateKey,
-  fastContext,
-  createdAt,
-  goalContext,
-  calorieEntry,
+	text,
+	dateKey,
+	fastContext,
+	createdAt,
+	goalContext,
+	calorieEntry,
 } = {}) {
-  const payload = { updatedAt: Date.now() };
-  if (typeof text === "string" || calorieEntry !== undefined) {
-    payload.payload = await encryptNotePayload({
-      text: typeof text === "string" ? text.trim() : "",
-      calorieEntry: calorieEntry ?? null,
-    });
-  }
-  if (typeof dateKey === "string") payload.dateKey = dateKey;
-  if (fastContext !== undefined) {
-    if (fastContext === null || typeof fastContext !== "object") {
-      payload.fastContext = fastContext;
-    } else {
-      const fields = [
-        ["wasActive", fastContext.wasActive],
-        ["fastId", fastContext.fastId],
-        ["fastTypeId", fastContext.fastTypeId],
-        ["fastTypeLabel", fastContext.fastTypeLabel],
-        ["startTimestamp", fastContext.startTimestamp],
-        ["plannedDurationHours", fastContext.plannedDurationHours],
-      ];
-      fields.forEach(([key, value]) => {
-        if (value !== undefined) payload[`fastContext.${key}`] = value;
-      });
-      if (Object.hasOwn(fastContext, "elapsedMsAtNote")) {
-        payload["fastContext.elapsedMsAtNote"] = fastContext.elapsedMsAtNote ?? null;
-      }
-    }
-  }
-  const resolvedGoalContext = goalContext === undefined ? buildGoalContext() : goalContext;
-  if (resolvedGoalContext !== undefined) {
-    if (resolvedGoalContext === null || typeof resolvedGoalContext !== "object") {
-      payload.goalContext = resolvedGoalContext;
-    } else {
-      const fields = [
-        ["dailyTarget", resolvedGoalContext.dailyTarget],
-        ["goal", resolvedGoalContext.goal],
-        ["age", resolvedGoalContext.age],
-        ["height", resolvedGoalContext.height],
-        ["currentWeight", resolvedGoalContext.currentWeight],
-        ["gender", resolvedGoalContext.gender],
-        ["fitnessLevel", resolvedGoalContext.fitnessLevel],
-      ];
-      fields.forEach(([key, value]) => {
-        if (value !== undefined) payload[`goalContext.${key}`] = value;
-      });
-    }
-  }
-  if (typeof createdAt === "number") payload.createdAt = createdAt;
-  return payload;
+	const payload = { updatedAt: Date.now() };
+	if (typeof text === "string" || calorieEntry !== undefined) {
+		payload.payload = await encryptNotePayload({
+			text: typeof text === "string" ? text.trim() : "",
+			calorieEntry: calorieEntry ?? null,
+		});
+	}
+	if (typeof dateKey === "string") payload.dateKey = dateKey;
+	if (fastContext !== undefined) {
+		if (fastContext === null || typeof fastContext !== "object") {
+			payload.fastContext = fastContext;
+		} else {
+			const fields = [
+				["wasActive", fastContext.wasActive],
+				["fastId", fastContext.fastId],
+				["fastTypeId", fastContext.fastTypeId],
+				["fastTypeLabel", fastContext.fastTypeLabel],
+				["startTimestamp", fastContext.startTimestamp],
+				["plannedDurationHours", fastContext.plannedDurationHours],
+			];
+			fields.forEach(([key, value]) => {
+				if (value !== undefined) payload[`fastContext.${key}`] = value;
+			});
+			if (Object.hasOwn(fastContext, "elapsedMsAtNote")) {
+				payload["fastContext.elapsedMsAtNote"] =
+					fastContext.elapsedMsAtNote ?? null;
+			}
+		}
+	}
+	const resolvedGoalContext =
+		goalContext === undefined ? buildGoalContext() : goalContext;
+	if (resolvedGoalContext !== undefined) {
+		if (
+			resolvedGoalContext === null ||
+			typeof resolvedGoalContext !== "object"
+		) {
+			payload.goalContext = resolvedGoalContext;
+		} else {
+			const fields = [
+				["dailyTarget", resolvedGoalContext.dailyTarget],
+				["goal", resolvedGoalContext.goal],
+				["age", resolvedGoalContext.age],
+				["height", resolvedGoalContext.height],
+				["currentWeight", resolvedGoalContext.currentWeight],
+				["gender", resolvedGoalContext.gender],
+				["fitnessLevel", resolvedGoalContext.fitnessLevel],
+			];
+			fields.forEach(([key, value]) => {
+				if (value !== undefined) payload[`goalContext.${key}`] = value;
+			});
+		}
+	}
+	if (typeof createdAt === "number") payload.createdAt = createdAt;
+	return payload;
 }
 
 async function createNote({ text, dateKey, fastContext, calorieEntry } = {}) {
-  const user = auth.currentUser;
-  if (!user) return null;
-  const payload = await buildNotePayload({ text, dateKey, fastContext, calorieEntry });
-  try {
-    const docRef = await addDoc(getNotesCollectionRef(user.uid), payload);
-    return docRef.id;
-  } catch {
-    return null;
-  }
+	const user = auth.currentUser;
+	if (!user) return null;
+	const payload = await buildNotePayload({
+		text,
+		dateKey,
+		fastContext,
+		calorieEntry,
+	});
+	try {
+		const docRef = await addDoc(getNotesCollectionRef(user.uid), payload);
+		return docRef.id;
+	} catch {
+		return null;
+	}
 }
 
-async function updateNote(noteId, { text, dateKey, fastContext, createdAt, calorieEntry } = {}) {
-  const user = auth.currentUser;
-  if (!user || !noteId) return;
-  const payload = await buildNoteUpdatePayload({
-    text,
-    dateKey,
-    fastContext,
-    createdAt,
-    calorieEntry,
-  });
-  try {
-    await setDoc(getNoteDocRef(user.uid, noteId), payload, { merge: true });
-  } catch {}
+async function updateNote(
+	noteId,
+	{ text, dateKey, fastContext, createdAt, calorieEntry } = {},
+) {
+	const user = auth.currentUser;
+	if (!user || !noteId) return;
+	const payload = await buildNoteUpdatePayload({
+		text,
+		dateKey,
+		fastContext,
+		createdAt,
+		calorieEntry,
+	});
+	try {
+		await setDoc(getNoteDocRef(user.uid, noteId), payload, { merge: true });
+	} catch {}
 }
 
 async function deleteNote(noteId) {
-  const user = auth.currentUser;
-  if (!user || !noteId) return;
-  try {
-    await deleteDoc(getNoteDocRef(user.uid, noteId));
-  } catch {}
+	const user = auth.currentUser;
+	if (!user || !noteId) return;
+	try {
+		await deleteDoc(getNoteDocRef(user.uid, noteId));
+	} catch {}
 }
 
 function openNoteEditor(note = null) {
-  const modal = $("note-editor-modal");
-  if (!modal) return;
-  if (noteEditorCloseTimeout) {
-    clearTimeout(noteEditorCloseTimeout);
-    noteEditorCloseTimeout = null;
-  }
-  editingNoteId = note?.id || null;
-  editingNoteDateKey = note?.dateKey || formatDateKey(new Date());
-  editingNoteContext = note?.fastContext ?? buildFastContext();
-  editingNoteCreatedAt = note?.createdAt ?? null;
-  editingNoteOpenedAt = Date.now();
+	const modal = $("note-editor-modal");
+	if (!modal) return;
+	if (noteEditorCloseTimeout) {
+		clearTimeout(noteEditorCloseTimeout);
+		noteEditorCloseTimeout = null;
+	}
+	editingNoteId = note?.id || null;
+	editingNoteDateKey = note?.dateKey || formatDateKey(new Date());
+	editingNoteContext = note?.fastContext ?? buildFastContext();
+	editingNoteCreatedAt = note?.createdAt ?? null;
+	editingNoteOpenedAt = Date.now();
 
-  const noteText = note?.text || "";
-  const legacyFoodNote = note?.calorieEntry?.foodNote || "";
-  $("note-editor-content").value = noteText || legacyFoodNote;
-  $("note-editor-calories").value = Number.isFinite(note?.calorieEntry?.calories)
-    ? note.calorieEntry.calories
-    : "";
-  editingNoteInitialText = $("note-editor-content").value.trim();
-  editingNoteInitialCalories = $("note-editor-calories").value.trim();
-  updateNoteEditorMeta();
-  $("note-editor-delete").classList.toggle("hidden", !editingNoteId);
-  modal.classList.remove("hidden");
-  requestAnimationFrame(() => modal.classList.add("is-open"));
+	const noteText = note?.text || "";
+	const legacyFoodNote = note?.calorieEntry?.foodNote || "";
+	$("note-editor-content").value = noteText || legacyFoodNote;
+	$("note-editor-calories").value = Number.isFinite(
+		note?.calorieEntry?.calories,
+	)
+		? note.calorieEntry.calories
+		: "";
+	editingNoteInitialText = $("note-editor-content").value.trim();
+	editingNoteInitialCalories = $("note-editor-calories").value.trim();
+	updateNoteEditorMeta();
+	$("note-editor-delete").classList.toggle("hidden", !editingNoteId);
+	modal.classList.remove("hidden");
+	requestAnimationFrame(() => modal.classList.add("is-open"));
 }
 
 function parseCalorieInput(value) {
-  if (value === "") return null;
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 0) return null;
-  return parsed;
+	if (value === "") return null;
+	const parsed = Number(value);
+	if (!Number.isFinite(parsed) || parsed < 0) return null;
+	return parsed;
 }
 
 function buildCalorieEntryFromEditor() {
-  const calories = parseCalorieInput($("note-editor-calories").value.trim());
-  if (calories === null) return null;
-  return {
-    calories,
-    goalSnapshot: buildGoalContext(),
-  };
+	const calories = parseCalorieInput($("note-editor-calories").value.trim());
+	if (calories === null) return null;
+	return {
+		calories,
+		goalSnapshot: buildGoalContext(),
+	};
 }
 
 function isTouchDevice() {
-  return navigator.maxTouchPoints > 0 || "ontouchstart" in window;
+	return navigator.maxTouchPoints > 0 || "ontouchstart" in window;
 }
 
 async function handleNoteEditorSwipeDismiss() {
-  const modal = $("note-editor-modal");
-  if (!modal || modal.classList.contains("hidden")) return;
-  const text = $("note-editor-content").value.trim();
-  const caloriesValue = $("note-editor-calories").value.trim();
-  const hasChanges =
-    text !== editingNoteInitialText || caloriesValue !== editingNoteInitialCalories;
-  const hasContent = Boolean(text) || Boolean(caloriesValue);
-  if (hasChanges && hasContent) {
-    const saved = await persistNoteEditor({ closeOnSave: false });
-    if (!saved) return;
-  }
-  closeNoteEditor();
+	const modal = $("note-editor-modal");
+	if (!modal || modal.classList.contains("hidden")) return;
+	const text = $("note-editor-content").value.trim();
+	const caloriesValue = $("note-editor-calories").value.trim();
+	const hasChanges =
+		text !== editingNoteInitialText ||
+		caloriesValue !== editingNoteInitialCalories;
+	const hasContent = Boolean(text) || Boolean(caloriesValue);
+	if (hasChanges && hasContent) {
+		const saved = await persistNoteEditor({ closeOnSave: false });
+		if (!saved) return;
+	}
+	closeNoteEditor();
 }
 
 function attachNoteEditorSwipeHandlers() {
-  if (noteEditorSwipeHandlersAttached || !isTouchDevice()) return;
-  const panel = document.querySelector("#note-editor-modal .note-editor-panel");
-  if (!panel) return;
-  noteEditorSwipeHandlersAttached = true;
+	if (noteEditorSwipeHandlersAttached || !isTouchDevice()) return;
+	const panel = document.querySelector("#note-editor-modal .note-editor-panel");
+	if (!panel) return;
+	noteEditorSwipeHandlersAttached = true;
 
-  let swipeStartX = 0;
-  let swipeStartY = 0;
+	let swipeStartX = 0;
+	let swipeStartY = 0;
 
-  panel.addEventListener(
-    "touchstart",
-    (event) => {
-      if (!event.touches || event.touches.length !== 1) return;
-      const touch = event.touches[0];
-      swipeStartX = touch.clientX;
-      swipeStartY = touch.clientY;
-    },
-    { passive: true },
-  );
+	panel.addEventListener(
+		"touchstart",
+		(event) => {
+			if (!event.touches || event.touches.length !== 1) return;
+			const touch = event.touches[0];
+			swipeStartX = touch.clientX;
+			swipeStartY = touch.clientY;
+		},
+		{ passive: true },
+	);
 
-  panel.addEventListener(
-    "touchend",
-    async (event) => {
-      const touch = event.changedTouches?.[0];
-      if (!touch) return;
-      const deltaX = touch.clientX - swipeStartX;
-      const deltaY = touch.clientY - swipeStartY;
-      swipeStartX = 0;
-      swipeStartY = 0;
+	panel.addEventListener(
+		"touchend",
+		async (event) => {
+			const touch = event.changedTouches?.[0];
+			if (!touch) return;
+			const deltaX = touch.clientX - swipeStartX;
+			const deltaY = touch.clientY - swipeStartY;
+			swipeStartX = 0;
+			swipeStartY = 0;
 
-      if (deltaX > 80 && Math.abs(deltaX) > Math.abs(deltaY)) {
-        await handleNoteEditorSwipeDismiss();
-      }
-    },
-    { passive: true },
-  );
+			if (deltaX > 80 && Math.abs(deltaX) > Math.abs(deltaY)) {
+				await handleNoteEditorSwipeDismiss();
+			}
+		},
+		{ passive: true },
+	);
 }
 
 function updateNoteEditorMeta() {
-  const badge = $("note-editor-fast");
-  const dateEl = $("note-editor-date");
-  if (!badge || !dateEl) return;
+	const badge = $("note-editor-fast");
+	const dateEl = $("note-editor-date");
+	if (!badge || !dateEl) return;
 
-  const dateObj = parseDateKey(editingNoteDateKey);
-  const dateLabel = dateObj
-    ? dateObj.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
-    : "Unknown date";
-  const createdLabel = editingNoteCreatedAt
-    ? `Created ${formatTimeShort(new Date(editingNoteCreatedAt))}`
-    : null;
-  const openedLabel = editingNoteOpenedAt
-    ? `Opened ${formatTimeShort(new Date(editingNoteOpenedAt))}`
-    : null;
-  const timeLabel = [createdLabel, openedLabel].filter(Boolean).join(" • ");
-  dateEl.textContent = timeLabel ? `${dateLabel} • ${timeLabel}` : dateLabel;
+	const dateObj = parseDateKey(editingNoteDateKey);
+	const dateLabel = dateObj
+		? dateObj.toLocaleDateString(undefined, {
+				month: "short",
+				day: "numeric",
+				year: "numeric",
+			})
+		: "Unknown date";
+	const createdLabel = editingNoteCreatedAt
+		? `Created ${formatTimeShort(new Date(editingNoteCreatedAt))}`
+		: null;
+	const openedLabel = editingNoteOpenedAt
+		? `Opened ${formatTimeShort(new Date(editingNoteOpenedAt))}`
+		: null;
+	const timeLabel = [createdLabel, openedLabel].filter(Boolean).join(" • ");
+	dateEl.textContent = timeLabel ? `${dateLabel} • ${timeLabel}` : dateLabel;
 
-  const isActive = Boolean(editingNoteContext?.wasActive);
-  const elapsedMsAtNote = editingNoteContext?.elapsedMsAtNote;
-  const hasElapsed = isActive && typeof elapsedMsAtNote === "number";
-  if (isActive) {
-    const typeLabel = editingNoteContext?.fastTypeLabel || "fast";
-    const elapsedLabel = hasElapsed ? ` • ${formatElapsedShort(elapsedMsAtNote)} in` : "";
-    badge.textContent = `Active ${typeLabel}${elapsedLabel}`;
-    badge.classList.remove("is-muted");
-  } else {
-    badge.textContent = "No active fast";
-    badge.classList.add("is-muted");
-  }
+	const isActive = Boolean(editingNoteContext?.wasActive);
+	const elapsedMsAtNote = editingNoteContext?.elapsedMsAtNote;
+	const hasElapsed = isActive && typeof elapsedMsAtNote === "number";
+	if (isActive) {
+		const typeLabel = editingNoteContext?.fastTypeLabel || "fast";
+		const elapsedLabel = hasElapsed
+			? ` • ${formatElapsedShort(elapsedMsAtNote)} in`
+			: "";
+		badge.textContent = `Active ${typeLabel}${elapsedLabel}`;
+		badge.classList.remove("is-muted");
+	} else {
+		badge.textContent = "No active fast";
+		badge.classList.add("is-muted");
+	}
 }
 
 function closeNoteEditor() {
-  const modal = $("note-editor-modal");
-  if (!modal) return;
-  modal.classList.remove("is-open");
-  if (noteEditorCloseTimeout) clearTimeout(noteEditorCloseTimeout);
-  noteEditorCloseTimeout = setTimeout(() => {
-    modal.classList.add("hidden");
-  }, 250);
-  $("note-editor-content").value = "";
-  $("note-editor-calories").value = "";
-  editingNoteId = null;
-  editingNoteDateKey = null;
-  editingNoteContext = null;
-  editingNoteCreatedAt = null;
-  editingNoteOpenedAt = null;
-  editingNoteInitialText = "";
-  editingNoteInitialCalories = "";
+	const modal = $("note-editor-modal");
+	if (!modal) return;
+	modal.classList.remove("is-open");
+	if (noteEditorCloseTimeout) clearTimeout(noteEditorCloseTimeout);
+	noteEditorCloseTimeout = setTimeout(() => {
+		modal.classList.add("hidden");
+	}, 250);
+	$("note-editor-content").value = "";
+	$("note-editor-calories").value = "";
+	editingNoteId = null;
+	editingNoteDateKey = null;
+	editingNoteContext = null;
+	editingNoteCreatedAt = null;
+	editingNoteOpenedAt = null;
+	editingNoteInitialText = "";
+	editingNoteInitialCalories = "";
 }
 
 async function persistNoteEditor({ closeOnSave = true } = {}) {
-  const text = $("note-editor-content").value.trim();
-  const calorieEntry = buildCalorieEntryFromEditor();
-  if (!text && !calorieEntry) {
-    showToast("Add a note before saving");
-    return false;
-  }
-  try {
-    if (editingNoteId) {
-      await updateNote(editingNoteId, {
-        text,
-        calorieEntry,
-        dateKey: editingNoteDateKey,
-        fastContext: editingNoteContext,
-        createdAt: editingNoteCreatedAt,
-      });
-    } else {
-      await createNote({
-        text,
-        calorieEntry,
-        dateKey: editingNoteDateKey,
-        fastContext: editingNoteContext,
-      });
-    }
-  } catch (err) {
-    if (err?.message === "missing-key") {
-      handleNotesDecryptError(err);
-      return false;
-    }
-  }
-  renderNotes();
-  if (closeOnSave) closeNoteEditor();
-  return true;
+	const text = $("note-editor-content").value.trim();
+	const calorieEntry = buildCalorieEntryFromEditor();
+	if (!text && !calorieEntry) {
+		showToast("Add a note before saving");
+		return false;
+	}
+	try {
+		if (editingNoteId) {
+			await updateNote(editingNoteId, {
+				text,
+				calorieEntry,
+				dateKey: editingNoteDateKey,
+				fastContext: editingNoteContext,
+				createdAt: editingNoteCreatedAt,
+			});
+		} else {
+			await createNote({
+				text,
+				calorieEntry,
+				dateKey: editingNoteDateKey,
+				fastContext: editingNoteContext,
+			});
+		}
+	} catch (err) {
+		if (err?.message === "missing-key") {
+			handleNotesDecryptError(err);
+			return false;
+		}
+	}
+	renderNotes();
+	if (closeOnSave) closeNoteEditor();
+	return true;
 }
 
 async function saveNoteEditor() {
-  await persistNoteEditor();
+	await persistNoteEditor();
 }
 
 async function removeNote() {
-  if (!editingNoteId) return;
-  await deleteNote(editingNoteId);
-  renderNotes();
-  closeNoteEditor();
+	if (!editingNoteId) return;
+	await deleteNote(editingNoteId);
+	renderNotes();
+	closeNoteEditor();
 }
 
 function startNotesListener(uid) {
-  stopNotesListener();
-  notesLoaded = false;
-  notes = [];
-  renderNotes();
+	stopNotesListener();
+	notesLoaded = false;
+	notes = [];
+	renderNotes();
 
-  notesUnsubscribe = onSnapshot(
-    getNotesCollectionRef(uid),
-    async (snap) => {
-      try {
-        const normalized = await Promise.all(snap.docs.map(normalizeNoteSnapshot));
-        notesLoaded = true;
-        notes = normalized.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-        renderNotes();
-      } catch (err) {
-        handleNotesDecryptError(err);
-      }
-    },
-    (err) => {
-      console.error("Notes listener failed:", err);
-      notesLoaded = true;
-      notes = [];
-      renderNotes();
+	notesUnsubscribe = onSnapshot(
+		getNotesCollectionRef(uid),
+		async (snap) => {
+			try {
+				const normalized = await Promise.all(
+					snap.docs.map(normalizeNoteSnapshot),
+				);
+				notesLoaded = true;
+				notes = normalized.sort(
+					(a, b) => (b.updatedAt || 0) - (a.updatedAt || 0),
+				);
+				renderNotes();
+			} catch (err) {
+				handleNotesDecryptError(err);
+			}
+		},
+		(err) => {
+			console.error("Notes listener failed:", err);
+			notesLoaded = true;
+			notes = [];
+			renderNotes();
 
-      const code = err?.code || "";
-      if (code === "permission-denied") showToast("Notes blocked by Firestore rules / App Check.");
-      else if (code === "failed-precondition")
-        showToast("Notes failed-precondition (index/AppCheck/offline).");
-      else showToast(`Notes failed to load (${code || "unknown error"})`);
-    },
-  );
+			const code = err?.code || "";
+			if (code === "permission-denied")
+				showToast("Notes blocked by Firestore rules / App Check.");
+			else if (code === "failed-precondition")
+				showToast("Notes failed-precondition (index/AppCheck/offline).");
+			else showToast(`Notes failed to load (${code || "unknown error"})`);
+		},
+	);
 }
 
 function stopStateListener() {
-  if (stateUnsubscribe) {
-    stateUnsubscribe();
-    stateUnsubscribe = null;
-  }
+	if (stateUnsubscribe) {
+		stateUnsubscribe();
+		stateUnsubscribe = null;
+	}
 }
 
 function startStateListener(uid) {
-  stopStateListener();
-  stateUnsubscribe = onSnapshot(getStateDocRef(uid), async (snap) => {
-    const payload = snap.data()?.payload;
-    if (!payload || !payload.iv || !payload.ciphertext) {
-      state = clone(defaultState);
-      selectedFastTypeId = resolveFastTypeId(state.settings.defaultFastTypeId);
-      pendingTypeId = null;
-      renderAll();
-      return;
-    }
-    if (!cryptoKey) return;
-    try {
-      const decrypted = await decryptStatePayload(payload);
-      state = mergeStateWithDefaults(decrypted);
-      renderAll();
-    } catch {}
-  });
+	stopStateListener();
+	stateUnsubscribe = onSnapshot(getStateDocRef(uid), async (snap) => {
+		const payload = snap.data()?.payload;
+		if (!payload || !payload.iv || !payload.ciphertext) {
+			state = clone(defaultState);
+			selectedFastTypeId = resolveFastTypeId(state.settings.defaultFastTypeId);
+			pendingTypeId = null;
+			renderAll();
+			return;
+		}
+		if (!cryptoKey) return;
+		try {
+			const decrypted = await decryptStatePayload(payload);
+			state = mergeStateWithDefaults(decrypted);
+			renderAll();
+		} catch {}
+	});
 }
 
 function getEncryptedCache() {
-  try {
-    const raw = localStorage.getItem(ENCRYPTED_CACHE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+	try {
+		const raw = localStorage.getItem(ENCRYPTED_CACHE_KEY);
+		if (!raw) return null;
+		return JSON.parse(raw);
+	} catch {
+		return null;
+	}
 }
 
 function setEncryptedCache(payload) {
-  try {
-    localStorage.setItem(ENCRYPTED_CACHE_KEY, JSON.stringify(payload));
-  } catch {}
+	try {
+		localStorage.setItem(ENCRYPTED_CACHE_KEY, JSON.stringify(payload));
+	} catch {}
 }
 
 function getWrappedKeyStorage(uid) {
-  try {
-    const raw = localStorage.getItem(`${WRAPPED_KEY_STORAGE_KEY}:${uid}`);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+	try {
+		const raw = localStorage.getItem(`${WRAPPED_KEY_STORAGE_KEY}:${uid}`);
+		if (!raw) return null;
+		return JSON.parse(raw);
+	} catch {
+		return null;
+	}
 }
 
 function setWrappedKeyStorage(uid, payload) {
-  try {
-    localStorage.setItem(`${WRAPPED_KEY_STORAGE_KEY}:${uid}`, JSON.stringify(payload));
-  } catch {}
+	try {
+		localStorage.setItem(
+			`${WRAPPED_KEY_STORAGE_KEY}:${uid}`,
+			JSON.stringify(payload),
+		);
+	} catch {}
 }
 
 function clearWrappedKeyStorage(uid) {
-  try {
-    localStorage.removeItem(`${WRAPPED_KEY_STORAGE_KEY}:${uid}`);
-  } catch {}
+	try {
+		localStorage.removeItem(`${WRAPPED_KEY_STORAGE_KEY}:${uid}`);
+	} catch {}
 }
 
 function openDeviceKeyDb() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DEVICE_KEY_DB, 1);
-    req.onupgradeneeded = () => {
-      req.result.createObjectStore(DEVICE_KEY_STORE);
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
+	return new Promise((resolve, reject) => {
+		const req = indexedDB.open(DEVICE_KEY_DB, 1);
+		req.onupgradeneeded = () => {
+			req.result.createObjectStore(DEVICE_KEY_STORE);
+		};
+		req.onsuccess = () => resolve(req.result);
+		req.onerror = () => reject(req.error);
+	});
 }
 
 async function loadDeviceWrappingKey() {
-  try {
-    const db = await openDeviceKeyDb();
-    return await new Promise((resolve, reject) => {
-      const tx = db.transaction(DEVICE_KEY_STORE, "readonly");
-      const store = tx.objectStore(DEVICE_KEY_STORE);
-      const req = store.get(DEVICE_KEY_ID);
-      req.onsuccess = () => resolve(req.result || null);
-      req.onerror = () => reject(req.error);
-    });
-  } catch {
-    return null;
-  }
+	try {
+		const db = await openDeviceKeyDb();
+		return await new Promise((resolve, reject) => {
+			const tx = db.transaction(DEVICE_KEY_STORE, "readonly");
+			const store = tx.objectStore(DEVICE_KEY_STORE);
+			const req = store.get(DEVICE_KEY_ID);
+			req.onsuccess = () => resolve(req.result || null);
+			req.onerror = () => reject(req.error);
+		});
+	} catch {
+		return null;
+	}
 }
 
 async function saveDeviceWrappingKey(key) {
-  try {
-    const db = await openDeviceKeyDb();
-    await new Promise((resolve, reject) => {
-      const tx = db.transaction(DEVICE_KEY_STORE, "readwrite");
-      const store = tx.objectStore(DEVICE_KEY_STORE);
-      const req = store.put(key, DEVICE_KEY_ID);
-      req.onsuccess = () => resolve();
-      req.onerror = () => reject(req.error);
-    });
-  } catch {}
+	try {
+		const db = await openDeviceKeyDb();
+		await new Promise((resolve, reject) => {
+			const tx = db.transaction(DEVICE_KEY_STORE, "readwrite");
+			const store = tx.objectStore(DEVICE_KEY_STORE);
+			const req = store.put(key, DEVICE_KEY_ID);
+			req.onsuccess = () => resolve();
+			req.onerror = () => reject(req.error);
+		});
+	} catch {}
 }
 
 async function getOrCreateDeviceWrappingKey() {
-  const existing = await loadDeviceWrappingKey();
-  if (existing) return existing;
-  const key = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, [
-    "wrapKey",
-    "unwrapKey",
-  ]);
-  await saveDeviceWrappingKey(key);
-  return key;
+	const existing = await loadDeviceWrappingKey();
+	if (existing) return existing;
+	const key = await crypto.subtle.generateKey(
+		{ name: "AES-GCM", length: 256 },
+		false,
+		["wrapKey", "unwrapKey"],
+	);
+	await saveDeviceWrappingKey(key);
+	return key;
 }
 
 async function wrapEncryptionKeyForDevice(uid) {
-  if (!cryptoKey) return;
-  const wrappingKey = await getOrCreateDeviceWrappingKey();
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const wrapped = await crypto.subtle.wrapKey("raw", cryptoKey, wrappingKey, {
-    name: "AES-GCM",
-    iv,
-  });
-  setWrappedKeyStorage(uid, {
-    version: ENCRYPTION_VERSION,
-    iv: encodeBase64(iv),
-    wrappedKey: encodeBase64(new Uint8Array(wrapped)),
-  });
+	if (!cryptoKey) return;
+	const wrappingKey = await getOrCreateDeviceWrappingKey();
+	const iv = crypto.getRandomValues(new Uint8Array(12));
+	const wrapped = await crypto.subtle.wrapKey("raw", cryptoKey, wrappingKey, {
+		name: "AES-GCM",
+		iv,
+	});
+	setWrappedKeyStorage(uid, {
+		version: ENCRYPTION_VERSION,
+		iv: encodeBase64(iv),
+		wrappedKey: encodeBase64(new Uint8Array(wrapped)),
+	});
 }
 
 async function unwrapEncryptionKeyFromDevice(uid) {
-  const cached = getWrappedKeyStorage(uid);
-  if (!cached?.iv || !cached?.wrappedKey) return null;
-  const wrappingKey = await loadDeviceWrappingKey();
-  if (!wrappingKey) return null;
-  try {
-    const iv = decodeBase64(cached.iv);
-    const wrappedBytes = decodeBase64(cached.wrappedKey);
-    return await crypto.subtle.unwrapKey(
-      "raw",
-      wrappedBytes,
-      wrappingKey,
-      { name: "AES-GCM", iv },
-      { name: "AES-GCM", length: 256 },
-      true,
-      ["encrypt", "decrypt"],
-    );
-  } catch {
-    return null;
-  }
+	const cached = getWrappedKeyStorage(uid);
+	if (!cached?.iv || !cached?.wrappedKey) return null;
+	const wrappingKey = await loadDeviceWrappingKey();
+	if (!wrappingKey) return null;
+	try {
+		const iv = decodeBase64(cached.iv);
+		const wrappedBytes = decodeBase64(cached.wrappedKey);
+		return await crypto.subtle.unwrapKey(
+			"raw",
+			wrappedBytes,
+			wrappingKey,
+			{ name: "AES-GCM", iv },
+			{ name: "AES-GCM", length: 256 },
+			true,
+			["encrypt", "decrypt"],
+		);
+	} catch {
+		return null;
+	}
 }
 
 function mergeStateWithDefaults(parsed) {
-  const merged = clone(defaultState);
-  const parsedSettings = parsed.settings || {};
-  const parsedTheme = parsedSettings.theme || {};
-  if (typeof parsedSettings.showRingEmojis !== "boolean") {
-    parsedSettings.showRingEmojis = defaultState.settings.showRingEmojis;
-  }
-  if (parsedTheme.accentColor && !parsedTheme.primaryColor) {
-    parsedTheme.primaryColor = parsedTheme.accentColor;
-  }
-  if (parsedTheme.accentColorStrong && !parsedTheme.secondaryColor) {
-    parsedTheme.secondaryColor = parsedTheme.accentColorStrong;
-  }
-  merged.settings = Object.assign(merged.settings, parsedSettings);
-  merged.settings.theme = Object.assign({}, defaultState.settings.theme, parsedTheme);
-  merged.settings.calories = mergeCalorieSettings(parsedSettings.calories);
-  merged.activeFast = parsed.activeFast || null;
-  merged.history = Array.isArray(parsed.history) ? parsed.history : [];
-  merged.reminders = Object.assign(merged.reminders, parsed.reminders || {});
-  merged.milestoneTally =
-    parsed?.milestoneTally && typeof parsed.milestoneTally === "object"
-      ? parsed.milestoneTally
-      : {};
-  if (merged.activeFast && !Array.isArray(merged.activeFast.milestonesHit)) {
-    merged.activeFast.milestonesHit = [];
-  }
-  return merged;
+	const merged = clone(defaultState);
+	const parsedSettings = parsed.settings || {};
+	const parsedTheme = parsedSettings.theme || {};
+	if (typeof parsedSettings.showRingEmojis !== "boolean") {
+		parsedSettings.showRingEmojis = defaultState.settings.showRingEmojis;
+	}
+	if (parsedTheme.accentColor && !parsedTheme.primaryColor) {
+		parsedTheme.primaryColor = parsedTheme.accentColor;
+	}
+	if (parsedTheme.accentColorStrong && !parsedTheme.secondaryColor) {
+		parsedTheme.secondaryColor = parsedTheme.accentColorStrong;
+	}
+	merged.settings = Object.assign(merged.settings, parsedSettings);
+	merged.settings.theme = Object.assign(
+		{},
+		defaultState.settings.theme,
+		parsedTheme,
+	);
+	merged.settings.calories = mergeCalorieSettings(parsedSettings.calories);
+	merged.activeFast = parsed.activeFast || null;
+	merged.history = Array.isArray(parsed.history) ? parsed.history : [];
+	merged.reminders = Object.assign(merged.reminders, parsed.reminders || {});
+	merged.milestoneTally =
+		parsed?.milestoneTally && typeof parsed.milestoneTally === "object"
+			? parsed.milestoneTally
+			: {};
+	if (merged.activeFast && !Array.isArray(merged.activeFast.milestonesHit)) {
+		merged.activeFast.milestonesHit = [];
+	}
+	return merged;
 }
 
 function normalizeHistoryEntries(entries = []) {
-  const mergedEntries = [];
-  const entriesById = new Map();
-  let changed = false;
+	const mergedEntries = [];
+	const entriesById = new Map();
+	let changed = false;
 
-  entries.forEach((entry) => {
-    if (!entry || typeof entry !== "object") return;
+	entries.forEach((entry) => {
+		if (!entry || typeof entry !== "object") return;
 
-    const normalized = { ...entry };
-    const startTs = Number(normalized.startTimestamp);
-    const endTs = Number(normalized.endTimestamp);
-    const durationHours = computeDurationHours(startTs, endTs);
+		const normalized = { ...entry };
+		const startTs = Number(normalized.startTimestamp);
+		const endTs = Number(normalized.endTimestamp);
+		const durationHours = computeDurationHours(startTs, endTs);
 
-    if (durationHours !== null && normalized.durationHours !== durationHours) {
-      normalized.durationHours = durationHours;
-      changed = true;
-    }
+		if (durationHours !== null && normalized.durationHours !== durationHours) {
+			normalized.durationHours = durationHours;
+			changed = true;
+		}
 
-    if (normalized.id) {
-      const existing = entriesById.get(normalized.id);
-      if (existing) {
-        const mergedStart = mergeTimestamp(existing.startTimestamp, startTs, Math.min);
-        const mergedEnd = mergeTimestamp(existing.endTimestamp, endTs, Math.max);
-        if (mergedStart !== existing.startTimestamp) {
-          existing.startTimestamp = mergedStart;
-          changed = true;
-        }
-        if (mergedEnd !== existing.endTimestamp) {
-          existing.endTimestamp = mergedEnd;
-          changed = true;
-        }
-        if (!existing.typeId && normalized.typeId) {
-          existing.typeId = normalized.typeId;
-          changed = true;
-        }
-        if (!existing.status && normalized.status) {
-          existing.status = normalized.status;
-          changed = true;
-        }
-        const mergedDuration = computeDurationHours(existing.startTimestamp, existing.endTimestamp);
-        if (mergedDuration !== null && existing.durationHours !== mergedDuration) {
-          existing.durationHours = mergedDuration;
-          changed = true;
-        }
-      } else {
-        entriesById.set(normalized.id, normalized);
-        mergedEntries.push(normalized);
-      }
-      return;
-    }
+		if (normalized.id) {
+			const existing = entriesById.get(normalized.id);
+			if (existing) {
+				const mergedStart = mergeTimestamp(
+					existing.startTimestamp,
+					startTs,
+					Math.min,
+				);
+				const mergedEnd = mergeTimestamp(
+					existing.endTimestamp,
+					endTs,
+					Math.max,
+				);
+				if (mergedStart !== existing.startTimestamp) {
+					existing.startTimestamp = mergedStart;
+					changed = true;
+				}
+				if (mergedEnd !== existing.endTimestamp) {
+					existing.endTimestamp = mergedEnd;
+					changed = true;
+				}
+				if (!existing.typeId && normalized.typeId) {
+					existing.typeId = normalized.typeId;
+					changed = true;
+				}
+				if (!existing.status && normalized.status) {
+					existing.status = normalized.status;
+					changed = true;
+				}
+				const mergedDuration = computeDurationHours(
+					existing.startTimestamp,
+					existing.endTimestamp,
+				);
+				if (
+					mergedDuration !== null &&
+					existing.durationHours !== mergedDuration
+				) {
+					existing.durationHours = mergedDuration;
+					changed = true;
+				}
+			} else {
+				entriesById.set(normalized.id, normalized);
+				mergedEntries.push(normalized);
+			}
+			return;
+		}
 
-    mergedEntries.push(normalized);
-  });
+		mergedEntries.push(normalized);
+	});
 
-  return { entries: mergedEntries, changed };
+	return { entries: mergedEntries, changed };
 }
 
 function mergeTimestamp(existing, incoming, picker) {
-  const hasExisting = Number.isFinite(existing);
-  const hasIncoming = Number.isFinite(incoming);
-  if (hasExisting && hasIncoming) return picker(existing, incoming);
-  if (hasIncoming) return incoming;
-  if (hasExisting) return existing;
-  return existing;
+	const hasExisting = Number.isFinite(existing);
+	const hasIncoming = Number.isFinite(incoming);
+	if (hasExisting && hasIncoming) return picker(existing, incoming);
+	if (hasIncoming) return incoming;
+	if (hasExisting) return existing;
+	return existing;
 }
 
 function computeDurationHours(startTs, endTs) {
-  if (!Number.isFinite(startTs) || !Number.isFinite(endTs) || endTs <= startTs) return null;
-  return Math.round(((endTs - startTs) / 3600000) * 100) / 100;
+	if (!Number.isFinite(startTs) || !Number.isFinite(endTs) || endTs <= startTs)
+		return null;
+	return Math.round(((endTs - startTs) / 3600000) * 100) / 100;
 }
 
 async function deriveKeyFromPassword(password, saltBytes) {
-  const keyMaterial = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(password),
-    "PBKDF2",
-    false,
-    ["deriveKey"],
-  );
-  return crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      salt: saltBytes,
-      iterations: PBKDF2_ITERATIONS,
-      hash: "SHA-256",
-    },
-    keyMaterial,
-    { name: "AES-GCM", length: 256 },
-    true,
-    ["encrypt", "decrypt"],
-  );
+	const keyMaterial = await crypto.subtle.importKey(
+		"raw",
+		new TextEncoder().encode(password),
+		"PBKDF2",
+		false,
+		["deriveKey"],
+	);
+	return crypto.subtle.deriveKey(
+		{
+			name: "PBKDF2",
+			salt: saltBytes,
+			iterations: PBKDF2_ITERATIONS,
+			hash: "SHA-256",
+		},
+		keyMaterial,
+		{ name: "AES-GCM", length: 256 },
+		true,
+		["encrypt", "decrypt"],
+	);
 }
 
 async function encryptStatePayload() {
-  if (!cryptoKey) throw new Error("missing-key");
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const encodedState = new TextEncoder().encode(JSON.stringify(state));
-  const cipherBuffer = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
-    cryptoKey,
-    encodedState,
-  );
-  return {
-    version: ENCRYPTION_VERSION,
-    iv: encodeBase64(iv),
-    ciphertext: encodeBase64(new Uint8Array(cipherBuffer)),
-  };
+	if (!cryptoKey) throw new Error("missing-key");
+	const iv = crypto.getRandomValues(new Uint8Array(12));
+	const encodedState = new TextEncoder().encode(JSON.stringify(state));
+	const cipherBuffer = await crypto.subtle.encrypt(
+		{ name: "AES-GCM", iv },
+		cryptoKey,
+		encodedState,
+	);
+	return {
+		version: ENCRYPTION_VERSION,
+		iv: encodeBase64(iv),
+		ciphertext: encodeBase64(new Uint8Array(cipherBuffer)),
+	};
 }
 
 async function decryptStatePayload(payload) {
-  if (!cryptoKey) throw new Error("missing-key");
-  const iv = decodeBase64(payload.iv);
-  const ciphertext = decodeBase64(payload.ciphertext);
-  const decryptedBuffer = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv },
-    cryptoKey,
-    ciphertext,
-  );
-  const decoded = new TextDecoder().decode(decryptedBuffer);
-  return JSON.parse(decoded);
+	if (!cryptoKey) throw new Error("missing-key");
+	const iv = decodeBase64(payload.iv);
+	const ciphertext = decodeBase64(payload.ciphertext);
+	const decryptedBuffer = await crypto.subtle.decrypt(
+		{ name: "AES-GCM", iv },
+		cryptoKey,
+		ciphertext,
+	);
+	const decoded = new TextDecoder().decode(decryptedBuffer);
+	return JSON.parse(decoded);
 }
 
 async function encryptNotePayload(notePayload) {
-  if (!cryptoKey) throw new Error("missing-key");
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  let serializedPayload = "";
-  if (typeof notePayload === "string") {
-    serializedPayload = notePayload;
-  } else if (notePayload && typeof notePayload === "object") {
-    serializedPayload = JSON.stringify({
-      text: typeof notePayload.text === "string" ? notePayload.text : "",
-      calorieEntry: notePayload.calorieEntry ?? null,
-    });
-  }
-  const encodedText = new TextEncoder().encode(serializedPayload);
-  const cipherBuffer = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, cryptoKey, encodedText);
-  return {
-    version: ENCRYPTION_VERSION,
-    iv: encodeBase64(iv),
-    ciphertext: encodeBase64(new Uint8Array(cipherBuffer)),
-  };
+	if (!cryptoKey) throw new Error("missing-key");
+	const iv = crypto.getRandomValues(new Uint8Array(12));
+	let serializedPayload = "";
+	if (typeof notePayload === "string") {
+		serializedPayload = notePayload;
+	} else if (notePayload && typeof notePayload === "object") {
+		serializedPayload = JSON.stringify({
+			text: typeof notePayload.text === "string" ? notePayload.text : "",
+			calorieEntry: notePayload.calorieEntry ?? null,
+		});
+	}
+	const encodedText = new TextEncoder().encode(serializedPayload);
+	const cipherBuffer = await crypto.subtle.encrypt(
+		{ name: "AES-GCM", iv },
+		cryptoKey,
+		encodedText,
+	);
+	return {
+		version: ENCRYPTION_VERSION,
+		iv: encodeBase64(iv),
+		ciphertext: encodeBase64(new Uint8Array(cipherBuffer)),
+	};
 }
 
 async function decryptNotePayload(payload) {
-  if (!cryptoKey) throw new Error("missing-key");
-  if (!payload?.iv || !payload?.ciphertext) throw new Error("invalid-payload");
-  const iv = decodeBase64(payload.iv);
-  const ciphertext = decodeBase64(payload.ciphertext);
-  const decryptedBuffer = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv },
-    cryptoKey,
-    ciphertext,
-  );
-  const decoded = new TextDecoder().decode(decryptedBuffer);
-  try {
-    const parsed = JSON.parse(decoded);
-    if (parsed && typeof parsed === "object" && ("text" in parsed || "calorieEntry" in parsed)) {
-      return parsed;
-    }
-  } catch {}
-  return decoded;
+	if (!cryptoKey) throw new Error("missing-key");
+	if (!payload?.iv || !payload?.ciphertext) throw new Error("invalid-payload");
+	const iv = decodeBase64(payload.iv);
+	const ciphertext = decodeBase64(payload.ciphertext);
+	const decryptedBuffer = await crypto.subtle.decrypt(
+		{ name: "AES-GCM", iv },
+		cryptoKey,
+		ciphertext,
+	);
+	const decoded = new TextDecoder().decode(decryptedBuffer);
+	try {
+		const parsed = JSON.parse(decoded);
+		if (
+			parsed &&
+			typeof parsed === "object" &&
+			("text" in parsed || "calorieEntry" in parsed)
+		) {
+			return parsed;
+		}
+	} catch {}
+	return decoded;
 }
 
 function handleNotesDecryptError(err) {
-  const message = err?.message === "missing-key" ? "missing-password" : err?.message;
-  if (message === "missing-password" || message === "decrypt-failed") {
-    cryptoKey = null;
-    keySalt = null;
-    showReauthPrompt("Please re-enter your password to decrypt your data.");
-  }
+	const message =
+		err?.message === "missing-key" ? "missing-password" : err?.message;
+	if (message === "missing-password" || message === "decrypt-failed") {
+		cryptoKey = null;
+		keySalt = null;
+		showReauthPrompt("Please re-enter your password to decrypt your data.");
+	}
 }
 
 async function resolveEncryptedPayload(uid) {
-  try {
-    const snap = await getDocFromServer(getStateDocRef(uid));
-    if (snap.exists()) return snap.data()?.payload || null;
-  } catch {}
-  try {
-    const snap = await getDoc(getStateDocRef(uid));
-    if (snap.exists()) return snap.data()?.payload || null;
-  } catch {}
-  return getEncryptedCache();
+	try {
+		const snap = await getDocFromServer(getStateDocRef(uid));
+		if (snap.exists()) return snap.data()?.payload || null;
+	} catch {}
+	try {
+		const snap = await getDoc(getStateDocRef(uid));
+		if (snap.exists()) return snap.data()?.payload || null;
+	} catch {}
+	return getEncryptedCache();
 }
 
 async function resolveUserSalt(uid, payloadSalt) {
-  let storedSalt = null;
-  try {
-    const snap = await getDoc(getUserDocRef(uid));
-    storedSalt = snap.data()?.crypto?.salt || null;
-  } catch {}
+	let storedSalt = null;
+	try {
+		const snap = await getDoc(getUserDocRef(uid));
+		storedSalt = snap.data()?.crypto?.salt || null;
+	} catch {}
 
-  if (!storedSalt && payloadSalt) {
-    storedSalt = payloadSalt;
-    try {
-      await setDoc(getUserDocRef(uid), { crypto: { salt: storedSalt } }, { merge: true });
-    } catch {}
-  }
+	if (!storedSalt && payloadSalt) {
+		storedSalt = payloadSalt;
+		try {
+			await setDoc(
+				getUserDocRef(uid),
+				{ crypto: { salt: storedSalt } },
+				{ merge: true },
+			);
+		} catch {}
+	}
 
-  if (!storedSalt) {
-    storedSalt = encodeBase64(crypto.getRandomValues(new Uint8Array(16)));
-    try {
-      await setDoc(getUserDocRef(uid), { crypto: { salt: storedSalt } }, { merge: true });
-    } catch {}
-  }
+	if (!storedSalt) {
+		storedSalt = encodeBase64(crypto.getRandomValues(new Uint8Array(16)));
+		try {
+			await setDoc(
+				getUserDocRef(uid),
+				{ crypto: { salt: storedSalt } },
+				{ merge: true },
+			);
+		} catch {}
+	}
 
-  return decodeBase64(storedSalt);
+	return decodeBase64(storedSalt);
 }
 
 async function loadState() {
-  const user = auth.currentUser;
-  if (!user) return clone(defaultState);
+	const user = auth.currentUser;
+	if (!user) return clone(defaultState);
 
-  const payload = await resolveEncryptedPayload(user.uid);
-  const saltBytes = await resolveUserSalt(user.uid, payload?.salt);
-  keySalt = saltBytes;
+	const payload = await resolveEncryptedPayload(user.uid);
+	const saltBytes = await resolveUserSalt(user.uid, payload?.salt);
+	keySalt = saltBytes;
 
-  if (!payload) {
-    if (!cryptoKey) {
-      if (pendingPassword) {
-        cryptoKey = await deriveKeyFromPassword(pendingPassword, keySalt);
-        pendingPassword = null;
-        if (authRememberChoice) await wrapEncryptionKeyForDevice(user.uid);
-      } else {
-        const cachedKey = await unwrapEncryptionKeyFromDevice(user.uid);
-        if (cachedKey) cryptoKey = cachedKey;
-        else throw new Error("missing-password");
-      }
-    }
-    return clone(defaultState);
-  }
+	if (!payload) {
+		if (!cryptoKey) {
+			if (pendingPassword) {
+				cryptoKey = await deriveKeyFromPassword(pendingPassword, keySalt);
+				pendingPassword = null;
+				if (authRememberChoice) await wrapEncryptionKeyForDevice(user.uid);
+			} else {
+				const cachedKey = await unwrapEncryptionKeyFromDevice(user.uid);
+				if (cachedKey) cryptoKey = cachedKey;
+				else throw new Error("missing-password");
+			}
+		}
+		return clone(defaultState);
+	}
 
-  if (!payload.iv || !payload.ciphertext) throw new Error("invalid-payload");
+	if (!payload.iv || !payload.ciphertext) throw new Error("invalid-payload");
 
-  if (!cryptoKey) {
-    if (pendingPassword) {
-      cryptoKey = await deriveKeyFromPassword(pendingPassword, keySalt);
-      pendingPassword = null;
-      if (authRememberChoice) await wrapEncryptionKeyForDevice(user.uid);
-    } else {
-      const cachedKey = await unwrapEncryptionKeyFromDevice(user.uid);
-      if (cachedKey) cryptoKey = cachedKey;
-      else throw new Error("missing-password");
-    }
-  }
+	if (!cryptoKey) {
+		if (pendingPassword) {
+			cryptoKey = await deriveKeyFromPassword(pendingPassword, keySalt);
+			pendingPassword = null;
+			if (authRememberChoice) await wrapEncryptionKeyForDevice(user.uid);
+		} else {
+			const cachedKey = await unwrapEncryptionKeyFromDevice(user.uid);
+			if (cachedKey) cryptoKey = cachedKey;
+			else throw new Error("missing-password");
+		}
+	}
 
-  try {
-    const decrypted = await decryptStatePayload(payload);
-    return mergeStateWithDefaults(decrypted);
-  } catch {
-    cryptoKey = null;
-    keySalt = null;
-    throw new Error("decrypt-failed");
-  }
+	try {
+		const decrypted = await decryptStatePayload(payload);
+		return mergeStateWithDefaults(decrypted);
+	} catch {
+		cryptoKey = null;
+		keySalt = null;
+		throw new Error("decrypt-failed");
+	}
 }
 
 async function saveState() {
-  const user = auth.currentUser;
-  if (!user || !cryptoKey || !keySalt) return;
+	const user = auth.currentUser;
+	if (!user || !cryptoKey || !keySalt) return;
 
-  const payload = await encryptStatePayload();
-  payload.salt = encodeBase64(keySalt);
+	const payload = await encryptStatePayload();
+	payload.salt = encodeBase64(keySalt);
 
-  try {
-    await setDoc(getStateDocRef(user.uid), { payload }, { merge: true });
-  } catch {}
-  setEncryptedCache(payload);
+	try {
+		await setDoc(getStateDocRef(user.uid), { payload }, { merge: true });
+	} catch {}
+	setEncryptedCache(payload);
 }
 
 async function markUserVerified(user) {
-  if (!user) return;
-  const payload = {
-    email: user.email ?? null,
-    emailVerified: Boolean(user.emailVerified),
-    updatedAt: Date.now(),
-  };
-  if (user.emailVerified) payload.verifiedAt = Date.now();
-  try {
-    await setDoc(getUserDocRef(user.uid), payload, { merge: true });
-  } catch {}
+	if (!user) return;
+	const payload = {
+		email: user.email ?? null,
+		emailVerified: Boolean(user.emailVerified),
+		updatedAt: Date.now(),
+	};
+	if (user.emailVerified) payload.verifiedAt = Date.now();
+	try {
+		await setDoc(getUserDocRef(user.uid), payload, { merge: true });
+	} catch {}
 }
 
 function initUI() {
-  initTabs();
-  initNavTooltips();
-  initFastTypeChips();
-  initCalories();
-  initButtons();
-  initSettings();
-  initCalendar();
-  renderAll();
+	initTabs();
+	initNavTooltips();
+	initFastTypeChips();
+	initCalories();
+	initButtons();
+	initSettings();
+	initCalendar();
+	renderAll();
 }
 
 function initAuthListener() {
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      if (!user.emailVerified) {
-        stopStateListener();
-        stopNotesListener();
-        notesLoaded = false;
-        notes = [];
-        showVerificationRequired(user);
-        return;
-      }
-      try {
-        await completeAuthFlow();
-      } catch (err) {
-        if (err?.message === "missing-password" || err?.message === "decrypt-failed") {
-          showReauthPrompt("Please re-enter your password to decrypt your data.");
-          return;
-        }
-        showReauthPrompt("We couldn't load your encrypted data. Please sign in again.");
-      }
-    } else {
-      stopStateListener();
-      stopNotesListener();
-      notesLoaded = false;
-      notes = [];
-      setAuthVisibility(false);
-      stopTick();
-      cryptoKey = null;
-      keySalt = null;
-      pendingPassword = null;
-      needsUnlock = false;
-      authRememberChoice = null;
-      closeNotesDrawer(true);
-    }
-  });
+	onAuthStateChanged(auth, async (user) => {
+		if (user) {
+			if (!user.emailVerified) {
+				stopStateListener();
+				stopNotesListener();
+				notesLoaded = false;
+				notes = [];
+				showVerificationRequired(user);
+				return;
+			}
+			try {
+				await completeAuthFlow();
+			} catch (err) {
+				if (
+					err?.message === "missing-password" ||
+					err?.message === "decrypt-failed"
+				) {
+					showReauthPrompt(
+						"Please re-enter your password to decrypt your data.",
+					);
+					return;
+				}
+				showReauthPrompt(
+					"We couldn't load your encrypted data. Please sign in again.",
+				);
+			}
+		} else {
+			stopStateListener();
+			stopNotesListener();
+			notesLoaded = false;
+			notes = [];
+			setAuthVisibility(false);
+			stopTick();
+			cryptoKey = null;
+			keySalt = null;
+			pendingPassword = null;
+			needsUnlock = false;
+			authRememberChoice = null;
+			closeNotesDrawer(true);
+		}
+	});
 }
 
 function initAuthUI() {
-  const form = $("auth-form");
-  const toggle = $("auth-toggle");
-  const resetBtn = $("auth-reset");
-  const resendBtn = $("verify-email-resend");
-  const refreshBtn = $("verify-email-refresh");
-  const signOutBtn = $("verify-email-signout");
-  const _passwordInput = $("auth-password");
-  const _confirmInput = $("auth-password-confirm");
-  form.addEventListener("submit", handleAuthSubmit);
-  toggle.addEventListener("click", () => {
-    authMode = authMode === "sign-in" ? "sign-up" : "sign-in";
-    updateAuthMode();
-  });
-  resetBtn.addEventListener("click", handlePasswordReset);
-  resendBtn.addEventListener("click", async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-    try {
-      await sendEmailVerification(user);
-      showToast("Verification email sent.");
-    } catch (err) {
-      showToast(err?.message || "Unable to resend verification email.");
-    }
-  });
-  refreshBtn.addEventListener("click", async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-    try {
-      await reload(user);
-    } catch (err) {
-      showToast(err?.message || "Unable to refresh verification status.");
-      return;
-    }
-    if (auth.currentUser?.emailVerified) {
-      await markUserVerified(auth.currentUser);
-      setVerificationPanel({ visible: false });
-      await completeAuthFlow();
-    } else {
-      showToast("Your email is still unverified.");
-    }
-  });
-  signOutBtn.addEventListener("click", async () => {
-    try {
-      await signOut(auth);
-    } catch {}
-    setVerificationPanel({ visible: false });
-    setAuthFormDisabled(false);
-    $("auth-email").value = "";
-    $("auth-password").value = "";
-    $("auth-password-confirm").value = "";
-  });
-  updateAuthMode();
+	const form = $("auth-form");
+	const toggle = $("auth-toggle");
+	const resetBtn = $("auth-reset");
+	const resendBtn = $("verify-email-resend");
+	const refreshBtn = $("verify-email-refresh");
+	const signOutBtn = $("verify-email-signout");
+	const _passwordInput = $("auth-password");
+	const _confirmInput = $("auth-password-confirm");
+	form.addEventListener("submit", handleAuthSubmit);
+	toggle.addEventListener("click", () => {
+		authMode = authMode === "sign-in" ? "sign-up" : "sign-in";
+		updateAuthMode();
+	});
+	resetBtn.addEventListener("click", handlePasswordReset);
+	resendBtn.addEventListener("click", async () => {
+		const user = auth.currentUser;
+		if (!user) return;
+		try {
+			await sendEmailVerification(user);
+			showToast("Verification email sent.");
+		} catch (err) {
+			showToast(err?.message || "Unable to resend verification email.");
+		}
+	});
+	refreshBtn.addEventListener("click", async () => {
+		const user = auth.currentUser;
+		if (!user) return;
+		try {
+			await reload(user);
+		} catch (err) {
+			showToast(err?.message || "Unable to refresh verification status.");
+			return;
+		}
+		if (auth.currentUser?.emailVerified) {
+			await markUserVerified(auth.currentUser);
+			setVerificationPanel({ visible: false });
+			await completeAuthFlow();
+		} else {
+			showToast("Your email is still unverified.");
+		}
+	});
+	signOutBtn.addEventListener("click", async () => {
+		try {
+			await signOut(auth);
+		} catch {}
+		setVerificationPanel({ visible: false });
+		setAuthFormDisabled(false);
+		$("auth-email").value = "";
+		$("auth-password").value = "";
+		$("auth-password-confirm").value = "";
+	});
+	updateAuthMode();
 }
 
 function updatePasswordMatchIndicator() {
-  const isSignUp = authMode === "sign-up";
-  const matchEl = $("auth-password-match");
-  if (!isSignUp) {
-    matchEl.classList.add("hidden");
-    return;
-  }
+	const isSignUp = authMode === "sign-up";
+	const matchEl = $("auth-password-match");
+	if (!isSignUp) {
+		matchEl.classList.add("hidden");
+		return;
+	}
 
-  const password = $("auth-password").value;
-  const confirmPassword = $("auth-password-confirm").value;
-  if (!password && !confirmPassword) {
-    matchEl.classList.add("hidden");
-    return;
-  }
+	const password = $("auth-password").value;
+	const confirmPassword = $("auth-password-confirm").value;
+	if (!password && !confirmPassword) {
+		matchEl.classList.add("hidden");
+		return;
+	}
 
-  const matches = password === confirmPassword;
-  matchEl.textContent = matches ? "Passwords match." : "Passwords do not match.";
-  matchEl.classList.remove("hidden");
-  matchEl.classList.toggle("text-emerald-400", matches);
-  matchEl.classList.toggle("text-rose-400", !matches);
+	const matches = password === confirmPassword;
+	matchEl.textContent = matches
+		? "Passwords match."
+		: "Passwords do not match.";
+	matchEl.classList.remove("hidden");
+	matchEl.classList.toggle("text-emerald-400", matches);
+	matchEl.classList.toggle("text-rose-400", !matches);
 }
 
 function updateAuthMode() {
-  const isSignUp = authMode === "sign-up";
-  $("auth-title").textContent = isSignUp ? "Create your account" : "Welcome back";
-  $("auth-subtitle").textContent = isSignUp
-    ? "Sign up to start tracking your fasts across devices."
-    : "Sign in to keep your fasting history synced.";
-  $("auth-submit").textContent = isSignUp ? "Create account" : "Sign in";
-  $("auth-toggle-text").textContent = isSignUp ? "Already have an account?" : "New here?";
-  $("auth-toggle").textContent = isSignUp ? "Sign in" : "Create an account";
-  $("auth-reset").classList.toggle("hidden", isSignUp);
-  $("auth-error").classList.add("hidden");
-  $("auth-error").textContent = "";
-  setVerificationPanel({ visible: false });
-  const confirmGroup = $("auth-confirm-group");
-  const confirmInput = $("auth-password-confirm");
-  const matchEl = $("auth-password-match");
-  confirmGroup.classList.toggle("hidden", !isSignUp);
-  confirmInput.disabled = !isSignUp;
-  confirmInput.required = isSignUp;
-  confirmInput.value = "";
-  matchEl.classList.add("hidden");
-  matchEl.textContent = "";
-  updatePasswordMatchIndicator();
+	const isSignUp = authMode === "sign-up";
+	$("auth-title").textContent = isSignUp
+		? "Create your account"
+		: "Welcome back";
+	$("auth-subtitle").textContent = isSignUp
+		? "Sign up to start tracking your fasts across devices."
+		: "Sign in to keep your fasting history synced.";
+	$("auth-submit").textContent = isSignUp ? "Create account" : "Sign in";
+	$("auth-toggle-text").textContent = isSignUp
+		? "Already have an account?"
+		: "New here?";
+	$("auth-toggle").textContent = isSignUp ? "Sign in" : "Create an account";
+	$("auth-reset").classList.toggle("hidden", isSignUp);
+	$("auth-error").classList.add("hidden");
+	$("auth-error").textContent = "";
+	setVerificationPanel({ visible: false });
+	const confirmGroup = $("auth-confirm-group");
+	const confirmInput = $("auth-password-confirm");
+	const matchEl = $("auth-password-match");
+	confirmGroup.classList.toggle("hidden", !isSignUp);
+	confirmInput.disabled = !isSignUp;
+	confirmInput.required = isSignUp;
+	confirmInput.value = "";
+	matchEl.classList.add("hidden");
+	matchEl.textContent = "";
+	updatePasswordMatchIndicator();
 }
 
 function showReauthPrompt(message) {
-  authMode = "sign-in";
-  updateAuthMode();
-  if (auth.currentUser?.email) $("auth-email").value = auth.currentUser.email;
-  $("auth-password").value = "";
-  const errorEl = $("auth-error");
-  errorEl.textContent = message;
-  errorEl.classList.remove("hidden");
-  needsUnlock = true;
-  setAuthVisibility(false);
+	authMode = "sign-in";
+	updateAuthMode();
+	if (auth.currentUser?.email) $("auth-email").value = auth.currentUser.email;
+	$("auth-password").value = "";
+	const errorEl = $("auth-error");
+	errorEl.textContent = message;
+	errorEl.classList.remove("hidden");
+	needsUnlock = true;
+	setAuthVisibility(false);
 }
 
 function setAuthFormDisabled(disabled) {
-  const form = $("auth-form");
-  if (!form) return;
-  const controls = form.querySelectorAll("input, button");
-  controls.forEach((control) => {
-    control.disabled = disabled;
-  });
-  form.classList.toggle("opacity-60", disabled);
-  form.classList.toggle("pointer-events-none", disabled);
-  const toggle = $("auth-toggle");
-  toggle.disabled = disabled;
-  toggle.classList.toggle("opacity-60", disabled);
-  toggle.classList.toggle("pointer-events-none", disabled);
+	const form = $("auth-form");
+	if (!form) return;
+	const controls = form.querySelectorAll("input, button");
+	controls.forEach((control) => {
+		control.disabled = disabled;
+	});
+	form.classList.toggle("opacity-60", disabled);
+	form.classList.toggle("pointer-events-none", disabled);
+	const toggle = $("auth-toggle");
+	toggle.disabled = disabled;
+	toggle.classList.toggle("opacity-60", disabled);
+	toggle.classList.toggle("pointer-events-none", disabled);
 }
 
 function setVerificationPanel({ visible, email = "" } = {}) {
-  const panel = $("verify-email-panel");
-  if (!panel) return;
-  panel.classList.toggle("hidden", !visible);
-  $("verify-email-address").textContent = email || "your inbox";
-  setAuthFormDisabled(visible);
+	const panel = $("verify-email-panel");
+	if (!panel) return;
+	panel.classList.toggle("hidden", !visible);
+	$("verify-email-address").textContent = email || "your inbox";
+	setAuthFormDisabled(visible);
 }
 
 function showVerificationRequired(user) {
-  authMode = "sign-in";
-  updateAuthMode();
-  if (user?.email) $("auth-email").value = user.email;
-  $("auth-error").classList.add("hidden");
-  $("auth-error").textContent = "";
-  setVerificationPanel({ visible: true, email: user?.email || "" });
-  setAuthVisibility(false);
+	authMode = "sign-in";
+	updateAuthMode();
+	if (user?.email) $("auth-email").value = user.email;
+	$("auth-error").classList.add("hidden");
+	$("auth-error").textContent = "";
+	setVerificationPanel({ visible: true, email: user?.email || "" });
+	setAuthVisibility(false);
 }
 
 function setAuthVisibility(isAuthed) {
-  $("app").classList.toggle("hidden", !isAuthed);
-  $("auth-screen").classList.toggle("hidden", isAuthed);
+	$("app").classList.toggle("hidden", !isAuthed);
+	$("auth-screen").classList.toggle("hidden", isAuthed);
 }
 
 async function handleAuthSubmit(e) {
-  e.preventDefault();
-  const email = $("auth-email").value.trim();
-  const password = $("auth-password").value;
-  const remember = $("auth-remember").checked;
-  const errorEl = $("auth-error");
+	e.preventDefault();
+	const email = $("auth-email").value.trim();
+	const password = $("auth-password").value;
+	const remember = $("auth-remember").checked;
+	const errorEl = $("auth-error");
 
-  errorEl.classList.add("hidden");
-  errorEl.textContent = "";
+	errorEl.classList.add("hidden");
+	errorEl.textContent = "";
 
-  if (!email || !password) {
-    errorEl.textContent = "Please enter both an email and password.";
-    errorEl.classList.remove("hidden");
-    return;
-  }
-  if (authMode === "sign-up") {
-    const confirmPassword = $("auth-password-confirm").value;
-    if (!confirmPassword) {
-      errorEl.textContent = "Please confirm your password.";
-      errorEl.classList.remove("hidden");
-      updatePasswordMatchIndicator();
-      return;
-    }
-    if (password !== confirmPassword) {
-      errorEl.textContent = "Passwords do not match.";
-      errorEl.classList.remove("hidden");
-      updatePasswordMatchIndicator();
-      return;
-    }
-  }
+	if (!email || !password) {
+		errorEl.textContent = "Please enter both an email and password.";
+		errorEl.classList.remove("hidden");
+		return;
+	}
+	if (authMode === "sign-up") {
+		const confirmPassword = $("auth-password-confirm").value;
+		if (!confirmPassword) {
+			errorEl.textContent = "Please confirm your password.";
+			errorEl.classList.remove("hidden");
+			updatePasswordMatchIndicator();
+			return;
+		}
+		if (password !== confirmPassword) {
+			errorEl.textContent = "Passwords do not match.";
+			errorEl.classList.remove("hidden");
+			updatePasswordMatchIndicator();
+			return;
+		}
+	}
 
-  try {
-    await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
-    if (authMode === "sign-up") {
-      await createUserWithEmailAndPassword(auth, email, password);
-      if (auth.currentUser) {
-        try {
-          await setDoc(
-            getUserDocRef(auth.currentUser.uid),
-            {
-              email: auth.currentUser.email ?? email,
-              emailVerified: auth.currentUser.emailVerified,
-              createdAt: Date.now(),
-              updatedAt: Date.now(),
-            },
-            { merge: true },
-          );
-        } catch {}
-        try {
-          await sendEmailVerification(auth.currentUser);
-        } catch (err) {
-          showToast(err?.message || "Unable to send verification email.");
-        }
-      }
-    } else {
-      await signInWithEmailAndPassword(auth, email, password);
-    }
+	try {
+		await setPersistence(
+			auth,
+			remember ? browserLocalPersistence : browserSessionPersistence,
+		);
+		if (authMode === "sign-up") {
+			await createUserWithEmailAndPassword(auth, email, password);
+			if (auth.currentUser) {
+				try {
+					await setDoc(
+						getUserDocRef(auth.currentUser.uid),
+						{
+							email: auth.currentUser.email ?? email,
+							emailVerified: auth.currentUser.emailVerified,
+							createdAt: Date.now(),
+							updatedAt: Date.now(),
+						},
+						{ merge: true },
+					);
+				} catch {}
+				try {
+					await sendEmailVerification(auth.currentUser);
+				} catch (err) {
+					showToast(err?.message || "Unable to send verification email.");
+				}
+			}
+		} else {
+			await signInWithEmailAndPassword(auth, email, password);
+		}
 
-    pendingPassword = password;
-    authRememberChoice = remember;
-    if (auth.currentUser && !remember) clearWrappedKeyStorage(auth.currentUser.uid);
+		pendingPassword = password;
+		authRememberChoice = remember;
+		if (auth.currentUser && !remember)
+			clearWrappedKeyStorage(auth.currentUser.uid);
 
-    if (needsUnlock && auth.currentUser) {
-      try {
-        await completeAuthFlow();
-      } catch (err) {
-        if (err?.message === "decrypt-failed") {
-          showReauthPrompt("Incorrect password. Please try again.");
-          return;
-        }
-        showReauthPrompt("We couldn't unlock your data. Please try again.");
-      }
-    }
-  } catch (err) {
-    errorEl.textContent = err?.message || "Unable to authenticate. Please try again.";
-    errorEl.classList.remove("hidden");
-  }
+		if (needsUnlock && auth.currentUser) {
+			try {
+				await completeAuthFlow();
+			} catch (err) {
+				if (err?.message === "decrypt-failed") {
+					showReauthPrompt("Incorrect password. Please try again.");
+					return;
+				}
+				showReauthPrompt("We couldn't unlock your data. Please try again.");
+			}
+		}
+	} catch (err) {
+		errorEl.textContent =
+			err?.message || "Unable to authenticate. Please try again.";
+		errorEl.classList.remove("hidden");
+	}
 }
 
 async function handlePasswordReset() {
-  const email = $("auth-email").value.trim();
-  const errorEl = $("auth-error");
-  const resetBtn = $("auth-reset");
+	const email = $("auth-email").value.trim();
+	const errorEl = $("auth-error");
+	const resetBtn = $("auth-reset");
 
-  errorEl.classList.add("hidden");
-  errorEl.textContent = "";
+	errorEl.classList.add("hidden");
+	errorEl.textContent = "";
 
-  if (!email) {
-    errorEl.textContent = "Enter your email to reset your password.";
-    errorEl.classList.remove("hidden");
-    return;
-  }
+	if (!email) {
+		errorEl.textContent = "Enter your email to reset your password.";
+		errorEl.classList.remove("hidden");
+		return;
+	}
 
-  resetBtn.disabled = true;
-  resetBtn.classList.add("opacity-60", "pointer-events-none");
+	resetBtn.disabled = true;
+	resetBtn.classList.add("opacity-60", "pointer-events-none");
 
-  try {
-    await sendPasswordResetEmail(auth, email);
-    showToast("Password reset email sent.");
-  } catch (err) {
-    errorEl.textContent = err?.message || "Unable to send password reset email.";
-    errorEl.classList.remove("hidden");
-  } finally {
-    resetBtn.disabled = false;
-    resetBtn.classList.remove("opacity-60", "pointer-events-none");
-  }
+	try {
+		await sendPasswordResetEmail(auth, email);
+		showToast("Password reset email sent.");
+	} catch (err) {
+		errorEl.textContent =
+			err?.message || "Unable to send password reset email.";
+		errorEl.classList.remove("hidden");
+	} finally {
+		resetBtn.disabled = false;
+		resetBtn.classList.remove("opacity-60", "pointer-events-none");
+	}
 }
 
 async function completeAuthFlow() {
-  if (auth.currentUser?.emailVerified) await markUserVerified(auth.currentUser);
-  await loadAppState();
-  startStateListener(auth.currentUser.uid);
-  startNotesListener(auth.currentUser.uid);
-  if (!appInitialized) {
-    initUI();
-    registerServiceWorker();
-    appInitialized = true;
-  }
-  startTick();
-  renderAll();
-  needsUnlock = false;
-  setAuthVisibility(true);
+	if (auth.currentUser?.emailVerified) await markUserVerified(auth.currentUser);
+	await loadAppState();
+	startStateListener(auth.currentUser.uid);
+	startNotesListener(auth.currentUser.uid);
+	if (!appInitialized) {
+		initUI();
+		registerServiceWorker();
+		appInitialized = true;
+	}
+	startTick();
+	renderAll();
+	needsUnlock = false;
+	setAuthVisibility(true);
 }
 
 async function loadAppState() {
-  state = await loadState();
-  const normalizedHistory = normalizeHistoryEntries(state.history);
-  if (normalizedHistory.changed) {
-    state.history = normalizedHistory.entries;
-    void saveState();
-  }
-  selectedFastTypeId = resolveFastTypeId(state.settings.defaultFastTypeId);
-  pendingTypeId = null;
-  calendarMonth = startOfMonth(new Date());
-  selectedDayKey = formatDateKey(new Date());
+	state = await loadState();
+	const normalizedHistory = normalizeHistoryEntries(state.history);
+	if (normalizedHistory.changed) {
+		state.history = normalizedHistory.entries;
+		void saveState();
+	}
+	selectedFastTypeId = resolveFastTypeId(state.settings.defaultFastTypeId);
+	pendingTypeId = null;
+	calendarMonth = startOfMonth(new Date());
+	selectedDayKey = formatDateKey(new Date());
 }
 
 // ✅ NEW: Ensure Notes drawer is an overlay (fixed, above tabs) and closes on outside click
 function ensureNotesOverlay() {
-  if (notesPortal) return;
+	if (notesPortal) return;
 
-  const drawer = $("tab-notes");
-  if (!drawer) return;
+	const drawer = $("tab-notes");
+	if (!drawer) return;
 
-  notesPortal = document.createElement("div");
-  notesPortal.id = "notes-portal";
-  notesPortal.style.position = "fixed";
-  notesPortal.style.inset = "0";
-  notesPortal.style.zIndex = "9999";
-  notesPortal.style.display = "none";
-  notesPortal.style.pointerEvents = "auto";
-  notesPortal.style.touchAction = "pan-y";
-  notesPortal.style.overscrollBehaviorX = "contain";
+	notesPortal = document.createElement("div");
+	notesPortal.id = "notes-portal";
+	notesPortal.style.position = "fixed";
+	notesPortal.style.inset = "0";
+	notesPortal.style.zIndex = "9999";
+	notesPortal.style.display = "none";
+	notesPortal.style.pointerEvents = "auto";
+	notesPortal.style.touchAction = "pan-y";
+	notesPortal.style.overscrollBehaviorX = "contain";
 
-  notesBackdrop = document.createElement("div");
-  notesBackdrop.id = "notes-backdrop";
-  notesBackdrop.style.position = "absolute";
-  notesBackdrop.style.inset = "0";
-  notesBackdrop.style.background = "rgba(0,0,0,0.55)";
-  notesBackdrop.style.backdropFilter = "blur(2px)";
-  notesBackdrop.style.webkitBackdropFilter = "blur(2px)";
+	notesBackdrop = document.createElement("div");
+	notesBackdrop.id = "notes-backdrop";
+	notesBackdrop.style.position = "absolute";
+	notesBackdrop.style.inset = "0";
+	notesBackdrop.style.background = "rgba(0,0,0,0.55)";
+	notesBackdrop.style.backdropFilter = "blur(2px)";
+	notesBackdrop.style.webkitBackdropFilter = "blur(2px)";
 
-  notesPortal.appendChild(notesBackdrop);
+	notesPortal.appendChild(notesBackdrop);
 
-  // Move drawer into portal so it can sit above everything
-  notesPortal.appendChild(drawer);
+	// Move drawer into portal so it can sit above everything
+	notesPortal.appendChild(drawer);
 
-  // Make the drawer behave like a right-side sheet on desktop, full width on mobile
-  drawer.style.position = "absolute";
-  drawer.style.top = "0";
-  drawer.style.right = "0";
-  drawer.style.bottom = "0";
-  drawer.style.left = "auto";
-  drawer.style.width = "min(420px, 100vw)";
-  drawer.style.maxWidth = "100vw";
-  drawer.style.height = "100%";
-  drawer.style.overflow = "auto";
-  drawer.style.zIndex = "10000";
+	// Make the drawer behave like a right-side sheet on desktop, full width on mobile
+	drawer.style.position = "absolute";
+	drawer.style.top = "0";
+	drawer.style.right = "0";
+	drawer.style.bottom = "0";
+	drawer.style.left = "auto";
+	drawer.style.width = "min(420px, 100vw)";
+	drawer.style.maxWidth = "100vw";
+	drawer.style.height = "100%";
+	drawer.style.overflow = "auto";
+	drawer.style.zIndex = "10000";
 
-  // Prevent clicks inside the drawer from closing it via backdrop
-  drawer.addEventListener("mousedown", (e) => e.stopPropagation());
-  drawer.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
-  drawer.addEventListener("click", (e) => e.stopPropagation());
+	// Prevent clicks inside the drawer from closing it via backdrop
+	drawer.addEventListener("mousedown", (e) => e.stopPropagation());
+	drawer.addEventListener("touchstart", (e) => e.stopPropagation(), {
+		passive: true,
+	});
+	drawer.addEventListener("click", (e) => e.stopPropagation());
 
-  if (!notesSwipeHandlersAttached && navigator.maxTouchPoints > 0) {
-    notesSwipeHandlersAttached = true;
-    let swipeStartX = 0;
-    let swipeStartY = 0;
-    let swipeTracking = false;
+	if (!notesSwipeHandlersAttached && navigator.maxTouchPoints > 0) {
+		notesSwipeHandlersAttached = true;
+		let swipeStartX = 0;
+		let swipeStartY = 0;
+		let swipeTracking = false;
 
-    notesPortal.addEventListener(
-      "touchstart",
-      (e) => {
-        if (!notesOverlayOpen || !e.touches || e.touches.length !== 1) return;
-        const touch = e.touches[0];
-        swipeStartX = touch.clientX;
-        swipeStartY = touch.clientY;
-        swipeTracking = true;
-      },
-      { passive: true, capture: true },
-    );
+		notesPortal.addEventListener(
+			"touchstart",
+			(e) => {
+				if (!notesOverlayOpen || !e.touches || e.touches.length !== 1) return;
+				const touch = e.touches[0];
+				swipeStartX = touch.clientX;
+				swipeStartY = touch.clientY;
+				swipeTracking = true;
+			},
+			{ passive: true, capture: true },
+		);
 
-    notesPortal.addEventListener(
-      "touchmove",
-      (e) => {
-        if (!swipeTracking || !e.touches || e.touches.length !== 1) return;
-        const touch = e.touches[0];
-        const deltaX = touch.clientX - swipeStartX;
-        const deltaY = Math.abs(touch.clientY - swipeStartY);
-        if (deltaY > 60 && deltaY > Math.abs(deltaX)) {
-          swipeTracking = false;
-        }
-      },
-      { passive: true, capture: true },
-    );
+		notesPortal.addEventListener(
+			"touchmove",
+			(e) => {
+				if (!swipeTracking || !e.touches || e.touches.length !== 1) return;
+				const touch = e.touches[0];
+				const deltaX = touch.clientX - swipeStartX;
+				const deltaY = Math.abs(touch.clientY - swipeStartY);
+				if (deltaY > 60 && deltaY > Math.abs(deltaX)) {
+					swipeTracking = false;
+				}
+			},
+			{ passive: true, capture: true },
+		);
 
-    notesPortal.addEventListener(
-      "touchend",
-      (e) => {
-        if (!swipeTracking || !notesOverlayOpen) return;
-        const touch = e.changedTouches?.[0];
-        if (!touch) return;
-        const deltaX = touch.clientX - swipeStartX;
-        const deltaY = Math.abs(touch.clientY - swipeStartY);
-        if (deltaX > 60 && deltaY < 40) {
-          closeNotesDrawer();
-        }
-        swipeTracking = false;
-      },
-      { passive: true, capture: true },
-    );
-  }
+		notesPortal.addEventListener(
+			"touchend",
+			(e) => {
+				if (!swipeTracking || !notesOverlayOpen) return;
+				const touch = e.changedTouches?.[0];
+				if (!touch) return;
+				const deltaX = touch.clientX - swipeStartX;
+				const deltaY = Math.abs(touch.clientY - swipeStartY);
+				if (deltaX > 60 && deltaY < 40) {
+					closeNotesDrawer();
+				}
+				swipeTracking = false;
+			},
+			{ passive: true, capture: true },
+		);
+	}
 
-  notesBackdrop.addEventListener("click", () => closeNotesDrawer());
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && notesOverlayOpen) closeNotesDrawer();
-  });
+	notesBackdrop.addEventListener("click", () => closeNotesDrawer());
+	document.addEventListener("keydown", (e) => {
+		if (e.key === "Escape" && notesOverlayOpen) closeNotesDrawer();
+	});
 
-  document.body.appendChild(notesPortal);
+	document.body.appendChild(notesPortal);
 }
 
 function setNotesNavActive(on) {
-  const notesBtn = document.querySelector('nav .nav-btn[data-tab="notes"]');
-  if (!notesBtn) return;
-  notesBtn.classList.toggle("nav-btn-active", !!on);
-  notesBtn.classList.toggle("text-default", !!on);
-  notesBtn.classList.toggle("text-subtle", !on);
+	const notesBtn = document.querySelector('nav .nav-btn[data-tab="notes"]');
+	if (!notesBtn) return;
+	notesBtn.classList.toggle("nav-btn-active", !!on);
+	notesBtn.classList.toggle("text-default", !!on);
+	notesBtn.classList.toggle("text-subtle", !on);
 }
 
 function openNotesDrawer() {
-  ensureNotesOverlay();
-  const drawer = $("tab-notes");
-  if (!drawer || !notesPortal) return;
+	ensureNotesOverlay();
+	const drawer = $("tab-notes");
+	if (!drawer || !notesPortal) return;
 
-  if (notesDrawerCloseTimeout) {
-    clearTimeout(notesDrawerCloseTimeout);
-    notesDrawerCloseTimeout = null;
-  }
+	if (notesDrawerCloseTimeout) {
+		clearTimeout(notesDrawerCloseTimeout);
+		notesDrawerCloseTimeout = null;
+	}
 
-  if (bodyOverflowBeforeNotes === null)
-    bodyOverflowBeforeNotes = document.body.style.overflow || "";
-  document.body.style.overflow = "hidden";
+	if (bodyOverflowBeforeNotes === null)
+		bodyOverflowBeforeNotes = document.body.style.overflow || "";
+	document.body.style.overflow = "hidden";
 
-  notesPortal.style.display = "block";
-  drawer.classList.remove("hidden");
-  requestAnimationFrame(() => drawer.classList.add("is-open"));
+	notesPortal.style.display = "block";
+	drawer.classList.remove("hidden");
+	requestAnimationFrame(() => drawer.classList.add("is-open"));
 
-  notesOverlayOpen = true;
-  setNotesNavActive(true);
-  renderNotes();
+	notesOverlayOpen = true;
+	setNotesNavActive(true);
+	renderNotes();
 }
 
 function closeNotesDrawer(forceImmediate = false) {
-  const drawer = $("tab-notes");
-  if (!drawer || !notesPortal) {
-    notesOverlayOpen = false;
-    setNotesNavActive(false);
-    if (bodyOverflowBeforeNotes !== null) {
-      document.body.style.overflow = bodyOverflowBeforeNotes;
-      bodyOverflowBeforeNotes = null;
-    }
-    return;
-  }
+	const drawer = $("tab-notes");
+	if (!drawer || !notesPortal) {
+		notesOverlayOpen = false;
+		setNotesNavActive(false);
+		if (bodyOverflowBeforeNotes !== null) {
+			document.body.style.overflow = bodyOverflowBeforeNotes;
+			bodyOverflowBeforeNotes = null;
+		}
+		return;
+	}
 
-  notesOverlayOpen = false;
-  setNotesNavActive(false);
+	notesOverlayOpen = false;
+	setNotesNavActive(false);
 
-  drawer.classList.remove("is-open");
+	drawer.classList.remove("is-open");
 
-  if (forceImmediate) {
-    drawer.classList.add("hidden");
-    notesPortal.style.display = "none";
-    if (bodyOverflowBeforeNotes !== null) {
-      document.body.style.overflow = bodyOverflowBeforeNotes;
-      bodyOverflowBeforeNotes = null;
-    }
-    return;
-  }
+	if (forceImmediate) {
+		drawer.classList.add("hidden");
+		notesPortal.style.display = "none";
+		if (bodyOverflowBeforeNotes !== null) {
+			document.body.style.overflow = bodyOverflowBeforeNotes;
+			bodyOverflowBeforeNotes = null;
+		}
+		return;
+	}
 
-  if (notesDrawerCloseTimeout) clearTimeout(notesDrawerCloseTimeout);
-  notesDrawerCloseTimeout = setTimeout(() => {
-    drawer.classList.add("hidden");
-    notesPortal.style.display = "none";
-    if (bodyOverflowBeforeNotes !== null) {
-      document.body.style.overflow = bodyOverflowBeforeNotes;
-      bodyOverflowBeforeNotes = null;
-    }
-  }, 220);
+	if (notesDrawerCloseTimeout) clearTimeout(notesDrawerCloseTimeout);
+	notesDrawerCloseTimeout = setTimeout(() => {
+		drawer.classList.add("hidden");
+		notesPortal.style.display = "none";
+		if (bodyOverflowBeforeNotes !== null) {
+			document.body.style.overflow = bodyOverflowBeforeNotes;
+			bodyOverflowBeforeNotes = null;
+		}
+	}, 220);
 }
 
 function initTabs() {
-  document.querySelectorAll("nav .nav-btn").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      if (suppressNavClickEl === btn) {
-        suppressNavClickEl = null;
-        e.preventDefault();
-        e.stopPropagation();
-        return;
-      }
+	document.querySelectorAll("nav .nav-btn").forEach((btn) => {
+		btn.addEventListener("click", (e) => {
+			if (suppressNavClickEl === btn) {
+				suppressNavClickEl = null;
+				e.preventDefault();
+				e.stopPropagation();
+				return;
+			}
 
-      const tab = btn.dataset.tab;
+			const tab = btn.dataset.tab;
 
-      // ✅ Notes is now an overlay, not a real tab switch
-      if (tab === "notes") {
-        if (notesOverlayOpen) closeNotesDrawer();
-        else openNotesDrawer();
-        return;
-      }
+			// ✅ Notes is now an overlay, not a real tab switch
+			if (tab === "notes") {
+				if (notesOverlayOpen) closeNotesDrawer();
+				else openNotesDrawer();
+				return;
+			}
 
-      // Switching tabs should close notes overlay if open
-      if (notesOverlayOpen) closeNotesDrawer();
+			// Switching tabs should close notes overlay if open
+			if (notesOverlayOpen) closeNotesDrawer();
 
-      switchTab(tab);
-    });
-  });
+			switchTab(tab);
+		});
+	});
 
-  switchTab("timer");
+	switchTab("timer");
 }
 
 function switchTab(tab) {
-  currentTab = tab;
-  if (tab !== "notes") _lastNonNotesTab = tab;
+	currentTab = tab;
+	if (tab !== "notes") _lastNonNotesTab = tab;
 
-  ["timer", "history", "calories", "settings"].forEach((id) => {
-    const section = $(`tab-${id}`);
-    const btn = document.querySelector(`nav .nav-btn[data-tab="${id}"]`);
-    const active = id === tab;
-    section.classList.toggle("hidden", !active);
-    btn.classList.toggle("nav-btn-active", active);
-    btn.classList.toggle("text-default", active);
-    btn.classList.toggle("text-subtle", !active);
-  });
+	["timer", "history", "calories", "settings"].forEach((id) => {
+		const section = $(`tab-${id}`);
+		const btn = document.querySelector(`nav .nav-btn[data-tab="${id}"]`);
+		const active = id === tab;
+		section.classList.toggle("hidden", !active);
+		btn.classList.toggle("nav-btn-active", active);
+		btn.classList.toggle("text-default", active);
+		btn.classList.toggle("text-subtle", !active);
+	});
 
-  document.body.classList.toggle("tab-no-scroll", tab === "timer" || tab === "calories");
+	document.body.classList.toggle(
+		"tab-no-scroll",
+		tab === "timer" || tab === "calories",
+	);
 
-  setNotesNavActive(false);
+	setNotesNavActive(false);
 
-  if (tab === "history") {
-    renderCalendar();
-    renderDayDetails();
-    renderRecentFasts();
-    renderNotes();
-  }
-  if (tab === "calories") renderCalories();
-  if (tab === "settings") renderSettings();
+	if (tab === "history") {
+		renderCalendar();
+		renderDayDetails();
+		renderRecentFasts();
+		renderNotes();
+	}
+	if (tab === "calories") renderCalories();
+	if (tab === "settings") renderSettings();
 
-  renderFastButton();
-  renderCalorieButton();
+	renderFastButton();
+	renderCalorieButton();
 }
 
 function initNavTooltips() {
-  const tooltip = $("nav-tooltip");
-  const hide = () => {
-    tooltip.classList.add("hidden");
-    navHoldShown = false;
-    clearTimeout(navHoldTimer);
-    navHoldTimer = null;
-  };
+	const tooltip = $("nav-tooltip");
+	const hide = () => {
+		tooltip.classList.add("hidden");
+		navHoldShown = false;
+		clearTimeout(navHoldTimer);
+		navHoldTimer = null;
+	};
 
-  const showFor = (btn) => {
-    const label = btn.dataset.label || "";
-    if (!label) return;
-    const r = btn.getBoundingClientRect();
-    tooltip.textContent = label;
-    tooltip.classList.remove("hidden");
+	const showFor = (btn) => {
+		const label = btn.dataset.label || "";
+		if (!label) return;
+		const r = btn.getBoundingClientRect();
+		tooltip.textContent = label;
+		tooltip.classList.remove("hidden");
 
-    const pad = 10;
-    const tw = tooltip.offsetWidth || 90;
-    const th = tooltip.offsetHeight || 24;
-    let x = r.left + r.width / 2 - tw / 2;
-    x = Math.max(pad, Math.min(window.innerWidth - tw - pad, x));
-    let y = r.top - th - 10;
-    if (y < pad) y = r.bottom + 10;
-    tooltip.style.left = `${x}px`;
-    tooltip.style.top = `${y}px`;
-  };
+		const pad = 10;
+		const tw = tooltip.offsetWidth || 90;
+		const th = tooltip.offsetHeight || 24;
+		let x = r.left + r.width / 2 - tw / 2;
+		x = Math.max(pad, Math.min(window.innerWidth - tw - pad, x));
+		let y = r.top - th - 10;
+		if (y < pad) y = r.bottom + 10;
+		tooltip.style.left = `${x}px`;
+		tooltip.style.top = `${y}px`;
+	};
 
-  const startHold = (btn) => {
-    clearTimeout(navHoldTimer);
-    navHoldShown = false;
-    suppressNavClickEl = null;
-    navHoldTimer = setTimeout(() => {
-      navHoldShown = true;
-      suppressNavClickEl = btn;
-      showFor(btn);
-      setTimeout(() => {
-        if (navHoldShown) hide();
-      }, 1400);
-    }, 420);
-  };
+	const startHold = (btn) => {
+		clearTimeout(navHoldTimer);
+		navHoldShown = false;
+		suppressNavClickEl = null;
+		navHoldTimer = setTimeout(() => {
+			navHoldShown = true;
+			suppressNavClickEl = btn;
+			showFor(btn);
+			setTimeout(() => {
+				if (navHoldShown) hide();
+			}, 1400);
+		}, 420);
+	};
 
-  document.querySelectorAll("nav .nav-btn").forEach((btn) => {
-    btn.addEventListener("touchstart", () => startHold(btn), { passive: true });
-    btn.addEventListener("touchend", hide, { passive: true });
-    btn.addEventListener("touchcancel", hide, { passive: true });
+	document.querySelectorAll("nav .nav-btn").forEach((btn) => {
+		btn.addEventListener("touchstart", () => startHold(btn), { passive: true });
+		btn.addEventListener("touchend", hide, { passive: true });
+		btn.addEventListener("touchcancel", hide, { passive: true });
 
-    btn.addEventListener("mousedown", () => startHold(btn));
-    btn.addEventListener("mouseup", hide);
-    btn.addEventListener("mouseleave", hide);
-    btn.addEventListener("blur", hide);
-  });
+		btn.addEventListener("mousedown", () => startHold(btn));
+		btn.addEventListener("mouseup", hide);
+		btn.addEventListener("mouseleave", hide);
+		btn.addEventListener("blur", hide);
+	});
 
-  window.addEventListener("scroll", hide, { passive: true });
-  window.addEventListener("resize", hide, { passive: true });
+	window.addEventListener("scroll", hide, { passive: true });
+	window.addEventListener("resize", hide, { passive: true });
 }
 
 function getTypeById(id) {
-  if (!Array.isArray(FAST_TYPES) || FAST_TYPES.length === 0) return null;
-  return FAST_TYPES.find((t) => t.id === id) || FAST_TYPES[0];
+	if (!Array.isArray(FAST_TYPES) || FAST_TYPES.length === 0) return null;
+	return FAST_TYPES.find((t) => t.id === id) || FAST_TYPES[0];
 }
 
 function getActiveType() {
-  if (state.activeFast?.typeId) return getTypeById(state.activeFast.typeId);
-  return getTypeById(selectedFastTypeId);
+	if (state.activeFast?.typeId) return getTypeById(state.activeFast.typeId);
+	return getTypeById(selectedFastTypeId);
 }
 
 function mergeCalorieSettings(settings) {
-  const next = {
-    ...defaultState.settings.calories,
-    ...(settings && typeof settings === "object" ? settings : {}),
-  };
-  const legacyTarget = Number(next.target);
-  if (next.dailyTarget == null && Number.isFinite(legacyTarget) && legacyTarget > 0) {
-    next.dailyTarget = legacyTarget;
-  }
-  if (next.currentWeight == null && next.bmi != null) {
-    const legacyWeight = normalizeGoalMetric(next.bmi);
-    if (legacyWeight != null) next.currentWeight = legacyWeight;
-  }
-  if ("bmi" in next) delete next.bmi;
-  return next;
+	const next = {
+		...defaultState.settings.calories,
+		...(settings && typeof settings === "object" ? settings : {}),
+	};
+	const legacyTarget = Number(next.target);
+	if (
+		next.dailyTarget == null &&
+		Number.isFinite(legacyTarget) &&
+		legacyTarget > 0
+	) {
+		next.dailyTarget = legacyTarget;
+	}
+	if (next.currentWeight == null && next.bmi != null) {
+		const legacyWeight = normalizeGoalMetric(next.bmi);
+		if (legacyWeight != null) next.currentWeight = legacyWeight;
+	}
+	if ("bmi" in next) delete next.bmi;
+	return next;
 }
 
 function getCalorieSettings() {
-  if (!state.settings.calories || typeof state.settings.calories !== "object") {
-    state.settings.calories = mergeCalorieSettings();
-  } else {
-    state.settings.calories = mergeCalorieSettings(state.settings.calories);
-  }
-  return state.settings.calories;
+	if (!state.settings.calories || typeof state.settings.calories !== "object") {
+		state.settings.calories = mergeCalorieSettings();
+	} else {
+		state.settings.calories = mergeCalorieSettings(state.settings.calories);
+	}
+	return state.settings.calories;
 }
 
 function getCalorieUnitSystem() {
-  const unitSystem = getCalorieSettings().unitSystem;
-  return unitSystem === "imperial" ? "imperial" : "metric";
+	const unitSystem = getCalorieSettings().unitSystem;
+	return unitSystem === "imperial" ? "imperial" : "metric";
 }
 
 function parseCalorieValue(value) {
-  const trimmed = String(value ?? "").trim();
-  if (!trimmed) return null;
-  const num = Number(trimmed);
-  if (!Number.isFinite(num) || num < 0) return null;
-  return num;
+	const trimmed = String(value ?? "").trim();
+	if (!trimmed) return null;
+	const num = Number(trimmed);
+	if (!Number.isFinite(num) || num < 0) return null;
+	return num;
 }
 
 function getCalorieTarget() {
-  const target = Number(getCalorieSettings().dailyTarget);
-  return Number.isFinite(target) && target > 0 ? target : null;
+	const target = Number(getCalorieSettings().dailyTarget);
+	return Number.isFinite(target) && target > 0 ? target : null;
 }
 
 function getCalorieConsumed() {
-  const consumed = Number(getCalorieSettings().consumed);
-  return Number.isFinite(consumed) && consumed > 0 ? consumed : 0;
+	const consumed = Number(getCalorieSettings().consumed);
+	return Number.isFinite(consumed) && consumed > 0 ? consumed : 0;
 }
 
 function getCalorieDisplayDateKey() {
-  const todayKey = formatDateKey(new Date());
-  if (currentTab === "history" && selectedDayKey) return selectedDayKey;
-  return todayKey;
+	const todayKey = formatDateKey(new Date());
+	if (currentTab === "history" && selectedDayKey) return selectedDayKey;
+	return todayKey;
 }
 
 function getNoteCaloriesForDateKey(dateKey = formatDateKey(new Date())) {
-  if (!Array.isArray(notes) || notes.length === 0) return 0;
-  return notes.reduce((sum, note) => {
-    if (!note || note.dateKey !== dateKey) return sum;
-    const calories = Number(note.calorieEntry?.calories);
-    if (!Number.isFinite(calories)) return sum;
-    return sum + calories;
-  }, 0);
+	if (!Array.isArray(notes) || notes.length === 0) return 0;
+	return notes.reduce((sum, note) => {
+		if (!note || note.dateKey !== dateKey) return sum;
+		const calories = Number(note.calorieEntry?.calories);
+		if (!Number.isFinite(calories)) return sum;
+		return sum + calories;
+	}, 0);
 }
 
 function getEffectiveCalorieConsumed(dateKey = getCalorieDisplayDateKey()) {
-  const todayKey = formatDateKey(new Date());
-  const baseConsumed = dateKey === todayKey ? getCalorieConsumed() : 0;
-  return baseConsumed + getNoteCaloriesForDateKey(dateKey);
+	const todayKey = formatDateKey(new Date());
+	const baseConsumed = dateKey === todayKey ? getCalorieConsumed() : 0;
+	return baseConsumed + getNoteCaloriesForDateKey(dateKey);
 }
 
 function getCalorieView() {
-  const view = getCalorieSettings().view;
-  return CALORIE_VIEWS.some((v) => v.id === view) ? view : "total";
+	const view = getCalorieSettings().view;
+	return CALORIE_VIEWS.some((v) => v.id === view) ? view : "total";
 }
 
 function getCalorieRemaining(consumed = getEffectiveCalorieConsumed()) {
-  const target = getCalorieTarget();
-  if (!target) return null;
-  return Math.max(0, target - consumed);
+	const target = getCalorieTarget();
+	if (!target) return null;
+	return Math.max(0, target - consumed);
 }
 
 function formatCalories(value) {
-  if (!Number.isFinite(value)) return "0";
-  return new Intl.NumberFormat().format(Math.round(value));
+	if (!Number.isFinite(value)) return "0";
+	return new Intl.NumberFormat().format(Math.round(value));
 }
 
 function renderCalorieSummary() {
-  const summary = $("calorie-summary");
-  if (!summary) return;
-  const target = getCalorieTarget();
-  const dateKey = getCalorieDisplayDateKey();
-  const consumed = getEffectiveCalorieConsumed(dateKey);
-  if (!target) {
-    summary.textContent = "Set a target to track remaining calories.";
-    return;
-  }
-  const remaining = Math.max(0, target - consumed);
-  summary.textContent = `${formatCalories(remaining)} calories left today.`;
+	const summary = $("calorie-summary");
+	if (!summary) return;
+	const target = getCalorieTarget();
+	const dateKey = getCalorieDisplayDateKey();
+	const consumed = getEffectiveCalorieConsumed(dateKey);
+	if (!target) {
+		summary.textContent = "Set a target to track remaining calories.";
+		return;
+	}
+	const remaining = Math.max(0, target - consumed);
+	summary.textContent = `${formatCalories(remaining)} calories left today.`;
 }
 
 function renderCalorieRing() {
-  const ring = $("calorie-progress-ring");
-  const valueEl = $("calorie-ring-value");
-  const labelEl = $("calorie-ring-label");
-  const detailEl = $("calorie-ring-detail");
-  if (!ring || !valueEl || !labelEl || !detailEl) return;
+	const ring = $("calorie-progress-ring");
+	const valueEl = $("calorie-ring-value");
+	const labelEl = $("calorie-ring-label");
+	const detailEl = $("calorie-ring-detail");
+	if (!ring || !valueEl || !labelEl || !detailEl) return;
 
-  ring.setAttribute("stroke-dasharray", String(RING_CIRC));
+	ring.setAttribute("stroke-dasharray", String(RING_CIRC));
 
-  const target = getCalorieTarget();
-  const dateKey = getCalorieDisplayDateKey();
-  const consumed = getEffectiveCalorieConsumed(dateKey);
-  const remaining = getCalorieRemaining(consumed);
-  const view = getCalorieView();
-  const viewLabel = CALORIE_VIEWS.find((v) => v.id === view)?.label ?? "Total";
+	const target = getCalorieTarget();
+	const dateKey = getCalorieDisplayDateKey();
+	const consumed = getEffectiveCalorieConsumed(dateKey);
+	const remaining = getCalorieRemaining(consumed);
+	const view = getCalorieView();
+	const viewLabel = CALORIE_VIEWS.find((v) => v.id === view)?.label ?? "Total";
 
-  let value = 0;
-  let progress = 0;
-  let labelText = viewLabel;
-  let detailText = "Set a daily target to track progress.";
+	let value = 0;
+	let progress = 0;
+	let labelText = viewLabel;
+	let detailText = "Set a daily target to track progress.";
 
-  if (!target) {
-    labelText = "No target set";
-    value = 0;
-    progress = 0;
-  } else {
-    if (view === "total") {
-      value = target;
-      progress = Math.min(consumed / target, 1);
-      detailText = `${formatCalories(consumed)} consumed of ${formatCalories(target)}.`;
-    } else if (view === "consumed") {
-      value = consumed;
-      progress = Math.min(consumed / target, 1);
-      detailText = `${formatCalories(consumed)} of ${formatCalories(target)} consumed.`;
-    } else {
-      value = remaining ?? 0;
-      progress = remaining !== null ? Math.min(remaining / target, 1) : 0;
-      detailText = `${formatCalories(remaining ?? 0)} left of ${formatCalories(target)}.`;
-    }
-  }
+	if (!target) {
+		labelText = "No target set";
+		value = 0;
+		progress = 0;
+	} else {
+		if (view === "total") {
+			value = target;
+			progress = Math.min(consumed / target, 1);
+			detailText = `${formatCalories(consumed)} consumed of ${formatCalories(target)}.`;
+		} else if (view === "consumed") {
+			value = consumed;
+			progress = Math.min(consumed / target, 1);
+			detailText = `${formatCalories(consumed)} of ${formatCalories(target)} consumed.`;
+		} else {
+			value = remaining ?? 0;
+			progress = remaining !== null ? Math.min(remaining / target, 1) : 0;
+			detailText = `${formatCalories(remaining ?? 0)} left of ${formatCalories(target)}.`;
+		}
+	}
 
-  valueEl.textContent = formatCalories(value);
-  labelEl.textContent = labelText;
-  detailEl.textContent = detailText;
-  ring.setAttribute("stroke-dashoffset", String(RING_CIRC * (1 - progress)));
+	valueEl.textContent = formatCalories(value);
+	labelEl.textContent = labelText;
+	detailEl.textContent = detailText;
+	ring.setAttribute("stroke-dashoffset", String(RING_CIRC * (1 - progress)));
 
-  renderCalorieTipOrbs();
+	renderCalorieTipOrbs();
 }
 
 function getCalorieTipBucket() {
-  const goalId = String(getCalorieSettings().goal || "").trim();
-  if (!goalId) return null;
-  return CALORIE_TIPS.map[goalId] || null;
+	const goalId = String(getCalorieSettings().goal || "").trim();
+	if (!goalId) return null;
+	return CALORIE_TIPS.map[goalId] || null;
 }
 
 function renderCalorieTipOrbs() {
-  const layer = $("calorie-ring-emoji-layer");
-  const panel = $("calorie-tip-panel");
-  const panelTitle = $("calorie-tip-title");
-  const panelDetail = $("calorie-tip-detail");
-  if (!layer) return;
+	const layer = $("calorie-ring-emoji-layer");
+	const panel = $("calorie-tip-panel");
+	const panelTitle = $("calorie-tip-title");
+	const panelDetail = $("calorie-tip-detail");
+	if (!layer) return;
 
-  const isEnabled = state.settings.showRingEmojis !== false;
-  if (!isEnabled) {
-    layer.classList.add("hidden");
-    if (panel) panel.classList.add("hidden");
-    return;
-  }
+	const isEnabled = state.settings.showRingEmojis !== false;
+	if (!isEnabled) {
+		layer.classList.add("hidden");
+		if (panel) panel.classList.add("hidden");
+		return;
+	}
 
-  layer.classList.remove("hidden");
-  if (panel) panel.classList.remove("hidden");
+	layer.classList.remove("hidden");
+	if (panel) panel.classList.remove("hidden");
 
-  const goalId = String(getCalorieSettings().goal || "").trim();
-  const bucket = getCalorieTipBucket();
-  const size = layer.clientWidth;
+	const goalId = String(getCalorieSettings().goal || "").trim();
+	const bucket = getCalorieTipBucket();
+	const size = layer.clientWidth;
 
-  if (!goalId || !bucket || bucket.tips.length === 0 || !size) {
-    layer.innerHTML = "";
-    calorieTipGoalId = goalId;
-    calorieTipLayoutSize = size;
-    calorieTipSelectionKey = null;
-    if (panelTitle)
-      panelTitle.textContent = goalId ? "No tips yet" : "Select a goal to see calorie tips";
-    if (panelDetail)
-      panelDetail.textContent = goalId ? "Add tips for this goal in calorie-tips.yaml." : "";
-    return;
-  }
+	if (!goalId || !bucket || bucket.tips.length === 0 || !size) {
+		layer.innerHTML = "";
+		calorieTipGoalId = goalId;
+		calorieTipLayoutSize = size;
+		calorieTipSelectionKey = null;
+		if (panelTitle)
+			panelTitle.textContent = goalId
+				? "No tips yet"
+				: "Select a goal to see calorie tips";
+		if (panelDetail)
+			panelDetail.textContent = goalId
+				? "Add tips for this goal in calorie-tips.yaml."
+				: "";
+		return;
+	}
 
-  const shouldRender =
-    !layer.childElementCount || calorieTipGoalId !== goalId || calorieTipLayoutSize !== size;
+	const shouldRender =
+		!layer.childElementCount ||
+		calorieTipGoalId !== goalId ||
+		calorieTipLayoutSize !== size;
 
-  if (shouldRender) {
-    renderCalorieTipLayout(bucket, size, goalId);
-  } else {
-    updateCalorieTipSelectionStyles();
-  }
+	if (shouldRender) {
+		renderCalorieTipLayout(bucket, size, goalId);
+	} else {
+		updateCalorieTipSelectionStyles();
+	}
 }
 
 function renderCalorieTipLayout(bucket, size, goalId) {
-  const layer = $("calorie-ring-emoji-layer");
-  const panelTitle = $("calorie-tip-title");
-  const panelDetail = $("calorie-tip-detail");
-  if (!layer || !panelTitle || !panelDetail) return;
+	const layer = $("calorie-ring-emoji-layer");
+	const panelTitle = $("calorie-tip-title");
+	const panelDetail = $("calorie-tip-detail");
+	if (!layer || !panelTitle || !panelDetail) return;
 
-  calorieTipGoalId = goalId;
-  calorieTipLayoutSize = size;
-  layer.innerHTML = "";
+	calorieTipGoalId = goalId;
+	calorieTipLayoutSize = size;
+	layer.innerHTML = "";
 
-  const tips = bucket.tips;
-  const radius = Math.max(size / 2 - 18, 0);
-  const center = size / 2;
-  const step = 360 / tips.length;
+	const tips = bucket.tips;
+	const radius = Math.max(size / 2 - 18, 0);
+	const center = size / 2;
+	const step = 360 / tips.length;
 
-  tips.forEach((tip, index) => {
-    const angle = step * index - 90;
-    const rad = angle * (Math.PI / 180);
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "ring-emoji-btn";
-    btn.textContent = tip.emoji;
-    btn.style.left = `${center + Math.cos(rad) * radius}px`;
-    btn.style.top = `${center + Math.sin(rad) * radius}px`;
-    btn.dataset.tipKey = `${goalId}-${index}`;
-    btn.addEventListener("click", () => selectCalorieTip(goalId, index, tip));
-    layer.appendChild(btn);
-  });
+	tips.forEach((tip, index) => {
+		const angle = step * index - 90;
+		const rad = angle * (Math.PI / 180);
+		const btn = document.createElement("button");
+		btn.type = "button";
+		btn.className = "ring-emoji-btn";
+		btn.textContent = tip.emoji;
+		btn.style.left = `${center + Math.cos(rad) * radius}px`;
+		btn.style.top = `${center + Math.sin(rad) * radius}px`;
+		btn.dataset.tipKey = `${goalId}-${index}`;
+		btn.addEventListener("click", () => selectCalorieTip(goalId, index, tip));
+		layer.appendChild(btn);
+	});
 
-  const hasSelection = tips.some((_, index) => `${goalId}-${index}` === calorieTipSelectionKey);
-  if (!hasSelection) {
-    calorieTipSelectionKey = null;
-  }
+	const hasSelection = tips.some(
+		(_, index) => `${goalId}-${index}` === calorieTipSelectionKey,
+	);
+	if (!hasSelection) {
+		calorieTipSelectionKey = null;
+	}
 
-  if (calorieTipSelectionKey) {
-    const index = Number(calorieTipSelectionKey.split("-")[1]);
-    const selectedTip = tips[index];
-    if (selectedTip) {
-      updateCalorieTipPanel(bucket, selectedTip);
-    } else {
-      updateCalorieTipPanel(bucket, null);
-    }
-  } else {
-    updateCalorieTipPanel(bucket, null);
-  }
+	if (calorieTipSelectionKey) {
+		const index = Number(calorieTipSelectionKey.split("-")[1]);
+		const selectedTip = tips[index];
+		if (selectedTip) {
+			updateCalorieTipPanel(bucket, selectedTip);
+		} else {
+			updateCalorieTipPanel(bucket, null);
+		}
+	} else {
+		updateCalorieTipPanel(bucket, null);
+	}
 
-  updateCalorieTipSelectionStyles();
+	updateCalorieTipSelectionStyles();
 }
 
 function selectCalorieTip(goalId, index, tip) {
-  calorieTipSelectionKey = `${goalId}-${index}`;
-  updateCalorieTipPanel(getCalorieTipBucket(), tip);
-  updateCalorieTipSelectionStyles();
+	calorieTipSelectionKey = `${goalId}-${index}`;
+	updateCalorieTipPanel(getCalorieTipBucket(), tip);
+	updateCalorieTipSelectionStyles();
 }
 
 function updateCalorieTipPanel(bucket, tip) {
-  const panelTitle = $("calorie-tip-title");
-  const panelDetail = $("calorie-tip-detail");
-  if (!panelTitle || !panelDetail) return;
+	const panelTitle = $("calorie-tip-title");
+	const panelDetail = $("calorie-tip-detail");
+	if (!panelTitle || !panelDetail) return;
 
-  if (!bucket || !tip) {
-    panelTitle.textContent = "Tap a calorie orb for a tip";
-    panelDetail.textContent = bucket ? `${bucket.label} tips wrap the ring.` : "";
-    return;
-  }
+	if (!bucket || !tip) {
+		panelTitle.textContent = "Tap a calorie orb for a tip";
+		panelDetail.textContent = bucket
+			? `${bucket.label} tips wrap the ring.`
+			: "";
+		return;
+	}
 
-  panelTitle.textContent = tip.title;
-  panelDetail.textContent = tip.detail;
+	panelTitle.textContent = tip.title;
+	panelDetail.textContent = tip.detail;
 }
 
 function updateCalorieTipSelectionStyles() {
-  const layer = $("calorie-ring-emoji-layer");
-  if (!layer) return;
-  layer.querySelectorAll(".ring-emoji-btn").forEach((btn) => {
-    const key = btn.dataset.tipKey;
-    if (key === calorieTipSelectionKey) btn.classList.add("is-selected");
-    else btn.classList.remove("is-selected");
-  });
+	const layer = $("calorie-ring-emoji-layer");
+	if (!layer) return;
+	layer.querySelectorAll(".ring-emoji-btn").forEach((btn) => {
+		const key = btn.dataset.tipKey;
+		if (key === calorieTipSelectionKey) btn.classList.add("is-selected");
+		else btn.classList.remove("is-selected");
+	});
 }
 
 function renderFastButton() {
-  const button = $("fast-btn");
-  const modeLabel = $("fast-label-mode");
-  const valueLabel = $("fast-label-value");
-  if (!button || !modeLabel || !valueLabel) return;
+	const button = $("fast-btn");
+	const modeLabel = $("fast-label-mode");
+	const valueLabel = $("fast-label-value");
+	if (!button || !modeLabel || !valueLabel) return;
 
-  const mode = $("timer-mode");
-  const main = $("timer-main");
-  modeLabel.textContent = mode?.textContent || "Fast";
-  valueLabel.textContent = main?.textContent || "00:00:00";
-  button.setAttribute("aria-pressed", String(currentTab === "timer"));
+	const mode = $("timer-mode");
+	const main = $("timer-main");
+	modeLabel.textContent = mode?.textContent || "Fast";
+	valueLabel.textContent = main?.textContent || "00:00:00";
+	button.setAttribute("aria-pressed", String(currentTab === "timer"));
 }
 
 function renderCalorieButton() {
-  const button = $("calorie-btn");
-  const modeLabel = $("calorie-label-mode");
-  const valueLabel = $("calorie-label-value");
-  if (!button || !modeLabel || !valueLabel) return;
+	const button = $("calorie-btn");
+	const modeLabel = $("calorie-label-mode");
+	const valueLabel = $("calorie-label-value");
+	if (!button || !modeLabel || !valueLabel) return;
 
-  const target = getCalorieTarget();
-  const dateKey = getCalorieDisplayDateKey();
-  const consumed = getEffectiveCalorieConsumed(dateKey);
-  const remaining = getCalorieRemaining(consumed);
-  const view = getCalorieView();
-  const viewLabel = CALORIE_VIEWS.find((v) => v.id === view)?.label ?? "Total";
-  const isMissingConfig = !target;
+	const target = getCalorieTarget();
+	const dateKey = getCalorieDisplayDateKey();
+	const consumed = getEffectiveCalorieConsumed(dateKey);
+	const remaining = getCalorieRemaining(consumed);
+	const view = getCalorieView();
+	const viewLabel = CALORIE_VIEWS.find((v) => v.id === view)?.label ?? "Total";
+	const isMissingConfig = !target;
 
-  let valueText = "Set target";
-  if (!isMissingConfig) {
-    let value = 0;
-    if (view === "total") value = target;
-    else if (view === "consumed") value = consumed;
-    else value = remaining ?? 0;
-    valueText = `${formatCalories(value)} cal`;
-  }
+	let valueText = "Set target";
+	if (!isMissingConfig) {
+		let value = 0;
+		if (view === "total") value = target;
+		else if (view === "consumed") value = consumed;
+		else value = remaining ?? 0;
+		valueText = `${formatCalories(value)} cal`;
+	}
 
-  modeLabel.textContent = viewLabel;
-  valueLabel.textContent = valueText;
-  button.setAttribute("aria-pressed", String(currentTab === "calories"));
+	modeLabel.textContent = viewLabel;
+	valueLabel.textContent = valueText;
+	button.setAttribute("aria-pressed", String(currentTab === "calories"));
 
-  button.classList.toggle("danger-glow", isMissingConfig);
+	button.classList.toggle("danger-glow", isMissingConfig);
 }
 
 function renderCalories() {
-  const targetInput = $("calorie-daily-target-input");
-  const consumedInput = $("calorie-consumed-input");
-  const goalInput = $("calorie-goal-input");
-  const genderInput = $("calorie-gender-input");
-  const fitnessInput = $("calorie-fitness-input");
-  const ageInput = $("calorie-age-input");
-  const heightInput = $("calorie-height-input");
-  const weightInput = $("calorie-weight-input");
-  const heightLabel = $("calorie-height-label");
-  const weightLabel = $("calorie-weight-label");
-  const heightSubtext = $("calorie-height-subtext");
-  const weightSubtext = $("calorie-weight-subtext");
-  const settings = getCalorieSettings();
-  const unitSystem = getCalorieUnitSystem();
-  if (targetInput) {
-    const target = getCalorieTarget();
-    targetInput.value = target ? String(Math.round(target)) : "";
-  }
-  if (consumedInput) {
-    const consumed = getCalorieConsumed();
-    consumedInput.value = consumed ? String(Math.round(consumed)) : "";
-  }
-  if (goalInput) goalInput.value = settings.goal || "";
-  if (genderInput) genderInput.value = settings.gender || "";
-  if (fitnessInput) fitnessInput.value = settings.fitnessLevel || "";
-  if (ageInput) {
-    const age = normalizeGoalMetric(settings.age);
-    ageInput.value = age ? String(age) : "";
-  }
-  if (heightInput) {
-    const height = normalizeGoalMetric(settings.height);
-    heightInput.value = height ? String(height) : "";
-  }
-  if (weightInput) {
-    const weight = normalizeGoalMetric(settings.currentWeight);
-    weightInput.value = weight ? String(weight) : "";
-  }
-  if (heightLabel) {
-    heightLabel.textContent = unitSystem === "imperial" ? "Height (ft/in)" : "Height (cm)";
-  }
-  if (weightLabel) {
-    weightLabel.textContent =
-      unitSystem === "imperial" ? "Current weight (lb)" : "Current weight (kg)";
-  }
-  if (heightInput) {
-    heightInput.placeholder = unitSystem === "imperial" ? "e.g. 5'8\"" : "e.g. 170 cm";
-  }
-  if (weightInput) {
-    weightInput.placeholder = unitSystem === "imperial" ? "e.g. 160 lb" : "e.g. 72.5 kg";
-  }
-  if (heightSubtext) {
-    heightSubtext.textContent =
-      unitSystem === "imperial" ? "Height in feet and inches." : "Height in centimeters.";
-  }
-  if (weightSubtext) {
-    weightSubtext.textContent =
-      unitSystem === "imperial" ? "Current weight in pounds." : "Current weight in kilograms.";
-  }
-  renderCalorieSummary();
-  renderCalorieRing();
-  renderCalorieButton();
+	const targetInput = $("calorie-daily-target-input");
+	const consumedInput = $("calorie-consumed-input");
+	const goalInput = $("calorie-goal-input");
+	const genderInput = $("calorie-gender-input");
+	const fitnessInput = $("calorie-fitness-input");
+	const ageInput = $("calorie-age-input");
+	const heightInput = $("calorie-height-input");
+	const weightInput = $("calorie-weight-input");
+	const heightLabel = $("calorie-height-label");
+	const weightLabel = $("calorie-weight-label");
+	const heightSubtext = $("calorie-height-subtext");
+	const weightSubtext = $("calorie-weight-subtext");
+	const settings = getCalorieSettings();
+	const unitSystem = getCalorieUnitSystem();
+	if (targetInput) {
+		const target = getCalorieTarget();
+		targetInput.value = target ? String(Math.round(target)) : "";
+	}
+	if (consumedInput) {
+		const consumed = getCalorieConsumed();
+		consumedInput.value = consumed ? String(Math.round(consumed)) : "";
+	}
+	if (goalInput) goalInput.value = settings.goal || "";
+	if (genderInput) genderInput.value = settings.gender || "";
+	if (fitnessInput) fitnessInput.value = settings.fitnessLevel || "";
+	if (ageInput) {
+		const age = normalizeGoalMetric(settings.age);
+		ageInput.value = age ? String(age) : "";
+	}
+	if (heightInput) {
+		const height = normalizeGoalMetric(settings.height);
+		heightInput.value = height ? String(height) : "";
+	}
+	if (weightInput) {
+		const weight = normalizeGoalMetric(settings.currentWeight);
+		weightInput.value = weight ? String(weight) : "";
+	}
+	if (heightLabel) {
+		heightLabel.textContent =
+			unitSystem === "imperial" ? "Height (ft/in)" : "Height (cm)";
+	}
+	if (weightLabel) {
+		weightLabel.textContent =
+			unitSystem === "imperial" ? "Current weight (lb)" : "Current weight (kg)";
+	}
+	if (heightInput) {
+		heightInput.placeholder =
+			unitSystem === "imperial" ? "e.g. 5'8\"" : "e.g. 170 cm";
+	}
+	if (weightInput) {
+		weightInput.placeholder =
+			unitSystem === "imperial" ? "e.g. 160 lb" : "e.g. 72.5 kg";
+	}
+	if (heightSubtext) {
+		heightSubtext.textContent =
+			unitSystem === "imperial"
+				? "Height in feet and inches."
+				: "Height in centimeters.";
+	}
+	if (weightSubtext) {
+		weightSubtext.textContent =
+			unitSystem === "imperial"
+				? "Current weight in pounds."
+				: "Current weight in kilograms.";
+	}
+	renderCalorieSummary();
+	renderCalorieRing();
+	renderCalorieButton();
 }
 
 function initCalories() {
-  const targetInput = $("calorie-daily-target-input");
-  const consumedInput = $("calorie-consumed-input");
-  const goalInput = $("calorie-goal-input");
-  const genderInput = $("calorie-gender-input");
-  const fitnessInput = $("calorie-fitness-input");
-  const ageInput = $("calorie-age-input");
-  const heightInput = $("calorie-height-input");
-  const weightInput = $("calorie-weight-input");
-  const ringValue = $("calorie-ring-value");
+	const targetInput = $("calorie-daily-target-input");
+	const consumedInput = $("calorie-consumed-input");
+	const goalInput = $("calorie-goal-input");
+	const genderInput = $("calorie-gender-input");
+	const fitnessInput = $("calorie-fitness-input");
+	const ageInput = $("calorie-age-input");
+	const heightInput = $("calorie-height-input");
+	const weightInput = $("calorie-weight-input");
+	const ringValue = $("calorie-ring-value");
 
-  if (targetInput) {
-    targetInput.addEventListener("input", (event) => {
-      const next = parseCalorieValue(event.target.value);
-      const settings = getCalorieSettings();
-      settings.dailyTarget = next;
-      settings.target = next;
-      void saveState();
-      renderCalories();
-    });
-  }
+	if (targetInput) {
+		targetInput.addEventListener("input", (event) => {
+			const next = parseCalorieValue(event.target.value);
+			const settings = getCalorieSettings();
+			settings.dailyTarget = next;
+			settings.target = next;
+			void saveState();
+			renderCalories();
+		});
+	}
 
-  if (consumedInput) {
-    consumedInput.addEventListener("input", (event) => {
-      const next = parseCalorieValue(event.target.value);
-      const settings = getCalorieSettings();
-      settings.consumed = next ?? 0;
-      void saveState();
-      renderCalories();
-    });
-  }
+	if (consumedInput) {
+		consumedInput.addEventListener("input", (event) => {
+			const next = parseCalorieValue(event.target.value);
+			const settings = getCalorieSettings();
+			settings.consumed = next ?? 0;
+			void saveState();
+			renderCalories();
+		});
+	}
 
-  if (goalInput) {
-    goalInput.addEventListener("change", (event) => {
-      const settings = getCalorieSettings();
-      settings.goal = event.target.value || "";
-      void saveState();
-      renderCalories();
-    });
-  }
+	if (goalInput) {
+		goalInput.addEventListener("change", (event) => {
+			const settings = getCalorieSettings();
+			settings.goal = event.target.value || "";
+			void saveState();
+			renderCalories();
+		});
+	}
 
-  if (genderInput) {
-    genderInput.addEventListener("change", (event) => {
-      const settings = getCalorieSettings();
-      settings.gender = event.target.value || "";
-      void saveState();
-      renderCalories();
-    });
-  }
+	if (genderInput) {
+		genderInput.addEventListener("change", (event) => {
+			const settings = getCalorieSettings();
+			settings.gender = event.target.value || "";
+			void saveState();
+			renderCalories();
+		});
+	}
 
-  if (fitnessInput) {
-    fitnessInput.addEventListener("change", (event) => {
-      const settings = getCalorieSettings();
-      settings.fitnessLevel = event.target.value || "";
-      void saveState();
-      renderCalories();
-    });
-  }
+	if (fitnessInput) {
+		fitnessInput.addEventListener("change", (event) => {
+			const settings = getCalorieSettings();
+			settings.fitnessLevel = event.target.value || "";
+			void saveState();
+			renderCalories();
+		});
+	}
 
-  if (ageInput) {
-    ageInput.addEventListener("input", (event) => {
-      const next = parseCalorieValue(event.target.value);
-      const settings = getCalorieSettings();
-      settings.age = next;
-      void saveState();
-      renderCalories();
-    });
-  }
+	if (ageInput) {
+		ageInput.addEventListener("input", (event) => {
+			const next = parseCalorieValue(event.target.value);
+			const settings = getCalorieSettings();
+			settings.age = next;
+			void saveState();
+			renderCalories();
+		});
+	}
 
-  if (heightInput) {
-    heightInput.addEventListener("input", (event) => {
-      const next = parseCalorieValue(event.target.value);
-      const settings = getCalorieSettings();
-      settings.height = next;
-      void saveState();
-      renderCalories();
-    });
-  }
+	if (heightInput) {
+		heightInput.addEventListener("input", (event) => {
+			const next = parseCalorieValue(event.target.value);
+			const settings = getCalorieSettings();
+			settings.height = next;
+			void saveState();
+			renderCalories();
+		});
+	}
 
-  if (weightInput) {
-    weightInput.addEventListener("input", (event) => {
-      const next = parseCalorieValue(event.target.value);
-      const settings = getCalorieSettings();
-      settings.currentWeight = next;
-      void saveState();
-      renderCalories();
-    });
-  }
+	if (weightInput) {
+		weightInput.addEventListener("input", (event) => {
+			const next = parseCalorieValue(event.target.value);
+			const settings = getCalorieSettings();
+			settings.currentWeight = next;
+			void saveState();
+			renderCalories();
+		});
+	}
 
-  if (ringValue) {
-    ringValue.addEventListener("click", () => {
-      const current = getCalorieView();
-      const index = CALORIE_VIEWS.findIndex((view) => view.id === current);
-      const next = CALORIE_VIEWS[(index + 1) % CALORIE_VIEWS.length]?.id ?? "total";
-      const settings = getCalorieSettings();
-      settings.view = next;
-      void saveState();
-      renderCalories();
-    });
-  }
+	if (ringValue) {
+		ringValue.addEventListener("click", () => {
+			const current = getCalorieView();
+			const index = CALORIE_VIEWS.findIndex((view) => view.id === current);
+			const next =
+				CALORIE_VIEWS[(index + 1) % CALORIE_VIEWS.length]?.id ?? "total";
+			const settings = getCalorieSettings();
+			settings.view = next;
+			void saveState();
+			renderCalories();
+		});
+	}
 }
 
 function initFastTypeChips() {
-  const container = $("fast-type-chips");
-  container.innerHTML = "";
-  FAST_TYPES.forEach((type) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.dataset.typeId = type.id;
-    btn.className = "fast-type-chip text-[11px] md:text-[10px]";
-    btn.textContent = type.label;
-    btn.addEventListener("click", () => {
-      pendingTypeId = type.id;
-      openFastTypeModal(getTypeById(pendingTypeId));
-    });
-    container.appendChild(btn);
-  });
-  highlightSelectedFastType();
+	const container = $("fast-type-chips");
+	container.innerHTML = "";
+	FAST_TYPES.forEach((type) => {
+		const btn = document.createElement("button");
+		btn.type = "button";
+		btn.dataset.typeId = type.id;
+		btn.className = "fast-type-chip text-[11px] md:text-[10px]";
+		btn.textContent = type.label;
+		btn.addEventListener("click", () => {
+			pendingTypeId = type.id;
+			openFastTypeModal(getTypeById(pendingTypeId));
+		});
+		container.appendChild(btn);
+	});
+	highlightSelectedFastType();
 }
 
 function highlightSelectedFastType() {
-  const chips = document.querySelectorAll("#fast-type-chips button");
-  const current = state.activeFast ? state.activeFast.typeId : selectedFastTypeId;
-  chips.forEach((chip) => {
-    const isActive = chip.dataset.typeId === current;
-    if (isActive) {
-      chip.classList.add("fast-type-chip--active");
-    } else {
-      chip.classList.remove("fast-type-chip--active");
-    }
-  });
+	const chips = document.querySelectorAll("#fast-type-chips button");
+	const current = state.activeFast
+		? state.activeFast.typeId
+		: selectedFastTypeId;
+	chips.forEach((chip) => {
+		const isActive = chip.dataset.typeId === current;
+		if (isActive) {
+			chip.classList.add("fast-type-chip--active");
+		} else {
+			chip.classList.remove("fast-type-chip--active");
+		}
+	});
 }
 
 function applyTypeToActiveFast(typeId) {
-  const af = state.activeFast;
-  if (!af) return;
-  const t = getTypeById(typeId);
-  af.typeId = t.id;
-  af.plannedDurationHours = t.durationHours;
-  af.endTimestamp = af.startTimestamp + t.durationHours * 3600000;
-  af.status = "active";
-  state.reminders = { endNotified: false, lastHourlyAt: null };
+	const af = state.activeFast;
+	if (!af) return;
+	const t = getTypeById(typeId);
+	af.typeId = t.id;
+	af.plannedDurationHours = t.durationHours;
+	af.endTimestamp = af.startTimestamp + t.durationHours * 3600000;
+	af.status = "active";
+	state.reminders = { endNotified: false, lastHourlyAt: null };
 }
 
 function openFastTypeModal(type) {
-  $("modal-type-label").textContent = `${type.label} fast`;
-  $("modal-type-duration").textContent = type.useCase || `${type.durationHours} hours`;
-  $("fast-type-modal").classList.remove("hidden");
+	$("modal-type-label").textContent = `${type.label} fast`;
+	$("modal-type-duration").textContent =
+		type.useCase || `${type.durationHours} hours`;
+	$("fast-type-modal").classList.remove("hidden");
 }
 
 function closeFastTypeModal() {
-  $("fast-type-modal").classList.add("hidden");
-  pendingTypeId = null;
+	$("fast-type-modal").classList.add("hidden");
+	pendingTypeId = null;
 }
 
 function usePendingFastType() {
-  if (!pendingTypeId) {
-    closeFastTypeModal();
-    return;
-  }
-  selectedFastTypeId = pendingTypeId;
-  state.settings.defaultFastTypeId = selectedFastTypeId;
-  if (state.activeFast) applyTypeToActiveFast(selectedFastTypeId);
-  void saveState();
-  closeFastTypeModal();
-  highlightSelectedFastType();
-  updateTimer();
-  if (!state.activeFast) renderTimerMetaIdle();
-  showToast("Fast type applied");
+	if (!pendingTypeId) {
+		closeFastTypeModal();
+		return;
+	}
+	selectedFastTypeId = pendingTypeId;
+	state.settings.defaultFastTypeId = selectedFastTypeId;
+	if (state.activeFast) applyTypeToActiveFast(selectedFastTypeId);
+	void saveState();
+	closeFastTypeModal();
+	highlightSelectedFastType();
+	updateTimer();
+	if (!state.activeFast) renderTimerMetaIdle();
+	showToast("Fast type applied");
 }
 
 function initButtons() {
-  $("start-fast-btn").addEventListener("click", confirmStartFast);
-  $("stop-fast-btn").addEventListener("click", confirmStopFast);
+	$("start-fast-btn").addEventListener("click", confirmStartFast);
+	$("stop-fast-btn").addEventListener("click", confirmStopFast);
 
-  $("fast-btn").addEventListener("click", () => {
-    if (notesOverlayOpen) closeNotesDrawer();
-    switchTab("timer");
-  });
+	$("fast-btn").addEventListener("click", () => {
+		if (notesOverlayOpen) closeNotesDrawer();
+		switchTab("timer");
+	});
 
-  $("calorie-btn").addEventListener("click", () => {
-    if (notesOverlayOpen) closeNotesDrawer();
-    switchTab("calories");
-  });
+	$("calorie-btn").addEventListener("click", () => {
+		if (notesOverlayOpen) closeNotesDrawer();
+		switchTab("calories");
+	});
 
-  $("alerts-btn").addEventListener("click", onAlertsButton);
+	$("alerts-btn").addEventListener("click", onAlertsButton);
 
-  $("modal-close").addEventListener("click", closeFastTypeModal);
-  $("modal-use-type").addEventListener("click", usePendingFastType);
-  $("confirm-fast-close").addEventListener("click", closeConfirmFastModal);
-  $("confirm-fast-accept").addEventListener("click", confirmFastAction);
-  const confirmBackdrop = document.querySelector("#confirm-fast-modal .confirm-fast-backdrop");
-  if (confirmBackdrop) confirmBackdrop.addEventListener("click", closeConfirmFastModal);
-  $("post-fast-note-close").addEventListener("click", closePostFastNoteModal);
-  $("post-fast-note-no").addEventListener("click", closePostFastNoteModal);
-  $("post-fast-note-yes").addEventListener("click", confirmPostFastNote);
-  const postFastNoteBackdrop = document.querySelector(
-    "#post-fast-note-modal .post-fast-note-backdrop",
-  );
-  if (postFastNoteBackdrop) postFastNoteBackdrop.addEventListener("click", closePostFastNoteModal);
+	$("modal-close").addEventListener("click", closeFastTypeModal);
+	$("modal-use-type").addEventListener("click", usePendingFastType);
+	$("confirm-fast-close").addEventListener("click", closeConfirmFastModal);
+	$("confirm-fast-accept").addEventListener("click", confirmFastAction);
+	const confirmBackdrop = document.querySelector(
+		"#confirm-fast-modal .confirm-fast-backdrop",
+	);
+	if (confirmBackdrop)
+		confirmBackdrop.addEventListener("click", closeConfirmFastModal);
+	$("post-fast-note-close").addEventListener("click", closePostFastNoteModal);
+	$("post-fast-note-no").addEventListener("click", closePostFastNoteModal);
+	$("post-fast-note-yes").addEventListener("click", confirmPostFastNote);
+	const postFastNoteBackdrop = document.querySelector(
+		"#post-fast-note-modal .post-fast-note-backdrop",
+	);
+	if (postFastNoteBackdrop)
+		postFastNoteBackdrop.addEventListener("click", closePostFastNoteModal);
 
-  $("calorie-target-drawer-btn").addEventListener("click", openCalorieTargetDrawer);
-  $("calorie-goal-drawer-btn").addEventListener("click", openCalorieGoalDrawer);
-  $("calorie-target-close").addEventListener("click", closeCalorieTargetDrawer);
-  $("calorie-goal-close").addEventListener("click", closeCalorieGoalDrawer);
-  const calorieTargetBackdrop = document.querySelector("#calorie-target-drawer .absolute.inset-0");
-  if (calorieTargetBackdrop)
-    calorieTargetBackdrop.addEventListener("click", closeCalorieTargetDrawer);
-  const calorieGoalBackdrop = document.querySelector("#calorie-goal-drawer .absolute.inset-0");
-  if (calorieGoalBackdrop) calorieGoalBackdrop.addEventListener("click", closeCalorieGoalDrawer);
+	$("calorie-target-drawer-btn").addEventListener(
+		"click",
+		openCalorieTargetDrawer,
+	);
+	$("calorie-goal-drawer-btn").addEventListener("click", openCalorieGoalDrawer);
+	$("calorie-target-close").addEventListener("click", closeCalorieTargetDrawer);
+	$("calorie-goal-close").addEventListener("click", closeCalorieGoalDrawer);
+	const calorieTargetBackdrop = document.querySelector(
+		"#calorie-target-drawer .absolute.inset-0",
+	);
+	if (calorieTargetBackdrop)
+		calorieTargetBackdrop.addEventListener("click", closeCalorieTargetDrawer);
+	const calorieGoalBackdrop = document.querySelector(
+		"#calorie-goal-drawer .absolute.inset-0",
+	);
+	if (calorieGoalBackdrop)
+		calorieGoalBackdrop.addEventListener("click", closeCalorieGoalDrawer);
 
-  $("toggle-end-alert").addEventListener("click", () => {
-    state.settings.notifyOnEnd = !state.settings.notifyOnEnd;
-    void saveState();
-    renderSettings();
-    renderAlertsPill();
-  });
+	$("toggle-end-alert").addEventListener("click", () => {
+		state.settings.notifyOnEnd = !state.settings.notifyOnEnd;
+		void saveState();
+		renderSettings();
+		renderAlertsPill();
+	});
 
-  $("toggle-hourly-alert").addEventListener("click", () => {
-    state.settings.hourlyReminders = !state.settings.hourlyReminders;
-    void saveState();
-    renderSettings();
-  });
+	$("toggle-hourly-alert").addEventListener("click", () => {
+		state.settings.hourlyReminders = !state.settings.hourlyReminders;
+		void saveState();
+		renderSettings();
+	});
 
-  $("toggle-ring-emojis").addEventListener("click", () => {
-    state.settings.showRingEmojis = !state.settings.showRingEmojis;
-    void saveState();
-    renderSettings();
-    applyRingEmojiVisibility();
-    updateTimer();
-    renderCalories();
-  });
+	$("toggle-ring-emojis").addEventListener("click", () => {
+		state.settings.showRingEmojis = !state.settings.showRingEmojis;
+		void saveState();
+		renderSettings();
+		applyRingEmojiVisibility();
+		updateTimer();
+		renderCalories();
+	});
 
-  $("theme-preset-select").addEventListener("change", (event) => {
-    setThemePreset(event.target.value);
-    applyThemeColors();
-    renderSettings();
-    void saveState();
-  });
+	$("theme-preset-select").addEventListener("change", (event) => {
+		setThemePreset(event.target.value);
+		applyThemeColors();
+		renderSettings();
+		void saveState();
+	});
 
-  $("theme-primary-color").addEventListener("input", (event) => {
-    setCustomThemeColor("primaryColor", event.target.value);
-    applyThemeColors();
-    void saveState();
-  });
+	$("theme-primary-color").addEventListener("input", (event) => {
+		setCustomThemeColor("primaryColor", event.target.value);
+		applyThemeColors();
+		void saveState();
+	});
 
-  $("theme-secondary-color").addEventListener("input", (event) => {
-    setCustomThemeColor("secondaryColor", event.target.value);
-    applyThemeColors();
-    void saveState();
-  });
+	$("theme-secondary-color").addEventListener("input", (event) => {
+		setCustomThemeColor("secondaryColor", event.target.value);
+		applyThemeColors();
+		void saveState();
+	});
 
-  $("theme-background-color").addEventListener("input", (event) => {
-    setCustomThemeColor("backgroundColor", event.target.value);
-    applyThemeColors();
-    void saveState();
-  });
+	$("theme-background-color").addEventListener("input", (event) => {
+		setCustomThemeColor("backgroundColor", event.target.value);
+		applyThemeColors();
+		void saveState();
+	});
 
-  $("theme-surface-color").addEventListener("input", (event) => {
-    setCustomThemeColor("surfaceColor", event.target.value);
-    applyThemeColors();
-    void saveState();
-  });
+	$("theme-surface-color").addEventListener("input", (event) => {
+		setCustomThemeColor("surfaceColor", event.target.value);
+		applyThemeColors();
+		void saveState();
+	});
 
-  $("theme-surface-muted-color").addEventListener("input", (event) => {
-    setCustomThemeColor("surfaceMutedColor", event.target.value);
-    applyThemeColors();
-    void saveState();
-  });
+	$("theme-surface-muted-color").addEventListener("input", (event) => {
+		setCustomThemeColor("surfaceMutedColor", event.target.value);
+		applyThemeColors();
+		void saveState();
+	});
 
-  $("theme-border-color").addEventListener("input", (event) => {
-    setCustomThemeColor("borderColor", event.target.value);
-    applyThemeColors();
-    void saveState();
-  });
+	$("theme-border-color").addEventListener("input", (event) => {
+		setCustomThemeColor("borderColor", event.target.value);
+		applyThemeColors();
+		void saveState();
+	});
 
-  $("theme-text-color").addEventListener("input", (event) => {
-    setCustomThemeColor("textColor", event.target.value);
-    applyThemeColors();
-    void saveState();
-  });
+	$("theme-text-color").addEventListener("input", (event) => {
+		setCustomThemeColor("textColor", event.target.value);
+		applyThemeColors();
+		void saveState();
+	});
 
-  $("theme-text-muted-color").addEventListener("input", (event) => {
-    setCustomThemeColor("textMutedColor", event.target.value);
-    applyThemeColors();
-    void saveState();
-  });
+	$("theme-text-muted-color").addEventListener("input", (event) => {
+		setCustomThemeColor("textMutedColor", event.target.value);
+		applyThemeColors();
+		void saveState();
+	});
 
-  $("theme-danger-color").addEventListener("input", (event) => {
-    setCustomThemeColor("dangerColor", event.target.value);
-    applyThemeColors();
-    void saveState();
-  });
+	$("theme-danger-color").addEventListener("input", (event) => {
+		setCustomThemeColor("dangerColor", event.target.value);
+		applyThemeColors();
+		void saveState();
+	});
 
-  $("export-data").addEventListener("click", exportCSV);
-  $("clear-data").addEventListener("click", clearAllData);
-  $("sign-out").addEventListener("click", async () => {
-    try {
-      await signOut(auth);
-    } catch {}
-  });
+	$("export-data").addEventListener("click", exportCSV);
+	$("clear-data").addEventListener("click", clearAllData);
+	$("sign-out").addEventListener("click", async () => {
+		try {
+			await signOut(auth);
+		} catch {}
+	});
 
-  $("calendar-prev").addEventListener("click", () => {
-    calendarMonth = addMonths(calendarMonth, -1);
-    renderCalendar();
-    renderDayDetails();
-    renderNotes();
-  });
-  $("calendar-next").addEventListener("click", () => {
-    calendarMonth = addMonths(calendarMonth, 1);
-    renderCalendar();
-    renderDayDetails();
-    renderNotes();
-  });
+	$("calendar-prev").addEventListener("click", () => {
+		calendarMonth = addMonths(calendarMonth, -1);
+		renderCalendar();
+		renderDayDetails();
+		renderNotes();
+	});
+	$("calendar-next").addEventListener("click", () => {
+		calendarMonth = addMonths(calendarMonth, 1);
+		renderCalendar();
+		renderDayDetails();
+		renderNotes();
+	});
 
-  $("default-fast-select").addEventListener("change", (e) => {
-    selectedFastTypeId = e.target.value;
-    state.settings.defaultFastTypeId = selectedFastTypeId;
-    void saveState();
-    highlightSelectedFastType();
-    if (!state.activeFast) renderTimerMetaIdle();
-    updateTimer();
-  });
+	$("default-fast-select").addEventListener("change", (e) => {
+		selectedFastTypeId = e.target.value;
+		state.settings.defaultFastTypeId = selectedFastTypeId;
+		void saveState();
+		highlightSelectedFastType();
+		if (!state.activeFast) renderTimerMetaIdle();
+		updateTimer();
+	});
 
-  $("timer-main").addEventListener("click", cycleTimeMode);
+	$("timer-main").addEventListener("click", cycleTimeMode);
 
-  $("meta-start-btn").addEventListener("click", () => {
-    if (!state.activeFast) return;
-    openEditStartModal();
-  });
+	$("meta-start-btn").addEventListener("click", () => {
+		if (!state.activeFast) return;
+		openEditStartModal();
+	});
 
-  $("edit-start-close").addEventListener("click", closeEditStartModal);
-  $("edit-start-now").addEventListener("click", () => {
-    $("edit-start-input").value = toLocalInputValue(new Date());
-  });
-  $("edit-start-save").addEventListener("click", saveEditedStartTime);
+	$("edit-start-close").addEventListener("click", closeEditStartModal);
+	$("edit-start-now").addEventListener("click", () => {
+		$("edit-start-input").value = toLocalInputValue(new Date());
+	});
+	$("edit-start-save").addEventListener("click", saveEditedStartTime);
 
-  $("edit-history-close").addEventListener("click", closeEditHistoryModal);
-  $("edit-history-start-now").addEventListener("click", () => {
-    $("edit-history-start").value = toLocalInputValue(new Date());
-  });
-  $("edit-history-end-now").addEventListener("click", () => {
-    $("edit-history-end").value = toLocalInputValue(new Date());
-  });
-  $("edit-history-save").addEventListener("click", saveEditedHistoryTimes);
-  $("edit-history-delete").addEventListener("click", deleteEditedHistoryEntry);
+	$("edit-history-close").addEventListener("click", closeEditHistoryModal);
+	$("edit-history-start-now").addEventListener("click", () => {
+		$("edit-history-start").value = toLocalInputValue(new Date());
+	});
+	$("edit-history-end-now").addEventListener("click", () => {
+		$("edit-history-end").value = toLocalInputValue(new Date());
+	});
+	$("edit-history-save").addEventListener("click", saveEditedHistoryTimes);
+	$("edit-history-delete").addEventListener("click", deleteEditedHistoryEntry);
 
-  $("new-note-btn").addEventListener("click", () => openNoteEditor());
-  $("calorie-log-meal-btn").addEventListener("click", () => openNoteEditor());
-  const noteEditorBackdrop = document.querySelector("#note-editor-modal .note-editor-backdrop");
-  if (noteEditorBackdrop) noteEditorBackdrop.addEventListener("click", closeNoteEditor);
-  $("note-editor-close").addEventListener("click", closeNoteEditor);
-  $("note-editor-save").addEventListener("click", saveNoteEditor);
-  $("note-editor-delete").addEventListener("click", removeNote);
-  attachNoteEditorSwipeHandlers();
+	$("new-note-btn").addEventListener("click", () => openNoteEditor());
+	$("calorie-log-meal-btn").addEventListener("click", () => openNoteEditor());
+	const noteEditorBackdrop = document.querySelector(
+		"#note-editor-modal .note-editor-backdrop",
+	);
+	if (noteEditorBackdrop)
+		noteEditorBackdrop.addEventListener("click", closeNoteEditor);
+	$("note-editor-close").addEventListener("click", closeNoteEditor);
+	$("note-editor-save").addEventListener("click", saveNoteEditor);
+	$("note-editor-delete").addEventListener("click", removeNote);
+	attachNoteEditorSwipeHandlers();
 
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) renderAll();
-  });
+	document.addEventListener("visibilitychange", () => {
+		if (!document.hidden) renderAll();
+	});
 }
 
 function openCalorieTargetDrawer() {
-  $("calorie-target-drawer").classList.remove("hidden");
-  $("calorie-target-drawer-btn").setAttribute("aria-expanded", "true");
+	$("calorie-target-drawer").classList.remove("hidden");
+	$("calorie-target-drawer-btn").setAttribute("aria-expanded", "true");
 }
 
 function closeCalorieTargetDrawer() {
-  $("calorie-target-drawer").classList.add("hidden");
-  $("calorie-target-drawer-btn").setAttribute("aria-expanded", "false");
+	$("calorie-target-drawer").classList.add("hidden");
+	$("calorie-target-drawer-btn").setAttribute("aria-expanded", "false");
 }
 
 function openCalorieGoalDrawer() {
-  $("calorie-goal-drawer").classList.remove("hidden");
-  $("calorie-goal-drawer-btn").setAttribute("aria-expanded", "true");
+	$("calorie-goal-drawer").classList.remove("hidden");
+	$("calorie-goal-drawer-btn").setAttribute("aria-expanded", "true");
 }
 
 function closeCalorieGoalDrawer() {
-  $("calorie-goal-drawer").classList.add("hidden");
-  $("calorie-goal-drawer-btn").setAttribute("aria-expanded", "false");
+	$("calorie-goal-drawer").classList.add("hidden");
+	$("calorie-goal-drawer-btn").setAttribute("aria-expanded", "false");
 }
 
 function openConfirmFastModal({
-  title,
-  message,
-  confirmLabel,
-  confirmClasses,
-  onConfirm,
-  focusAfterClose,
+	title,
+	message,
+	confirmLabel,
+	confirmClasses,
+	onConfirm,
+	focusAfterClose,
 }) {
-  $("confirm-fast-title").textContent = title;
-  $("confirm-fast-message").textContent = message;
-  $("confirm-fast-accept").textContent = confirmLabel;
-  $("confirm-fast-accept").className = confirmClasses;
-  pendingConfirmAction = onConfirm;
-  pendingConfirmCloseFocus = focusAfterClose || null;
-  $("confirm-fast-modal").classList.remove("hidden");
+	$("confirm-fast-title").textContent = title;
+	$("confirm-fast-message").textContent = message;
+	$("confirm-fast-accept").textContent = confirmLabel;
+	$("confirm-fast-accept").className = confirmClasses;
+	pendingConfirmAction = onConfirm;
+	pendingConfirmCloseFocus = focusAfterClose || null;
+	$("confirm-fast-modal").classList.remove("hidden");
 }
 
 function closeConfirmFastModal() {
-  $("confirm-fast-modal").classList.add("hidden");
-  pendingConfirmAction = null;
-  if (pendingConfirmCloseFocus) {
-    pendingConfirmCloseFocus.focus();
-  }
-  pendingConfirmCloseFocus = null;
+	$("confirm-fast-modal").classList.add("hidden");
+	pendingConfirmAction = null;
+	if (pendingConfirmCloseFocus) {
+		pendingConfirmCloseFocus.focus();
+	}
+	pendingConfirmCloseFocus = null;
 }
 
 function confirmFastAction() {
-  if (typeof pendingConfirmAction === "function") {
-    pendingConfirmAction();
-  }
-  closeConfirmFastModal();
+	if (typeof pendingConfirmAction === "function") {
+		pendingConfirmAction();
+	}
+	closeConfirmFastModal();
 }
 
 function openPostFastNoteModal({ fastContext, dateKey, focusAfterClose } = {}) {
-  pendingPostFastNote = {
-    fastContext: fastContext ?? buildInactiveFastContext(),
-    dateKey: dateKey ?? formatDateKey(new Date()),
-  };
-  pendingConfirmCloseFocus = focusAfterClose || null;
-  $("post-fast-note-modal").classList.remove("hidden");
+	pendingPostFastNote = {
+		fastContext: fastContext ?? buildInactiveFastContext(),
+		dateKey: dateKey ?? formatDateKey(new Date()),
+	};
+	pendingConfirmCloseFocus = focusAfterClose || null;
+	$("post-fast-note-modal").classList.remove("hidden");
 }
 
 function closePostFastNoteModal() {
-  $("post-fast-note-modal").classList.add("hidden");
-  pendingPostFastNote = null;
-  if (pendingConfirmCloseFocus) {
-    pendingConfirmCloseFocus.focus();
-  }
-  pendingConfirmCloseFocus = null;
+	$("post-fast-note-modal").classList.add("hidden");
+	pendingPostFastNote = null;
+	if (pendingConfirmCloseFocus) {
+		pendingConfirmCloseFocus.focus();
+	}
+	pendingConfirmCloseFocus = null;
 }
 
 function confirmPostFastNote() {
-  const noteContext = pendingPostFastNote;
-  closePostFastNoteModal();
-  if (!noteContext) return;
-  openNotesDrawer();
-  openNoteEditor({
-    text: "",
-    dateKey: noteContext.dateKey,
-    fastContext: noteContext.fastContext,
-  });
+	const noteContext = pendingPostFastNote;
+	closePostFastNoteModal();
+	if (!noteContext) return;
+	openNotesDrawer();
+	openNoteEditor({
+		text: "",
+		dateKey: noteContext.dateKey,
+		fastContext: noteContext.fastContext,
+	});
 }
 
 function confirmStartFast(event) {
-  const type = getTypeById(selectedFastTypeId);
-  if (!type) return;
-  openConfirmFastModal({
-    title: "Start this fast?",
-    message: `Start a ${type.label} fast for ${type.durationHours} hours?`,
-    confirmLabel: "Start fast",
-    confirmClasses:
-      "w-full py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold",
-    onConfirm: startFast,
-    focusAfterClose: event?.currentTarget,
-  });
+	const type = getTypeById(selectedFastTypeId);
+	if (!type) return;
+	openConfirmFastModal({
+		title: "Start this fast?",
+		message: `Start a ${type.label} fast for ${type.durationHours} hours?`,
+		confirmLabel: "Start fast",
+		confirmClasses:
+			"w-full py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold",
+		onConfirm: startFast,
+		focusAfterClose: event?.currentTarget,
+	});
 }
 
 function confirmStopFast(event) {
-  const af = state.activeFast;
-  if (!af) return;
-  const type = getTypeById(af.typeId);
-  const typeLabel = type ? type.label : "current";
-  openConfirmFastModal({
-    title: "Stop this fast?",
-    message: `Stop and log your ${typeLabel} fast now?`,
-    confirmLabel: "Stop fast",
-    confirmClasses:
-      "w-full py-3 md:py-2.5 rounded-xl button-danger border text-sm md:text-xs font-semibold",
-    onConfirm: stopFastAndLog,
-    focusAfterClose: event?.currentTarget,
-  });
+	const af = state.activeFast;
+	if (!af) return;
+	const type = getTypeById(af.typeId);
+	const typeLabel = type ? type.label : "current";
+	openConfirmFastModal({
+		title: "Stop this fast?",
+		message: `Stop and log your ${typeLabel} fast now?`,
+		confirmLabel: "Stop fast",
+		confirmClasses:
+			"w-full py-3 md:py-2.5 rounded-xl button-danger border text-sm md:text-xs font-semibold",
+		onConfirm: stopFastAndLog,
+		focusAfterClose: event?.currentTarget,
+	});
 }
 
 function initSettings() {
-  const sel = $("default-fast-select");
-  sel.innerHTML = "";
-  FAST_TYPES.forEach((t) => {
-    const o = document.createElement("option");
-    o.value = t.id;
-    o.textContent = `${t.label} (${t.durationHours}h)`;
-    sel.appendChild(o);
-  });
+	const sel = $("default-fast-select");
+	sel.innerHTML = "";
+	FAST_TYPES.forEach((t) => {
+		const o = document.createElement("option");
+		o.value = t.id;
+		o.textContent = `${t.label} (${t.durationHours}h)`;
+		sel.appendChild(o);
+	});
 
-  const themeSelect = $("theme-preset-select");
-  themeSelect.innerHTML = "";
-  THEME_PRESET_LIST.forEach((preset) => {
-    const option = document.createElement("option");
-    option.value = preset.id;
-    option.textContent = preset.label;
-    themeSelect.appendChild(option);
-  });
-  const customOption = document.createElement("option");
-  customOption.value = "custom";
-  customOption.textContent = "Custom";
-  themeSelect.appendChild(customOption);
+	const themeSelect = $("theme-preset-select");
+	themeSelect.innerHTML = "";
+	THEME_PRESET_LIST.forEach((preset) => {
+		const option = document.createElement("option");
+		option.value = preset.id;
+		option.textContent = preset.label;
+		themeSelect.appendChild(option);
+	});
+	const customOption = document.createElement("option");
+	customOption.value = "custom";
+	customOption.textContent = "Custom";
+	themeSelect.appendChild(customOption);
 
-  const unitSelect = $("calorie-unit-system");
-  if (unitSelect) {
-    unitSelect.addEventListener("change", (event) => {
-      const settings = getCalorieSettings();
-      settings.unitSystem = event.target.value === "imperial" ? "imperial" : "metric";
-      void saveState();
-      renderCalories();
-      renderSettings();
-    });
-  }
+	const unitSelect = $("calorie-unit-system");
+	if (unitSelect) {
+		unitSelect.addEventListener("change", (event) => {
+			const settings = getCalorieSettings();
+			settings.unitSystem =
+				event.target.value === "imperial" ? "imperial" : "metric";
+			void saveState();
+			renderCalories();
+			renderSettings();
+		});
+	}
 }
 
 function renderSettings() {
-  const customTheme = getCustomThemeColors();
-  const presetId = resolveThemePresetId();
-  const unitSelect = $("calorie-unit-system");
-  const unitSystem = getCalorieUnitSystem();
-  $("default-fast-select").value = resolveFastTypeId(state.settings.defaultFastTypeId);
-  $("toggle-end-alert").classList.toggle("on", !!state.settings.notifyOnEnd);
-  $("toggle-hourly-alert").classList.toggle("on", !!state.settings.hourlyReminders);
-  $("toggle-ring-emojis").classList.toggle("on", state.settings.showRingEmojis !== false);
-  if (unitSelect) unitSelect.value = unitSystem;
-  $("theme-preset-select").value = presetId;
-  $("theme-custom-controls").classList.toggle("hidden", presetId !== "custom");
-  $("theme-primary-color").value = customTheme.primaryColor;
-  $("theme-secondary-color").value = customTheme.secondaryColor;
-  $("theme-background-color").value = customTheme.backgroundColor;
-  $("theme-surface-color").value = customTheme.surfaceColor;
-  $("theme-surface-muted-color").value = customTheme.surfaceMutedColor;
-  $("theme-border-color").value = customTheme.borderColor;
-  $("theme-text-color").value = customTheme.textColor;
-  $("theme-text-muted-color").value = customTheme.textMutedColor;
-  $("theme-danger-color").value = customTheme.dangerColor;
-  renderAlertsPill();
+	const customTheme = getCustomThemeColors();
+	const presetId = resolveThemePresetId();
+	const unitSelect = $("calorie-unit-system");
+	const unitSystem = getCalorieUnitSystem();
+	$("default-fast-select").value = resolveFastTypeId(
+		state.settings.defaultFastTypeId,
+	);
+	$("toggle-end-alert").classList.toggle("on", !!state.settings.notifyOnEnd);
+	$("toggle-hourly-alert").classList.toggle(
+		"on",
+		!!state.settings.hourlyReminders,
+	);
+	$("toggle-ring-emojis").classList.toggle(
+		"on",
+		state.settings.showRingEmojis !== false,
+	);
+	if (unitSelect) unitSelect.value = unitSystem;
+	$("theme-preset-select").value = presetId;
+	$("theme-custom-controls").classList.toggle("hidden", presetId !== "custom");
+	$("theme-primary-color").value = customTheme.primaryColor;
+	$("theme-secondary-color").value = customTheme.secondaryColor;
+	$("theme-background-color").value = customTheme.backgroundColor;
+	$("theme-surface-color").value = customTheme.surfaceColor;
+	$("theme-surface-muted-color").value = customTheme.surfaceMutedColor;
+	$("theme-border-color").value = customTheme.borderColor;
+	$("theme-text-color").value = customTheme.textColor;
+	$("theme-text-muted-color").value = customTheme.textMutedColor;
+	$("theme-danger-color").value = customTheme.dangerColor;
+	renderAlertsPill();
 }
 
 function applyRingEmojiVisibility() {
-  const isEnabled = state.settings.showRingEmojis !== false;
-  const layer = $("ring-emoji-layer");
-  const panel = $("ring-emoji-panel");
-  const calorieLayer = $("calorie-ring-emoji-layer");
-  const caloriePanel = $("calorie-tip-panel");
-  if (layer) layer.classList.toggle("hidden", !isEnabled);
-  if (panel) panel.classList.toggle("hidden", !isEnabled);
-  if (calorieLayer) calorieLayer.classList.toggle("hidden", !isEnabled);
-  if (caloriePanel) caloriePanel.classList.toggle("hidden", !isEnabled);
-  if (!isEnabled) {
-    ringEmojiTypeId = null;
-    ringEmojiLayoutSize = 0;
-    ringEmojiSelectionKey = null;
-    ringEmojiSelectionDetail = null;
-    calorieTipGoalId = null;
-    calorieTipLayoutSize = 0;
-    calorieTipSelectionKey = null;
-  }
+	const isEnabled = state.settings.showRingEmojis !== false;
+	const layer = $("ring-emoji-layer");
+	const panel = $("ring-emoji-panel");
+	const calorieLayer = $("calorie-ring-emoji-layer");
+	const caloriePanel = $("calorie-tip-panel");
+	if (layer) layer.classList.toggle("hidden", !isEnabled);
+	if (panel) panel.classList.toggle("hidden", !isEnabled);
+	if (calorieLayer) calorieLayer.classList.toggle("hidden", !isEnabled);
+	if (caloriePanel) caloriePanel.classList.toggle("hidden", !isEnabled);
+	if (!isEnabled) {
+		ringEmojiTypeId = null;
+		ringEmojiLayoutSize = 0;
+		ringEmojiSelectionKey = null;
+		ringEmojiSelectionDetail = null;
+		calorieTipGoalId = null;
+		calorieTipLayoutSize = 0;
+		calorieTipSelectionKey = null;
+	}
 }
 
 function startFast() {
-  const type = getTypeById(selectedFastTypeId);
-  const now = Date.now();
-  state.activeFast = {
-    id: `fast_${now}`,
-    typeId: type.id,
-    startTimestamp: now,
-    plannedDurationHours: type.durationHours,
-    endTimestamp: now + type.durationHours * 3600000,
-    status: "active",
-    milestonesHit: [],
-  };
-  state.reminders = { endNotified: false, lastHourlyAt: null };
-  selectedDayKey = formatDateKey(new Date(now));
-  calendarMonth = startOfMonth(new Date(now));
-  void saveState();
-  renderAll();
-  showToast("Fast started");
+	const type = getTypeById(selectedFastTypeId);
+	const now = Date.now();
+	state.activeFast = {
+		id: `fast_${now}`,
+		typeId: type.id,
+		startTimestamp: now,
+		plannedDurationHours: type.durationHours,
+		endTimestamp: now + type.durationHours * 3600000,
+		status: "active",
+		milestonesHit: [],
+	};
+	state.reminders = { endNotified: false, lastHourlyAt: null };
+	selectedDayKey = formatDateKey(new Date(now));
+	calendarMonth = startOfMonth(new Date(now));
+	void saveState();
+	renderAll();
+	showToast("Fast started");
 }
 
 function stopFastAndLog() {
-  const endedFast = state.activeFast;
-  if (!endedFast) return;
-  const now = Date.now();
-  const endTs = now;
-  const durHrs = Math.max(0, (endTs - endedFast.startTimestamp) / 3600000);
+	const endedFast = state.activeFast;
+	if (!endedFast) return;
+	const now = Date.now();
+	const endTs = now;
+	const durHrs = Math.max(0, (endTs - endedFast.startTimestamp) / 3600000);
 
-  state.history.unshift({
-    id: endedFast.id,
-    typeId: endedFast.typeId,
-    startTimestamp: endedFast.startTimestamp,
-    endTimestamp: endTs,
-    durationHours: Math.round(durHrs * 100) / 100,
-  });
+	state.history.unshift({
+		id: endedFast.id,
+		typeId: endedFast.typeId,
+		startTimestamp: endedFast.startTimestamp,
+		endTimestamp: endTs,
+		durationHours: Math.round(durHrs * 100) / 100,
+	});
 
-  state.activeFast = null;
-  state.reminders = { endNotified: false, lastHourlyAt: null };
-  void saveState();
+	state.activeFast = null;
+	state.reminders = { endNotified: false, lastHourlyAt: null };
+	void saveState();
 
-  calendarMonth = startOfMonth(new Date());
-  selectedDayKey = formatDateKey(new Date());
-  renderAll();
-  showToast("Fast logged");
-  openPostFastNoteModal({
-    fastContext: buildFastContextFromFast(endedFast, endTs),
-    dateKey: formatDateKey(new Date(endTs)),
-  });
+	calendarMonth = startOfMonth(new Date());
+	selectedDayKey = formatDateKey(new Date());
+	renderAll();
+	showToast("Fast logged");
+	openPostFastNoteModal({
+		fastContext: buildFastContextFromFast(endedFast, endTs),
+		dateKey: formatDateKey(new Date(endTs)),
+	});
 }
 
 function startTick() {
-  if (tickHandle) clearInterval(tickHandle);
-  tickHandle = setInterval(() => {
-    updateTimer();
-    handleAlerts();
-  }, 1000);
-  updateTimer();
-  renderAlertsPill();
+	if (tickHandle) clearInterval(tickHandle);
+	tickHandle = setInterval(() => {
+		updateTimer();
+		handleAlerts();
+	}, 1000);
+	updateTimer();
+	renderAlertsPill();
 }
 
 function stopTick() {
-  if (!tickHandle) return;
-  clearInterval(tickHandle);
-  tickHandle = null;
+	if (!tickHandle) return;
+	clearInterval(tickHandle);
+	tickHandle = null;
 }
 
 function cycleTimeMode() {
-  const order = ["elapsed", "total", "remaining"];
-  const cur = state.settings.timeDisplayMode || "elapsed";
-  const next = order[(order.indexOf(cur) + 1) % order.length];
-  state.settings.timeDisplayMode = next;
-  void saveState();
-  updateTimer();
+	const order = ["elapsed", "total", "remaining"];
+	const cur = state.settings.timeDisplayMode || "elapsed";
+	const next = order[(order.indexOf(cur) + 1) % order.length];
+	state.settings.timeDisplayMode = next;
+	void saveState();
+	updateTimer();
 }
 
 function ensureRingEmojis() {
-  if (state.settings.showRingEmojis === false) return;
-  const type = getActiveType();
-  const layer = $("ring-emoji-layer");
-  if (!layer || !type) return;
-  const size = layer.clientWidth;
-  const shouldRender =
-    !layer.childElementCount || ringEmojiTypeId !== type.id || ringEmojiLayoutSize !== size;
-  if (shouldRender) {
-    renderRingEmojis(type, size);
-  } else {
-    updateRingEmojiProgress(type);
-  }
+	if (state.settings.showRingEmojis === false) return;
+	const type = getActiveType();
+	const layer = $("ring-emoji-layer");
+	if (!layer || !type) return;
+	const size = layer.clientWidth;
+	const shouldRender =
+		!layer.childElementCount ||
+		ringEmojiTypeId !== type.id ||
+		ringEmojiLayoutSize !== size;
+	if (shouldRender) {
+		renderRingEmojis(type, size);
+	} else {
+		updateRingEmojiProgress(type);
+	}
 }
 
 function renderRingEmojis(type, size) {
-  const layer = $("ring-emoji-layer");
-  const title = $("ring-emoji-title");
-  const detail = $("ring-emoji-detail");
-  if (!layer || !title || !detail) return;
+	const layer = $("ring-emoji-layer");
+	const title = $("ring-emoji-title");
+	const detail = $("ring-emoji-detail");
+	if (!layer || !title || !detail) return;
 
-  ringEmojiTypeId = type.id;
-  ringEmojiLayoutSize = size;
-  layer.innerHTML = "";
+	ringEmojiTypeId = type.id;
+	ringEmojiLayoutSize = size;
+	layer.innerHTML = "";
 
-  const milestones = Array.isArray(type.milestones) ? type.milestones : [];
-  if (!milestones.length || !size) {
-    title.textContent = "Tap an orb to see what’s happening";
-    detail.textContent = "";
-    return;
-  }
+	const milestones = Array.isArray(type.milestones) ? type.milestones : [];
+	if (!milestones.length || !size) {
+		title.textContent = "Tap an orb to see what’s happening";
+		detail.textContent = "";
+		return;
+	}
 
-  const radius = Math.max(size / 2 - 18, 0);
-  const center = size / 2;
+	const radius = Math.max(size / 2 - 18, 0);
+	const center = size / 2;
 
-  milestones.forEach((milestone) => {
-    const angle = (milestone.hour / type.durationHours) * 360 - 90;
-    const rad = angle * (Math.PI / 180);
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "ring-emoji-btn";
-    btn.textContent = milestone.emoji;
-    btn.style.left = `${center + Math.cos(rad) * radius}px`;
-    btn.style.top = `${center + Math.sin(rad) * radius}px`;
-    btn.dataset.hour = String(milestone.hour);
-    btn.dataset.typeId = type.id;
-    btn.addEventListener("click", () => selectRingEmoji(type, milestone));
-    layer.appendChild(btn);
-  });
+	milestones.forEach((milestone) => {
+		const angle = (milestone.hour / type.durationHours) * 360 - 90;
+		const rad = angle * (Math.PI / 180);
+		const btn = document.createElement("button");
+		btn.type = "button";
+		btn.className = "ring-emoji-btn";
+		btn.textContent = milestone.emoji;
+		btn.style.left = `${center + Math.cos(rad) * radius}px`;
+		btn.style.top = `${center + Math.sin(rad) * radius}px`;
+		btn.dataset.hour = String(milestone.hour);
+		btn.dataset.typeId = type.id;
+		btn.addEventListener("click", () => selectRingEmoji(type, milestone));
+		layer.appendChild(btn);
+	});
 
-  const hasSelection = milestones.some((m) => `${type.id}-${m.hour}` === ringEmojiSelectionKey);
-  if (!hasSelection) {
-    ringEmojiSelectionKey = null;
-    ringEmojiSelectionDetail = null;
-  }
-  if (ringEmojiSelectionKey) {
-    const selected = milestones.find((m) => `${type.id}-${m.hour}` === ringEmojiSelectionKey);
-    updateRingEmojiPanel(type, selected);
-  } else {
-    title.textContent = "Tap an orb to see what’s happening";
-    detail.textContent = `${type.label} milestones wrap the ring.`;
-  }
+	const hasSelection = milestones.some(
+		(m) => `${type.id}-${m.hour}` === ringEmojiSelectionKey,
+	);
+	if (!hasSelection) {
+		ringEmojiSelectionKey = null;
+		ringEmojiSelectionDetail = null;
+	}
+	if (ringEmojiSelectionKey) {
+		const selected = milestones.find(
+			(m) => `${type.id}-${m.hour}` === ringEmojiSelectionKey,
+		);
+		updateRingEmojiPanel(type, selected);
+	} else {
+		title.textContent = "Tap an orb to see what’s happening";
+		detail.textContent = `${type.label} milestones wrap the ring.`;
+	}
 
-  updateRingEmojiSelectionStyles();
-  updateRingEmojiProgress(type);
+	updateRingEmojiSelectionStyles();
+	updateRingEmojiProgress(type);
 }
 
 function selectRingEmoji(type, milestone) {
-  ringEmojiSelectionKey = `${type.id}-${milestone.hour}`;
-  ringEmojiSelectionDetail = getRandomMilestoneDetail(milestone.hour) ?? milestone.detail;
-  updateRingEmojiPanel(type, milestone);
-  updateRingEmojiSelectionStyles();
+	ringEmojiSelectionKey = `${type.id}-${milestone.hour}`;
+	ringEmojiSelectionDetail =
+		getRandomMilestoneDetail(milestone.hour) ?? milestone.detail;
+	updateRingEmojiPanel(type, milestone);
+	updateRingEmojiSelectionStyles();
 }
 
 function getRandomMilestoneDetail(hour) {
-  return getHourlyActionDetail(hour, { random: true });
+	return getHourlyActionDetail(hour, { random: true });
 }
 
 function updateRingEmojiPanel(type, milestone) {
-  const title = $("ring-emoji-title");
-  const detail = $("ring-emoji-detail");
-  if (!title || !detail) return;
+	const title = $("ring-emoji-title");
+	const detail = $("ring-emoji-detail");
+	if (!title || !detail) return;
 
-  if (!milestone) {
-    title.textContent = "Tap an orb to see what’s happening";
-    detail.textContent = `${type.label} milestones wrap the ring.`;
-    return;
-  }
+	if (!milestone) {
+		title.textContent = "Tap an orb to see what’s happening";
+		detail.textContent = `${type.label} milestones wrap the ring.`;
+		return;
+	}
 
-  title.textContent = `Hour ${milestone.hour} · ${milestone.label}`;
-  detail.textContent = ringEmojiSelectionDetail ?? milestone.detail;
+	title.textContent = `Hour ${milestone.hour} · ${milestone.label}`;
+	detail.textContent = ringEmojiSelectionDetail ?? milestone.detail;
 }
 
 function updateRingEmojiSelectionStyles() {
-  const layer = $("ring-emoji-layer");
-  if (!layer) return;
-  layer.querySelectorAll(".ring-emoji-btn").forEach((btn) => {
-    const key = `${btn.dataset.typeId}-${btn.dataset.hour}`;
-    if (key === ringEmojiSelectionKey) btn.classList.add("is-selected");
-    else btn.classList.remove("is-selected");
-  });
+	const layer = $("ring-emoji-layer");
+	if (!layer) return;
+	layer.querySelectorAll(".ring-emoji-btn").forEach((btn) => {
+		const key = `${btn.dataset.typeId}-${btn.dataset.hour}`;
+		if (key === ringEmojiSelectionKey) btn.classList.add("is-selected");
+		else btn.classList.remove("is-selected");
+	});
 }
 
 function updateRingEmojiProgress(type) {
-  const layer = $("ring-emoji-layer");
-  if (!layer) return;
-  const elapsedHours = state.activeFast
-    ? Math.max(0, (Date.now() - state.activeFast.startTimestamp) / 3600000)
-    : null;
-  const _milestones = Array.isArray(type?.milestones) ? type.milestones : [];
+	const layer = $("ring-emoji-layer");
+	if (!layer) return;
+	const elapsedHours = state.activeFast
+		? Math.max(0, (Date.now() - state.activeFast.startTimestamp) / 3600000)
+		: null;
+	const _milestones = Array.isArray(type?.milestones) ? type.milestones : [];
 
-  layer.querySelectorAll(".ring-emoji-btn").forEach((btn) => {
-    const hour = Number(btn.dataset.hour);
-    const isActive = elapsedHours !== null && elapsedHours >= hour;
-    const isUpcoming = elapsedHours !== null && elapsedHours < hour;
-    if (isActive) btn.classList.add("is-active");
-    else btn.classList.remove("is-active");
-    if (isUpcoming) btn.classList.add("is-upcoming");
-    else btn.classList.remove("is-upcoming");
-  });
+	layer.querySelectorAll(".ring-emoji-btn").forEach((btn) => {
+		const hour = Number(btn.dataset.hour);
+		const isActive = elapsedHours !== null && elapsedHours >= hour;
+		const isUpcoming = elapsedHours !== null && elapsedHours < hour;
+		if (isActive) btn.classList.add("is-active");
+		else btn.classList.remove("is-active");
+		if (isUpcoming) btn.classList.add("is-upcoming");
+		else btn.classList.remove("is-upcoming");
+	});
 
-  if (ringEmojiSelectionKey) {
-    const selectedButton = layer.querySelector(
-      `[data-type-id="${type.id}"][data-hour="${ringEmojiSelectionKey.split("-")[1]}"]`,
-    );
-    if (!selectedButton || selectedButton.hidden) {
-      ringEmojiSelectionKey = null;
-      ringEmojiSelectionDetail = null;
-      updateRingEmojiPanel(type, null);
-      updateRingEmojiSelectionStyles();
-    }
-  }
+	if (ringEmojiSelectionKey) {
+		const selectedButton = layer.querySelector(
+			`[data-type-id="${type.id}"][data-hour="${ringEmojiSelectionKey.split("-")[1]}"]`,
+		);
+		if (!selectedButton || selectedButton.hidden) {
+			ringEmojiSelectionKey = null;
+			ringEmojiSelectionDetail = null;
+			updateRingEmojiPanel(type, null);
+			updateRingEmojiSelectionStyles();
+		}
+	}
 }
 
 function updateTimer() {
-  const ring = $("progress-ring");
-  const main = $("timer-main");
-  const mode = $("timer-mode");
-  const sub = $("timer-sub");
-  const header = $("header-subtitle");
-  const status = $("timer-status");
-  const typePill = $("timer-type");
+	const ring = $("progress-ring");
+	const main = $("timer-main");
+	const mode = $("timer-mode");
+	const sub = $("timer-sub");
+	const header = $("header-subtitle");
+	const status = $("timer-status");
+	const typePill = $("timer-type");
 
-  ring.setAttribute("stroke-dasharray", String(RING_CIRC));
-  applyRingEmojiVisibility();
-  ensureRingEmojis();
+	ring.setAttribute("stroke-dasharray", String(RING_CIRC));
+	applyRingEmojiVisibility();
+	ensureRingEmojis();
 
-  const displayMode = state.settings.timeDisplayMode || "elapsed";
-  const type = getActiveType();
-  typePill.textContent = type ? `${type.label} fast` : "No fast selected";
+	const displayMode = state.settings.timeDisplayMode || "elapsed";
+	const type = getActiveType();
+	typePill.textContent = type ? `${type.label} fast` : "No fast selected";
 
-  highlightSelectedFastType();
+	highlightSelectedFastType();
 
-  if (!state.activeFast) {
-    status.textContent = "IDLE";
-    header.textContent = "No active fast";
-    ring.setAttribute("stroke-dashoffset", String(RING_CIRC));
-    renderTimerMetaIdle();
+	if (!state.activeFast) {
+		status.textContent = "IDLE";
+		header.textContent = "No active fast";
+		ring.setAttribute("stroke-dashoffset", String(RING_CIRC));
+		renderTimerMetaIdle();
 
-    const plannedMs = (type?.durationHours || 0) * 3600000;
-    const totalStr = formatHMS(plannedMs);
+		const plannedMs = (type?.durationHours || 0) * 3600000;
+		const totalStr = formatHMS(plannedMs);
 
-    if (displayMode === "elapsed") {
-      mode.textContent = "Time Fasted";
-      main.textContent = "00:00:00";
-      sub.textContent = "Tap time to change view";
-    } else if (displayMode === "total") {
-      mode.textContent = "Total Fast";
-      main.textContent = totalStr;
-      sub.textContent = "Tap time to change view";
-    } else {
-      mode.textContent = "Time Remaining";
-      main.textContent = totalStr;
-      sub.textContent = "Tap time to change view";
-    }
+		if (displayMode === "elapsed") {
+			mode.textContent = "Time Fasted";
+			main.textContent = "00:00:00";
+			sub.textContent = "Tap time to change view";
+		} else if (displayMode === "total") {
+			mode.textContent = "Total Fast";
+			main.textContent = totalStr;
+			sub.textContent = "Tap time to change view";
+		} else {
+			mode.textContent = "Time Remaining";
+			main.textContent = totalStr;
+			sub.textContent = "Tap time to change view";
+		}
 
-    $("start-fast-btn").classList.remove("hidden");
-    $("stop-fast-btn").classList.add("hidden");
-    $("meta-start-btn").disabled = true;
-    renderFastButton();
-    return;
-  }
+		$("start-fast-btn").classList.remove("hidden");
+		$("stop-fast-btn").classList.add("hidden");
+		$("meta-start-btn").disabled = true;
+		renderFastButton();
+		return;
+	}
 
-  trackMilestoneProgress(type);
+	trackMilestoneProgress(type);
 
-  const af = state.activeFast;
-  const now = Date.now();
-  const start = af.startTimestamp;
-  const end = af.endTimestamp;
+	const af = state.activeFast;
+	const now = Date.now();
+	const start = af.startTimestamp;
+	const end = af.endTimestamp;
 
-  const total = Math.max(1, end - start);
-  const elapsed = Math.max(0, now - start);
-  const remaining = end - now;
+	const total = Math.max(1, end - start);
+	const elapsed = Math.max(0, now - start);
+	const remaining = end - now;
 
-  const progress = Math.min(elapsed / total, 1);
-  ring.setAttribute("stroke-dashoffset", String(RING_CIRC * (1 - progress)));
+	const progress = Math.min(elapsed / total, 1);
+	ring.setAttribute("stroke-dashoffset", String(RING_CIRC * (1 - progress)));
 
-  $("meta-start-btn").disabled = false;
-  $("meta-start-btn").textContent = formatDateTime(new Date(start));
-  $("meta-end").textContent = formatDateTime(new Date(end));
+	$("meta-start-btn").disabled = false;
+	$("meta-start-btn").textContent = formatDateTime(new Date(start));
+	$("meta-end").textContent = formatDateTime(new Date(end));
 
-  $("start-fast-btn").classList.add("hidden");
-  $("stop-fast-btn").classList.remove("hidden");
+	$("start-fast-btn").classList.add("hidden");
+	$("stop-fast-btn").classList.remove("hidden");
 
-  if (now < end) {
-    status.textContent = "FASTING";
-    header.textContent = `Ends ${formatTimeShort(new Date(end))}`;
-  } else {
-    status.textContent = "COMPLETE";
-    header.textContent = "Fast complete";
-  }
+	if (now < end) {
+		status.textContent = "FASTING";
+		header.textContent = `Ends ${formatTimeShort(new Date(end))}`;
+	} else {
+		status.textContent = "COMPLETE";
+		header.textContent = "Fast complete";
+	}
 
-  if (displayMode === "elapsed") {
-    mode.textContent = "Time Fasted";
-    main.textContent = formatHMS(elapsed);
-    sub.textContent = "Tap time to change view";
-  } else if (displayMode === "total") {
-    mode.textContent = "Total Fast";
-    main.textContent = formatHMS(total);
-    sub.textContent = "Tap time to change view";
-  } else {
-    if (remaining >= 0) {
-      mode.textContent = "Time Remaining";
-      main.textContent = formatHMS(remaining);
-      sub.textContent = "Tap time to change view";
-    } else {
-      mode.textContent = "Extra Time Fasted";
-      main.textContent = formatHMS(-remaining);
-      sub.textContent = "Tap time to change view";
-    }
-  }
-  renderFastButton();
+	if (displayMode === "elapsed") {
+		mode.textContent = "Time Fasted";
+		main.textContent = formatHMS(elapsed);
+		sub.textContent = "Tap time to change view";
+	} else if (displayMode === "total") {
+		mode.textContent = "Total Fast";
+		main.textContent = formatHMS(total);
+		sub.textContent = "Tap time to change view";
+	} else {
+		if (remaining >= 0) {
+			mode.textContent = "Time Remaining";
+			main.textContent = formatHMS(remaining);
+			sub.textContent = "Tap time to change view";
+		} else {
+			mode.textContent = "Extra Time Fasted";
+			main.textContent = formatHMS(-remaining);
+			sub.textContent = "Tap time to change view";
+		}
+	}
+	renderFastButton();
 }
 
 function trackMilestoneProgress(type) {
-  if (!state.activeFast || !type) return;
-  const milestones = Array.isArray(type.milestones) ? type.milestones : [];
-  if (!milestones.length) return;
-  if (!Array.isArray(state.activeFast.milestonesHit)) {
-    state.activeFast.milestonesHit = [];
-  }
-  if (!state.milestoneTally || typeof state.milestoneTally !== "object") {
-    state.milestoneTally = {};
-  }
-  const elapsedHours = Math.max(0, (Date.now() - state.activeFast.startTimestamp) / 3600000);
-  let updated = false;
-  milestones.forEach((milestone) => {
-    if (elapsedHours < milestone.hour) return;
-    if (state.activeFast.milestonesHit.includes(milestone.hour)) return;
-    state.activeFast.milestonesHit.push(milestone.hour);
-    const key = String(milestone.hour);
-    state.milestoneTally[key] = (state.milestoneTally[key] || 0) + 1;
-    updated = true;
-  });
-  if (updated) void saveState();
+	if (!state.activeFast || !type) return;
+	const milestones = Array.isArray(type.milestones) ? type.milestones : [];
+	if (!milestones.length) return;
+	if (!Array.isArray(state.activeFast.milestonesHit)) {
+		state.activeFast.milestonesHit = [];
+	}
+	if (!state.milestoneTally || typeof state.milestoneTally !== "object") {
+		state.milestoneTally = {};
+	}
+	const elapsedHours = Math.max(
+		0,
+		(Date.now() - state.activeFast.startTimestamp) / 3600000,
+	);
+	let updated = false;
+	milestones.forEach((milestone) => {
+		if (elapsedHours < milestone.hour) return;
+		if (state.activeFast.milestonesHit.includes(milestone.hour)) return;
+		state.activeFast.milestonesHit.push(milestone.hour);
+		const key = String(milestone.hour);
+		state.milestoneTally[key] = (state.milestoneTally[key] || 0) + 1;
+		updated = true;
+	});
+	if (updated) void saveState();
 }
 
 function renderTimerMetaIdle() {
-  const _type = getTypeById(selectedFastTypeId);
-  $("meta-start-btn").textContent = "—";
-  $("meta-end").textContent = "—";
+	const _type = getTypeById(selectedFastTypeId);
+	$("meta-start-btn").textContent = "—";
+	$("meta-end").textContent = "—";
 }
 
 async function onAlertsButton() {
-  if (!("Notification" in window)) {
-    showToast("Notifications not supported");
-    return;
-  }
-  if (Notification.permission === "denied") {
-    showToast("Alerts blocked in browser settings");
-    return;
-  }
+	if (!("Notification" in window)) {
+		showToast("Notifications not supported");
+		return;
+	}
+	if (Notification.permission === "denied") {
+		showToast("Alerts blocked in browser settings");
+		return;
+	}
 
-  if (Notification.permission === "default") {
-    const res = await Notification.requestPermission();
-    if (res !== "granted") {
-      showToast("Permission not granted");
-      renderAlertsPill();
-      return;
-    }
-    state.settings.alertsEnabled = true;
-    void saveState();
-    renderAlertsPill();
-    await sendNotification("Alerts enabled", "You’ll be notified when your fast ends.");
-    showToast("Alerts enabled");
-    return;
-  }
+	if (Notification.permission === "default") {
+		const res = await Notification.requestPermission();
+		if (res !== "granted") {
+			showToast("Permission not granted");
+			renderAlertsPill();
+			return;
+		}
+		state.settings.alertsEnabled = true;
+		void saveState();
+		renderAlertsPill();
+		await sendNotification(
+			"Alerts enabled",
+			"You’ll be notified when your fast ends.",
+		);
+		showToast("Alerts enabled");
+		return;
+	}
 
-  state.settings.alertsEnabled = !state.settings.alertsEnabled;
-  void saveState();
-  renderAlertsPill();
+	state.settings.alertsEnabled = !state.settings.alertsEnabled;
+	void saveState();
+	renderAlertsPill();
 
-  if (state.settings.alertsEnabled) {
-    await sendNotification("Alerts enabled", "You’ll be notified when your fast ends.");
-    showToast("Alerts enabled");
-  } else {
-    showToast("Alerts disabled");
-  }
+	if (state.settings.alertsEnabled) {
+		await sendNotification(
+			"Alerts enabled",
+			"You’ll be notified when your fast ends.",
+		);
+		showToast("Alerts enabled");
+	} else {
+		showToast("Alerts disabled");
+	}
 }
 
 function renderAlertsPill() {
-  const dot = $("alerts-dot");
-  const text = $("alerts-text");
-  const dotBaseClasses = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full";
-  const textBaseClasses = "text-xs md:text-[11px]";
+	const dot = $("alerts-dot");
+	const text = $("alerts-text");
+	const dotBaseClasses = "w-2 h-2 md:w-1.5 md:h-1.5 rounded-full";
+	const textBaseClasses = "text-xs md:text-[11px]";
 
-  if (!("Notification" in window)) {
-    dot.className = `${dotBaseClasses} bg-slate-600`;
-    text.textContent = "Off";
-    text.className = `${textBaseClasses} text-slate-600`;
-    return;
-  }
-  if (Notification.permission === "denied") {
-    dot.className = `${dotBaseClasses} bg-red-500`;
-    text.textContent = "Off";
-    text.className = `${textBaseClasses} text-red-500`;
-    return;
-  }
-  if (Notification.permission === "default") {
-    dot.className = `${dotBaseClasses} bg-slate-600`;
-    text.textContent = "Off";
-    text.className = `${textBaseClasses} text-slate-600`;
-    return;
-  }
-  if (state.settings.alertsEnabled) {
-    dot.className = `${dotBaseClasses} bg-emerald-400`;
-    text.textContent = "On";
-    text.className = `${textBaseClasses} text-emerald-400`;
-  } else {
-    dot.className = `${dotBaseClasses} bg-slate-600`;
-    text.textContent = "Off";
-    text.className = `${textBaseClasses} text-slate-600`;
-  }
+	if (!("Notification" in window)) {
+		dot.className = `${dotBaseClasses} bg-slate-600`;
+		text.textContent = "Off";
+		text.className = `${textBaseClasses} text-slate-600`;
+		return;
+	}
+	if (Notification.permission === "denied") {
+		dot.className = `${dotBaseClasses} bg-red-500`;
+		text.textContent = "Off";
+		text.className = `${textBaseClasses} text-red-500`;
+		return;
+	}
+	if (Notification.permission === "default") {
+		dot.className = `${dotBaseClasses} bg-slate-600`;
+		text.textContent = "Off";
+		text.className = `${textBaseClasses} text-slate-600`;
+		return;
+	}
+	if (state.settings.alertsEnabled) {
+		dot.className = `${dotBaseClasses} bg-emerald-400`;
+		text.textContent = "On";
+		text.className = `${textBaseClasses} text-emerald-400`;
+	} else {
+		dot.className = `${dotBaseClasses} bg-slate-600`;
+		text.textContent = "Off";
+		text.className = `${textBaseClasses} text-slate-600`;
+	}
 }
 
 async function sendNotification(title, body) {
-  if (!("Notification" in window)) return;
-  if (Notification.permission !== "granted") return;
+	if (!("Notification" in window)) return;
+	if (Notification.permission !== "granted") return;
 
-  try {
-    if (swReg?.showNotification) {
-      await swReg.showNotification(title, {
-        body,
-        icon: "assets/favicon/android-chrome-192x192.png",
-        badge: "assets/favicon/android-chrome-192x192.png",
-        tag: "fasting-tracker",
-      });
-      return;
-    }
-  } catch {}
+	try {
+		if (swReg?.showNotification) {
+			await swReg.showNotification(title, {
+				body,
+				icon: "assets/favicon/android-chrome-192x192.png",
+				badge: "assets/favicon/android-chrome-192x192.png",
+				tag: "fasting-tracker",
+			});
+			return;
+		}
+	} catch {}
 
-  try {
-    new Notification(title, { body });
-  } catch {}
+	try {
+		new Notification(title, { body });
+	} catch {}
 }
 
 function handleAlerts() {
-  if (!state.activeFast) return;
-  if (!state.settings.alertsEnabled) return;
-  if (!("Notification" in window)) return;
-  if (Notification.permission !== "granted") return;
+	if (!state.activeFast) return;
+	if (!state.settings.alertsEnabled) return;
+	if (!("Notification" in window)) return;
+	if (Notification.permission !== "granted") return;
 
-  const now = Date.now();
-  const af = state.activeFast;
-  const endTs = af.endTimestamp;
+	const now = Date.now();
+	const af = state.activeFast;
+	const endTs = af.endTimestamp;
 
-  if (!state.reminders.endNotified && now >= endTs) {
-    if (state.settings.notifyOnEnd)
-      sendNotification("Fast complete", "You reached your fasting goal.");
-    state.reminders.endNotified = true;
-    state.reminders.lastHourlyAt = now;
-    void saveState();
-    return;
-  }
+	if (!state.reminders.endNotified && now >= endTs) {
+		if (state.settings.notifyOnEnd)
+			sendNotification("Fast complete", "You reached your fasting goal.");
+		state.reminders.endNotified = true;
+		state.reminders.lastHourlyAt = now;
+		void saveState();
+		return;
+	}
 
-  if (state.reminders.endNotified && state.settings.hourlyReminders) {
-    const last = state.reminders.lastHourlyAt || endTs;
-    if (now - last >= 3600000) {
-      sendNotification("Extra hour fasted", "You’re past your target. Break your fast when ready.");
-      state.reminders.lastHourlyAt = now;
-      void saveState();
-    }
-  }
+	if (state.reminders.endNotified && state.settings.hourlyReminders) {
+		const last = state.reminders.lastHourlyAt || endTs;
+		if (now - last >= 3600000) {
+			sendNotification(
+				"Extra hour fasted",
+				"You’re past your target. Break your fast when ready.",
+			);
+			state.reminders.lastHourlyAt = now;
+			void saveState();
+		}
+	}
 }
 
 function openEditStartModal() {
-  const start = new Date(state.activeFast.startTimestamp);
-  $("edit-start-input").value = toLocalInputValue(start);
-  $("edit-start-modal").classList.remove("hidden");
+	const start = new Date(state.activeFast.startTimestamp);
+	$("edit-start-input").value = toLocalInputValue(start);
+	$("edit-start-modal").classList.remove("hidden");
 }
 
 function closeEditStartModal() {
-  $("edit-start-modal").classList.add("hidden");
+	$("edit-start-modal").classList.add("hidden");
 }
 
 function saveEditedStartTime() {
-  if (!state.activeFast) return;
-  const v = $("edit-start-input").value;
-  if (!v) {
-    showToast("Invalid time");
-    return;
-  }
-  const d = new Date(v);
-  if (!Number.isFinite(d.getTime())) {
-    showToast("Invalid time");
-    return;
-  }
+	if (!state.activeFast) return;
+	const v = $("edit-start-input").value;
+	if (!v) {
+		showToast("Invalid time");
+		return;
+	}
+	const d = new Date(v);
+	if (!Number.isFinite(d.getTime())) {
+		showToast("Invalid time");
+		return;
+	}
 
-  const af = state.activeFast;
-  const plannedMs = (af.plannedDurationHours || getActiveType().durationHours || 0) * 3600000;
-  af.startTimestamp = d.getTime();
-  af.endTimestamp = af.startTimestamp + plannedMs;
-  af.status = "active";
-  state.reminders = { endNotified: false, lastHourlyAt: null };
-  selectedDayKey = formatDateKey(new Date(af.startTimestamp));
-  calendarMonth = startOfMonth(new Date(af.startTimestamp));
+	const af = state.activeFast;
+	const plannedMs =
+		(af.plannedDurationHours || getActiveType().durationHours || 0) * 3600000;
+	af.startTimestamp = d.getTime();
+	af.endTimestamp = af.startTimestamp + plannedMs;
+	af.status = "active";
+	state.reminders = { endNotified: false, lastHourlyAt: null };
+	selectedDayKey = formatDateKey(new Date(af.startTimestamp));
+	calendarMonth = startOfMonth(new Date(af.startTimestamp));
 
-  void saveState();
-  closeEditStartModal();
-  updateTimer();
-  renderCalendar();
-  renderDayDetails();
-  showToast("Start time updated");
+	void saveState();
+	closeEditStartModal();
+	updateTimer();
+	renderCalendar();
+	renderDayDetails();
+	showToast("Start time updated");
 }
 
 function openEditHistoryModal(entry) {
-  if (!entry || entry.isActive) return;
-  editingHistoryId = entry.id;
-  $("edit-history-start").value = toLocalInputValue(new Date(entry.startTimestamp));
-  $("edit-history-end").value = toLocalInputValue(new Date(entry.endTimestamp));
-  $("edit-history-modal").classList.remove("hidden");
+	if (!entry || entry.isActive) return;
+	editingHistoryId = entry.id;
+	$("edit-history-start").value = toLocalInputValue(
+		new Date(entry.startTimestamp),
+	);
+	$("edit-history-end").value = toLocalInputValue(new Date(entry.endTimestamp));
+	$("edit-history-modal").classList.remove("hidden");
 }
 
 function closeEditHistoryModal() {
-  $("edit-history-modal").classList.add("hidden");
-  editingHistoryId = null;
+	$("edit-history-modal").classList.add("hidden");
+	editingHistoryId = null;
 }
 
 function saveEditedHistoryTimes() {
-  if (!editingHistoryId) return;
-  const entry = state.history.find((item) => item.id === editingHistoryId);
-  if (!entry) {
-    closeEditHistoryModal();
-    return;
-  }
+	if (!editingHistoryId) return;
+	const entry = state.history.find((item) => item.id === editingHistoryId);
+	if (!entry) {
+		closeEditHistoryModal();
+		return;
+	}
 
-  const startValue = $("edit-history-start").value;
-  const endValue = $("edit-history-end").value;
-  if (!startValue || !endValue) {
-    showToast("Invalid time");
-    return;
-  }
+	const startValue = $("edit-history-start").value;
+	const endValue = $("edit-history-end").value;
+	if (!startValue || !endValue) {
+		showToast("Invalid time");
+		return;
+	}
 
-  const startDate = new Date(startValue);
-  const endDate = new Date(endValue);
-  if (!Number.isFinite(startDate.getTime()) || !Number.isFinite(endDate.getTime())) {
-    showToast("Invalid time");
-    return;
-  }
-  if (endDate <= startDate) {
-    showToast("End time must be after start time");
-    return;
-  }
+	const startDate = new Date(startValue);
+	const endDate = new Date(endValue);
+	if (
+		!Number.isFinite(startDate.getTime()) ||
+		!Number.isFinite(endDate.getTime())
+	) {
+		showToast("Invalid time");
+		return;
+	}
+	if (endDate <= startDate) {
+		showToast("End time must be after start time");
+		return;
+	}
 
-  entry.startTimestamp = startDate.getTime();
-  entry.endTimestamp = endDate.getTime();
-  const durationHours = (entry.endTimestamp - entry.startTimestamp) / 3600000;
-  entry.durationHours = Math.round(durationHours * 100) / 100;
+	entry.startTimestamp = startDate.getTime();
+	entry.endTimestamp = endDate.getTime();
+	const durationHours = (entry.endTimestamp - entry.startTimestamp) / 3600000;
+	entry.durationHours = Math.round(durationHours * 100) / 100;
 
-  selectedDayKey = formatDateKey(new Date(entry.startTimestamp));
-  calendarMonth = startOfMonth(new Date(entry.startTimestamp));
+	selectedDayKey = formatDateKey(new Date(entry.startTimestamp));
+	calendarMonth = startOfMonth(new Date(entry.startTimestamp));
 
-  void saveState();
-  closeEditHistoryModal();
-  renderCalendar();
-  renderDayDetails();
-  renderRecentFasts();
-  showToast("Fast updated");
+	void saveState();
+	closeEditHistoryModal();
+	renderCalendar();
+	renderDayDetails();
+	renderRecentFasts();
+	showToast("Fast updated");
 }
 
 function deleteEditedHistoryEntry() {
-  if (!editingHistoryId) return;
-  deleteHistoryEntry(editingHistoryId);
+	if (!editingHistoryId) return;
+	deleteHistoryEntry(editingHistoryId);
 }
 
 function deleteHistoryEntry(entryId) {
-  if (!entryId) return;
-  const entry = state.history.find((item) => item.id === entryId);
-  if (!entry) return;
-  if (!confirm("Delete this fast? This cannot be undone.")) return;
+	if (!entryId) return;
+	const entry = state.history.find((item) => item.id === entryId);
+	if (!entry) return;
+	if (!confirm("Delete this fast? This cannot be undone.")) return;
 
-  state.history = state.history.filter((item) => item.id !== entryId);
-  if (editingHistoryId === entryId) closeEditHistoryModal();
-  void saveState();
-  renderCalendar();
-  renderDayDetails();
-  renderRecentFasts();
-  showToast("Fast deleted");
+	state.history = state.history.filter((item) => item.id !== entryId);
+	if (editingHistoryId === entryId) closeEditHistoryModal();
+	void saveState();
+	renderCalendar();
+	renderDayDetails();
+	renderRecentFasts();
+	showToast("Fast deleted");
 }
 
 function showToast(msg) {
-  const t = $("toast");
-  t.textContent = msg;
-  t.classList.remove("hidden");
-  clearTimeout(toastHandle);
-  toastHandle = setTimeout(() => t.classList.add("hidden"), 2200);
+	const t = $("toast");
+	t.textContent = msg;
+	t.classList.remove("hidden");
+	clearTimeout(toastHandle);
+	toastHandle = setTimeout(() => t.classList.add("hidden"), 2200);
 }
 
 function exportCSV() {
-  const rows = [];
-  rows.push(["id", "typeId", "typeLabel", "startISO", "endISO", "durationHours"].join(","));
-  for (const e of state.history) {
-    const type = getTypeById(e.typeId);
-    const startISO = new Date(e.startTimestamp).toISOString();
-    const endISO = new Date(e.endTimestamp).toISOString();
-    const duration =
-      (typeof e.durationHours === "number" ? e.durationHours : Number(e.durationHours)) || 0;
-    rows.push(
-      [
-        csvCell(e.id),
-        csvCell(e.typeId),
-        csvCell(type?.label || ""),
-        csvCell(startISO),
-        csvCell(endISO),
-        csvCell(duration.toFixed(2)),
-      ].join(","),
-    );
-  }
-  const csv = rows.join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "history.csv";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-  showToast("Exported CSV");
+	const rows = [];
+	rows.push(
+		["id", "typeId", "typeLabel", "startISO", "endISO", "durationHours"].join(
+			",",
+		),
+	);
+	for (const e of state.history) {
+		const type = getTypeById(e.typeId);
+		const startISO = new Date(e.startTimestamp).toISOString();
+		const endISO = new Date(e.endTimestamp).toISOString();
+		const duration =
+			(typeof e.durationHours === "number"
+				? e.durationHours
+				: Number(e.durationHours)) || 0;
+		rows.push(
+			[
+				csvCell(e.id),
+				csvCell(e.typeId),
+				csvCell(type?.label || ""),
+				csvCell(startISO),
+				csvCell(endISO),
+				csvCell(duration.toFixed(2)),
+			].join(","),
+		);
+	}
+	const csv = rows.join("\n");
+	const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement("a");
+	a.href = url;
+	a.download = "history.csv";
+	document.body.appendChild(a);
+	a.click();
+	a.remove();
+	URL.revokeObjectURL(url);
+	showToast("Exported CSV");
 }
 
 function csvCell(v) {
-  const s = String(v ?? "");
-  if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
+	const s = String(v ?? "");
+	if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+	return s;
 }
 
 function clearAllData() {
-  if (!confirm("Clear all fasting history and active fast?")) return;
-  state = clone(defaultState);
-  selectedFastTypeId = state.settings.defaultFastTypeId;
-  pendingTypeId = null;
-  void saveState();
-  renderAll();
-  showToast("Cleared");
+	if (!confirm("Clear all fasting history and active fast?")) return;
+	state = clone(defaultState);
+	selectedFastTypeId = state.settings.defaultFastTypeId;
+	pendingTypeId = null;
+	void saveState();
+	renderAll();
+	showToast("Cleared");
 }
 
 function initCalendar() {
-  calendarMonth = startOfMonth(new Date());
-  selectedDayKey = formatDateKey(new Date());
+	calendarMonth = startOfMonth(new Date());
+	selectedDayKey = formatDateKey(new Date());
 }
 
 function renderCalendar() {
-  const label = $("calendar-label");
-  const grid = $("calendar-grid");
-  label.textContent = calendarMonth.toLocaleDateString(undefined, {
-    month: "long",
-    year: "numeric",
-  });
-  grid.innerHTML = "";
+	const label = $("calendar-label");
+	const grid = $("calendar-grid");
+	label.textContent = calendarMonth.toLocaleDateString(undefined, {
+		month: "long",
+		year: "numeric",
+	});
+	grid.innerHTML = "";
 
-  const first = startOfMonth(calendarMonth);
-  const startWeekday = first.getDay();
-  const daysInMonth = getDaysInMonth(calendarMonth);
-  const prevMonth = addMonths(calendarMonth, -1);
-  const daysInPrev = getDaysInMonth(prevMonth);
+	const first = startOfMonth(calendarMonth);
+	const startWeekday = first.getDay();
+	const daysInMonth = getDaysInMonth(calendarMonth);
+	const prevMonth = addMonths(calendarMonth, -1);
+	const daysInPrev = getDaysInMonth(prevMonth);
 
-  const dayMap = buildDayFastMap();
-  const todayKey = formatDateKey(new Date());
+	const dayMap = buildDayFastMap();
+	const todayKey = formatDateKey(new Date());
 
-  for (let i = 0; i < 42; i++) {
-    const cell = document.createElement("button");
-    cell.type = "button";
-    cell.className =
-      "calendar-day aspect-square flex flex-col items-center justify-center text-[12px] md:text-[11px]";
+	for (let i = 0; i < 42; i++) {
+		const cell = document.createElement("button");
+		cell.type = "button";
+		cell.className =
+			"calendar-day aspect-square flex flex-col items-center justify-center text-[12px] md:text-[11px]";
 
-    let dayNum,
-      date,
-      isCurrent = false;
+		let dayNum,
+			date,
+			isCurrent = false;
 
-    if (i < startWeekday) {
-      dayNum = daysInPrev - startWeekday + i + 1;
-      date = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), dayNum);
-      cell.classList.add("calendar-day--muted");
-    } else if (i >= startWeekday + daysInMonth) {
-      dayNum = i - startWeekday - daysInMonth + 1;
-      const nextMonth = addMonths(calendarMonth, 1);
-      date = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), dayNum);
-      cell.classList.add("calendar-day--muted");
-    } else {
-      dayNum = i - startWeekday + 1;
-      date = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), dayNum);
-      isCurrent = true;
-      cell.classList.add("calendar-day--current");
-    }
+		if (i < startWeekday) {
+			dayNum = daysInPrev - startWeekday + i + 1;
+			date = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), dayNum);
+			cell.classList.add("calendar-day--muted");
+		} else if (i >= startWeekday + daysInMonth) {
+			dayNum = i - startWeekday - daysInMonth + 1;
+			const nextMonth = addMonths(calendarMonth, 1);
+			date = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), dayNum);
+			cell.classList.add("calendar-day--muted");
+		} else {
+			dayNum = i - startWeekday + 1;
+			date = new Date(
+				calendarMonth.getFullYear(),
+				calendarMonth.getMonth(),
+				dayNum,
+			);
+			isCurrent = true;
+			cell.classList.add("calendar-day--current");
+		}
 
-    const key = formatDateKey(date);
-    const data = dayMap[key];
-    const hasFast = !!data;
-    const isSelected = key === selectedDayKey;
-    const isToday = key === todayKey;
+		const key = formatDateKey(date);
+		const data = dayMap[key];
+		const hasFast = !!data;
+		const isSelected = key === selectedDayKey;
+		const isToday = key === todayKey;
 
-    if (isSelected) cell.classList.add("calendar-day--selected");
-    else if (hasFast) cell.classList.add("calendar-day--has-fast");
-    else cell.classList.add("calendar-day--empty");
+		if (isSelected) cell.classList.add("calendar-day--selected");
+		else if (hasFast) cell.classList.add("calendar-day--has-fast");
+		else cell.classList.add("calendar-day--empty");
 
-    if (isToday && isCurrent) {
-      const dot = document.createElement("span");
-      dot.className = "calendar-day-dot w-2 h-2 md:w-1.5 md:h-1.5 rounded-full mb-0.5";
-      cell.appendChild(dot);
-    }
+		if (isToday && isCurrent) {
+			const dot = document.createElement("span");
+			dot.className =
+				"calendar-day-dot w-2 h-2 md:w-1.5 md:h-1.5 rounded-full mb-0.5";
+			cell.appendChild(dot);
+		}
 
-    const dspan = document.createElement("span");
-    dspan.textContent = dayNum;
-    cell.appendChild(dspan);
+		const dspan = document.createElement("span");
+		dspan.textContent = dayNum;
+		cell.appendChild(dspan);
 
-    if (hasFast) {
-      const tiny = document.createElement("span");
-      tiny.className = "calendar-day-hours mt-0.5 text-[10px] md:text-[9px]";
-      tiny.textContent = `${Math.round(data.totalHours)}h`;
-      cell.appendChild(tiny);
-    }
+		if (hasFast) {
+			const tiny = document.createElement("span");
+			tiny.className = "calendar-day-hours mt-0.5 text-[10px] md:text-[9px]";
+			tiny.textContent = `${Math.round(data.totalHours)}h`;
+			cell.appendChild(tiny);
+		}
 
-    cell.addEventListener("click", () => {
-      selectedDayKey = key;
-      renderCalendar();
-      renderDayDetails();
-      renderNotes();
-    });
+		cell.addEventListener("click", () => {
+			selectedDayKey = key;
+			renderCalendar();
+			renderDayDetails();
+			renderNotes();
+		});
 
-    grid.appendChild(cell);
-  }
+		grid.appendChild(cell);
+	}
 }
 
 function buildDayFastMap({ includeActive = false } = {}) {
-  const map = {};
+	const map = {};
 
-  const addEntryForDay = (entry, startTs, endTs, dayKey) => {
-    if (!map[dayKey]) map[dayKey] = { entries: [], totalHours: 0 };
-    const durationHours = computeDurationHours(startTs, endTs) ?? 0;
-    if (!durationHours) return;
-    map[dayKey].entries.push({
-      ...entry,
-      durationHours,
-      displayStartTimestamp: startTs,
-      displayEndTimestamp: endTs,
-      sourceEntry: entry,
-    });
-    map[dayKey].totalHours += durationHours;
-  };
+	const addEntryForDay = (entry, startTs, endTs, dayKey) => {
+		if (!map[dayKey]) map[dayKey] = { entries: [], totalHours: 0 };
+		const durationHours = computeDurationHours(startTs, endTs) ?? 0;
+		if (!durationHours) return;
+		map[dayKey].entries.push({
+			...entry,
+			durationHours,
+			displayStartTimestamp: startTs,
+			displayEndTimestamp: endTs,
+			sourceEntry: entry,
+		});
+		map[dayKey].totalHours += durationHours;
+	};
 
-  const addEntryAcrossDays = (entry, startTs, endTs) => {
-    if (!Number.isFinite(startTs) || !Number.isFinite(endTs) || endTs <= startTs) return;
-    let cursor = new Date(startTs);
-    cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
-    const endDay = new Date(endTs);
-    const endDayStart = new Date(endDay.getFullYear(), endDay.getMonth(), endDay.getDate());
+	const addEntryAcrossDays = (entry, startTs, endTs) => {
+		if (
+			!Number.isFinite(startTs) ||
+			!Number.isFinite(endTs) ||
+			endTs <= startTs
+		)
+			return;
+		let cursor = new Date(startTs);
+		cursor = new Date(
+			cursor.getFullYear(),
+			cursor.getMonth(),
+			cursor.getDate(),
+		);
+		const endDay = new Date(endTs);
+		const endDayStart = new Date(
+			endDay.getFullYear(),
+			endDay.getMonth(),
+			endDay.getDate(),
+		);
 
-    while (cursor <= endDayStart) {
-      const dayStart = new Date(cursor);
-      const dayEnd = new Date(dayStart);
-      dayEnd.setDate(dayEnd.getDate() + 1);
-      const displayStart = Math.max(startTs, dayStart.getTime());
-      const displayEnd = Math.min(endTs, dayEnd.getTime());
-      const dayKey = formatDateKey(cursor);
-      addEntryForDay(entry, displayStart, displayEnd, dayKey);
-      cursor.setDate(cursor.getDate() + 1);
-    }
-  };
+		while (cursor <= endDayStart) {
+			const dayStart = new Date(cursor);
+			const dayEnd = new Date(dayStart);
+			dayEnd.setDate(dayEnd.getDate() + 1);
+			const displayStart = Math.max(startTs, dayStart.getTime());
+			const displayEnd = Math.min(endTs, dayEnd.getTime());
+			const dayKey = formatDateKey(cursor);
+			addEntryForDay(entry, displayStart, displayEnd, dayKey);
+			cursor.setDate(cursor.getDate() + 1);
+		}
+	};
 
-  state.history.forEach((e) => {
-    addEntryAcrossDays(e, e.startTimestamp, e.endTimestamp);
-  });
+	state.history.forEach((e) => {
+		addEntryAcrossDays(e, e.startTimestamp, e.endTimestamp);
+	});
 
-  if (includeActive && state.activeFast) {
-    const af = state.activeFast;
-    const endTs = Date.now();
-    addEntryAcrossDays({ ...af, isActive: true }, af.startTimestamp, endTs);
-  }
+	if (includeActive && state.activeFast) {
+		const af = state.activeFast;
+		const endTs = Date.now();
+		addEntryAcrossDays({ ...af, isActive: true }, af.startTimestamp, endTs);
+	}
 
-  return map;
+	return map;
 }
 
 function renderDayDetails() {
-  const summary = $("day-summary");
-  const list = $("day-fast-list");
-  const map = buildDayFastMap({ includeActive: true });
-  const day = map[selectedDayKey];
+	const summary = $("day-summary");
+	const list = $("day-fast-list");
+	const map = buildDayFastMap({ includeActive: true });
+	const day = map[selectedDayKey];
 
-  list.innerHTML = "";
+	list.innerHTML = "";
 
-  if (!day) {
-    summary.textContent = "No fasts logged";
-    return;
-  }
+	if (!day) {
+		summary.textContent = "No fasts logged";
+		return;
+	}
 
-  const dayNoteCalories = getNoteCaloriesForDateKey(selectedDayKey);
-  const calorieSummary =
-    Number.isFinite(dayNoteCalories) && dayNoteCalories > 0
-      ? `, ${formatCalories(dayNoteCalories)} calories`
-      : "";
-  summary.textContent = `${day.entries.length} fast(s), ${day.totalHours.toFixed(1)} total hours${calorieSummary}`;
+	const dayNoteCalories = getNoteCaloriesForDateKey(selectedDayKey);
+	const calorieSummary =
+		Number.isFinite(dayNoteCalories) && dayNoteCalories > 0
+			? `, ${formatCalories(dayNoteCalories)} calories`
+			: "";
+	summary.textContent = `${day.entries.length} fast(s), ${day.totalHours.toFixed(1)} total hours${calorieSummary}`;
 
-  day.entries.forEach((e) => {
-    const displayStart = e.displayStartTimestamp ?? e.startTimestamp;
-    const displayEnd = e.displayEndTimestamp ?? e.endTimestamp;
-    const sourceEntry = e.sourceEntry ?? e;
-    const actualStart = new Date(sourceEntry.startTimestamp);
-    const actualEnd = new Date(sourceEntry.endTimestamp);
-    const spansMultipleDays = !isSameLocalDay(actualStart, actualEnd);
-    const row = document.createElement("div");
-    row.className =
-      "flex items-center justify-between surface border border-default rounded-xl px-3 py-3 md:py-2";
+	day.entries.forEach((e) => {
+		const displayStart = e.displayStartTimestamp ?? e.startTimestamp;
+		const displayEnd = e.displayEndTimestamp ?? e.endTimestamp;
+		const sourceEntry = e.sourceEntry ?? e;
+		const actualStart = new Date(sourceEntry.startTimestamp);
+		const actualEnd = new Date(sourceEntry.endTimestamp);
+		const spansMultipleDays = !isSameLocalDay(actualStart, actualEnd);
+		const row = document.createElement("div");
+		row.className =
+			"flex items-center justify-between surface border border-default rounded-xl px-3 py-3 md:py-2";
 
-    const left = document.createElement("div");
-    left.className = "flex flex-col text-sm md:text-[11px]";
+		const left = document.createElement("div");
+		left.className = "flex flex-col text-sm md:text-[11px]";
 
-    const type = getTypeById(e.typeId);
-    const title = document.createElement("div");
-    title.className = "text-default";
-    const label = type ? type.label : "Custom";
-    title.textContent = e.isActive
-      ? `Active • ${label} fast`
-      : `${label} • ${Number(e.durationHours).toFixed(1)}h`;
+		const type = getTypeById(e.typeId);
+		const title = document.createElement("div");
+		title.className = "text-default";
+		const label = type ? type.label : "Custom";
+		title.textContent = e.isActive
+			? `Active • ${label} fast`
+			: `${label} • ${Number(e.durationHours).toFixed(1)}h`;
 
-    const time = document.createElement("div");
-    time.className = "text-muted";
-    const timeLabel = spansMultipleDays
-      ? `${formatDateTimeLong(actualStart)} → ${formatDateTimeLong(new Date(displayEnd))}`
-      : `${formatTimeShort(new Date(displayStart))} → ${formatTimeShort(new Date(displayEnd))}`;
-    time.textContent = e.isActive ? `${timeLabel} (in progress)` : timeLabel;
+		const time = document.createElement("div");
+		time.className = "text-muted";
+		const timeLabel = spansMultipleDays
+			? `${formatDateTimeLong(actualStart)} → ${formatDateTimeLong(new Date(displayEnd))}`
+			: `${formatTimeShort(new Date(displayStart))} → ${formatTimeShort(new Date(displayEnd))}`;
+		time.textContent = e.isActive ? `${timeLabel} (in progress)` : timeLabel;
 
-    left.appendChild(title);
-    left.appendChild(time);
+		left.appendChild(title);
+		left.appendChild(time);
 
-    row.appendChild(left);
+		row.appendChild(left);
 
-    if (!e.isActive) {
-      const actions = document.createElement("div");
-      actions.className = "flex items-center gap-2";
+		if (!e.isActive) {
+			const actions = document.createElement("div");
+			actions.className = "flex items-center gap-2";
 
-      const editBtn = document.createElement("button");
-      editBtn.type = "button";
-      editBtn.className =
-        "button-outline border text-xs md:text-[11px] px-3 py-2 md:px-2 md:py-1 rounded-full";
-      editBtn.textContent = "Edit";
-      editBtn.addEventListener("click", () => openEditHistoryModal(sourceEntry));
+			const editBtn = document.createElement("button");
+			editBtn.type = "button";
+			editBtn.className =
+				"button-outline border text-xs md:text-[11px] px-3 py-2 md:px-2 md:py-1 rounded-full";
+			editBtn.textContent = "Edit";
+			editBtn.addEventListener("click", () =>
+				openEditHistoryModal(sourceEntry),
+			);
 
-      const deleteBtn = document.createElement("button");
-      deleteBtn.type = "button";
-      deleteBtn.className =
-        "button-danger border text-xs md:text-[11px] px-3 py-2 md:px-2 md:py-1 rounded-full";
-      deleteBtn.textContent = "Delete";
-      deleteBtn.addEventListener("click", () => deleteHistoryEntry(sourceEntry.id));
+			const deleteBtn = document.createElement("button");
+			deleteBtn.type = "button";
+			deleteBtn.className =
+				"button-danger border text-xs md:text-[11px] px-3 py-2 md:px-2 md:py-1 rounded-full";
+			deleteBtn.textContent = "Delete";
+			deleteBtn.addEventListener("click", () =>
+				deleteHistoryEntry(sourceEntry.id),
+			);
 
-      actions.appendChild(editBtn);
-      actions.appendChild(deleteBtn);
-      row.appendChild(actions);
-    }
+			actions.appendChild(editBtn);
+			actions.appendChild(deleteBtn);
+			row.appendChild(actions);
+		}
 
-    list.appendChild(row);
-  });
+		list.appendChild(row);
+	});
 }
 
 function isSameLocalDay(a, b) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
+	return (
+		a.getFullYear() === b.getFullYear() &&
+		a.getMonth() === b.getMonth() &&
+		a.getDate() === b.getDate()
+	);
 }
 
 function formatDateTimeLong(date) {
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  const yyyy = date.getFullYear();
-  const hh = String(date.getHours()).padStart(2, "0");
-  const min = String(date.getMinutes()).padStart(2, "0");
-  return `${mm}/${dd}/${yyyy} ${hh}:${min}`;
+	const mm = String(date.getMonth() + 1).padStart(2, "0");
+	const dd = String(date.getDate()).padStart(2, "0");
+	const yyyy = date.getFullYear();
+	const hh = String(date.getHours()).padStart(2, "0");
+	const min = String(date.getMinutes()).padStart(2, "0");
+	return `${mm}/${dd}/${yyyy} ${hh}:${min}`;
 }
 
 function renderNotes() {
-  renderHistoryNotes();
-  renderNotesTab();
-  renderCalorieSummary();
-  renderCalorieRing();
-  renderCalorieButton();
+	renderHistoryNotes();
+	renderNotesTab();
+	renderCalorieSummary();
+	renderCalorieRing();
+	renderCalorieButton();
 }
 
 function renderHistoryNotes() {
-  const summary = $("day-notes-summary");
-  const list = $("day-notes-list");
-  if (!summary || !list) return;
+	const summary = $("day-notes-summary");
+	const list = $("day-notes-list");
+	if (!summary || !list) return;
 
-  list.innerHTML = "";
+	list.innerHTML = "";
 
-  if (!notesLoaded) {
-    summary.textContent = "Loading notes…";
-    return;
-  }
+	if (!notesLoaded) {
+		summary.textContent = "Loading notes…";
+		return;
+	}
 
-  const dayNotes = notes.filter((note) => note.dateKey === selectedDayKey);
-  if (!dayNotes.length) {
-    summary.textContent = "No notes yet.";
-    return;
-  }
+	const dayNotes = notes.filter((note) => note.dateKey === selectedDayKey);
+	if (!dayNotes.length) {
+		summary.textContent = "No notes yet.";
+		return;
+	}
 
-  const dayNoteCalories = getNoteCaloriesForDateKey(selectedDayKey);
-  const calorieSummary =
-    Number.isFinite(dayNoteCalories) && dayNoteCalories > 0
-      ? `, ${formatCalories(dayNoteCalories)} calories`
-      : "";
-  summary.textContent = `${dayNotes.length} note(s)${calorieSummary}`;
-  dayNotes.forEach((note) => {
-    list.appendChild(buildNoteCard(note));
-  });
+	const dayNoteCalories = getNoteCaloriesForDateKey(selectedDayKey);
+	const calorieSummary =
+		Number.isFinite(dayNoteCalories) && dayNoteCalories > 0
+			? `, ${formatCalories(dayNoteCalories)} calories`
+			: "";
+	summary.textContent = `${dayNotes.length} note(s)${calorieSummary}`;
+	dayNotes.forEach((note) => {
+		list.appendChild(buildNoteCard(note));
+	});
 }
 
 function renderNotesTab() {
-  const list = $("notes-list");
-  const empty = $("notes-empty");
-  const emptyTitle = $("notes-empty-title");
-  const emptyBody = $("notes-empty-body");
-  if (!list || !empty || !emptyTitle || !emptyBody) return;
+	const list = $("notes-list");
+	const empty = $("notes-empty");
+	const emptyTitle = $("notes-empty-title");
+	const emptyBody = $("notes-empty-body");
+	if (!list || !empty || !emptyTitle || !emptyBody) return;
 
-  list.innerHTML = "";
+	list.innerHTML = "";
 
-  if (!notesLoaded) {
-    emptyTitle.textContent = "Loading notes…";
-    emptyBody.textContent = "Your notes will appear here once they sync.";
-    empty.classList.remove("hidden");
-    return;
-  }
+	if (!notesLoaded) {
+		emptyTitle.textContent = "Loading notes…";
+		emptyBody.textContent = "Your notes will appear here once they sync.";
+		empty.classList.remove("hidden");
+		return;
+	}
 
-  if (!notes.length) {
-    emptyTitle.textContent = "No notes yet";
-    emptyBody.textContent = "Start a new note to track how your fast feels.";
-    empty.classList.remove("hidden");
-    return;
-  }
+	if (!notes.length) {
+		emptyTitle.textContent = "No notes yet";
+		emptyBody.textContent = "Start a new note to track how your fast feels.";
+		empty.classList.remove("hidden");
+		return;
+	}
 
-  empty.classList.add("hidden");
-  notes.forEach((note) => {
-    list.appendChild(buildNoteCard(note));
-  });
+	empty.classList.add("hidden");
+	notes.forEach((note) => {
+		list.appendChild(buildNoteCard(note));
+	});
 }
 
 function buildNoteCard(note) {
-  const card = document.createElement("button");
-  card.type = "button";
-  card.className = "note-card";
-  card.addEventListener("click", () => openNoteEditor(note));
+	const card = document.createElement("button");
+	card.type = "button";
+	card.className = "note-card";
+	card.addEventListener("click", () => openNoteEditor(note));
 
-  const hasCalorieEntry = Boolean(note.calorieEntry);
-  if (hasCalorieEntry) {
-    const entry = document.createElement("div");
-    entry.className = "note-calorie-entry";
+	const hasCalorieEntry = Boolean(note.calorieEntry);
+	if (hasCalorieEntry) {
+		const entry = document.createElement("div");
+		entry.className = "note-calorie-entry";
 
-    const calorieBox = document.createElement("div");
-    calorieBox.className = "note-calorie-box";
+		const calorieBox = document.createElement("div");
+		calorieBox.className = "note-calorie-box";
 
-    const calorieValue = document.createElement("div");
-    calorieValue.className = "note-calorie-value";
-    const calories = note.calorieEntry?.calories;
-    calorieValue.textContent = Number.isFinite(calories) ? `${Math.round(calories)}` : "—";
+		const calorieValue = document.createElement("div");
+		calorieValue.className = "note-calorie-value";
+		const calories = note.calorieEntry?.calories;
+		calorieValue.textContent = Number.isFinite(calories)
+			? `${Math.round(calories)}`
+			: "—";
 
-    const calorieUnit = document.createElement("div");
-    calorieUnit.className = "note-calorie-unit";
-    calorieUnit.textContent = "cal";
+		const calorieUnit = document.createElement("div");
+		calorieUnit.className = "note-calorie-unit";
+		calorieUnit.textContent = "cal";
 
-    calorieBox.appendChild(calorieValue);
-    calorieBox.appendChild(calorieUnit);
+		calorieBox.appendChild(calorieValue);
+		calorieBox.appendChild(calorieUnit);
 
-    const calorieText = document.createElement("div");
-    calorieText.className = "note-calorie-text";
-    calorieText.textContent = note.text || "Calorie entry";
+		const calorieText = document.createElement("div");
+		calorieText.className = "note-calorie-text";
+		calorieText.textContent = note.text || "Calorie entry";
 
-    entry.appendChild(calorieBox);
-    entry.appendChild(calorieText);
-    card.appendChild(entry);
-  } else {
-    const text = document.createElement("div");
-    text.className = "text-default whitespace-pre-wrap text-sm md:text-xs";
-    text.textContent = note.text || "Untitled note";
-    card.appendChild(text);
-  }
+		entry.appendChild(calorieBox);
+		entry.appendChild(calorieText);
+		card.appendChild(entry);
+	} else {
+		const text = document.createElement("div");
+		text.className = "text-default whitespace-pre-wrap text-sm md:text-xs";
+		text.textContent = note.text || "Untitled note";
+		card.appendChild(text);
+	}
 
-  const meta = document.createElement("div");
-  meta.className = "note-meta";
+	const meta = document.createElement("div");
+	meta.className = "note-meta";
 
-  const date = document.createElement("span");
-  date.textContent = getNoteTimestampLabel(note);
+	const date = document.createElement("span");
+	date.textContent = getNoteTimestampLabel(note);
 
-  const badge = document.createElement("span");
-  badge.className = "note-badge";
-  const isActive = Boolean(note.fastContext?.wasActive);
-  const elapsedMsAtNote = note.fastContext?.elapsedMsAtNote;
-  const hasElapsed = isActive && typeof elapsedMsAtNote === "number";
-  if (isActive) {
-    const typeLabel = note.fastContext?.fastTypeLabel || "fast";
-    const elapsedLabel = hasElapsed ? ` • ${formatElapsedShort(elapsedMsAtNote)} in` : "";
-    badge.textContent = `Active ${typeLabel}${elapsedLabel}`;
-  } else {
-    badge.textContent = "No active fast";
-    badge.classList.add("is-muted");
-  }
+	const badge = document.createElement("span");
+	badge.className = "note-badge";
+	const isActive = Boolean(note.fastContext?.wasActive);
+	const elapsedMsAtNote = note.fastContext?.elapsedMsAtNote;
+	const hasElapsed = isActive && typeof elapsedMsAtNote === "number";
+	if (isActive) {
+		const typeLabel = note.fastContext?.fastTypeLabel || "fast";
+		const elapsedLabel = hasElapsed
+			? ` • ${formatElapsedShort(elapsedMsAtNote)} in`
+			: "";
+		badge.textContent = `Active ${typeLabel}${elapsedLabel}`;
+	} else {
+		badge.textContent = "No active fast";
+		badge.classList.add("is-muted");
+	}
 
-  meta.appendChild(date);
-  meta.appendChild(badge);
+	meta.appendChild(date);
+	meta.appendChild(badge);
 
-  card.appendChild(meta);
-  return card;
+	card.appendChild(meta);
+	return card;
 }
 
 function getNoteTimestampLabel(note) {
-  const dateObj = parseDateKey(note.dateKey);
-  if (dateObj)
-    return dateObj.toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  return "Unknown date";
+	const dateObj = parseDateKey(note.dateKey);
+	if (dateObj)
+		return dateObj.toLocaleDateString(undefined, {
+			month: "short",
+			day: "numeric",
+			year: "numeric",
+		});
+	return "Unknown date";
 }
 
 function renderRecentFasts() {
-  const container = $("recent-fast-list");
-  container.innerHTML = "";
-  if (!state.history.length) {
-    const p = document.createElement("p");
-    p.className = "text-muted text-sm md:text-xs";
-    p.textContent = "No fasts logged yet.";
-    container.appendChild(p);
-    return;
-  }
+	const container = $("recent-fast-list");
+	container.innerHTML = "";
+	if (!state.history.length) {
+		const p = document.createElement("p");
+		p.className = "text-muted text-sm md:text-xs";
+		p.textContent = "No fasts logged yet.";
+		container.appendChild(p);
+		return;
+	}
 
-  state.history.slice(0, 10).forEach((e) => {
-    const row = document.createElement("div");
-    row.className =
-      "flex items-center justify-between surface border border-default rounded-xl px-3 py-3 md:py-2";
+	state.history.slice(0, 10).forEach((e) => {
+		const row = document.createElement("div");
+		row.className =
+			"flex items-center justify-between surface border border-default rounded-xl px-3 py-3 md:py-2";
 
-    const left = document.createElement("div");
-    left.className = "flex flex-col text-sm md:text-[11px]";
+		const left = document.createElement("div");
+		left.className = "flex flex-col text-sm md:text-[11px]";
 
-    const type = getTypeById(e.typeId);
-    const title = document.createElement("div");
-    title.className = "text-default";
-    title.textContent = `${type ? type.label : "Custom"} • ${Number(e.durationHours).toFixed(1)}h`;
+		const type = getTypeById(e.typeId);
+		const title = document.createElement("div");
+		title.className = "text-default";
+		title.textContent = `${type ? type.label : "Custom"} • ${Number(e.durationHours).toFixed(1)}h`;
 
-    const start = new Date(e.startTimestamp);
-    const time = document.createElement("div");
-    time.className = "text-muted";
-    time.textContent = `${start.toLocaleDateString(undefined, { month: "short", day: "numeric" })} • ${formatTimeShort(start)}`;
+		const start = new Date(e.startTimestamp);
+		const time = document.createElement("div");
+		time.className = "text-muted";
+		time.textContent = `${start.toLocaleDateString(undefined, { month: "short", day: "numeric" })} • ${formatTimeShort(start)}`;
 
-    left.appendChild(title);
-    left.appendChild(time);
+		left.appendChild(title);
+		left.appendChild(time);
 
-    row.appendChild(left);
-    container.appendChild(row);
-  });
+		row.appendChild(left);
+		container.appendChild(row);
+	});
 }
 
 function renderAll() {
-  applyThemeColors();
-  renderSettings();
-  updateTimer();
-  renderCalendar();
-  renderDayDetails();
-  renderNotes();
-  renderRecentFasts();
-  renderCalories();
+	applyThemeColors();
+	renderSettings();
+	updateTimer();
+	renderCalendar();
+	renderDayDetails();
+	renderNotes();
+	renderRecentFasts();
+	renderCalories();
 }
 
 function resolveThemePresetId() {
-  const themeState = state.settings.theme || {};
-  if (themeState.presetId === "custom") return "custom";
-  if (themeState.presetId && THEME_PRESETS[themeState.presetId]) return themeState.presetId;
-  if (getLegacyThemeColors(themeState)) return "custom";
-  return defaultState.settings.theme.presetId;
+	const themeState = state.settings.theme || {};
+	if (themeState.presetId === "custom") return "custom";
+	if (themeState.presetId && THEME_PRESETS[themeState.presetId])
+		return themeState.presetId;
+	if (getLegacyThemeColors(themeState)) return "custom";
+	return defaultState.settings.theme.presetId;
 }
 
 function getLegacyThemeColors(themeState) {
-  const legacyKeys = [
-    "primaryColor",
-    "secondaryColor",
-    "backgroundColor",
-    "surfaceColor",
-    "surfaceMutedColor",
-    "borderColor",
-    "textColor",
-    "textMutedColor",
-    "dangerColor",
-  ];
-  const hasLegacy = legacyKeys.some((key) => themeState?.[key]);
-  if (!hasLegacy) return null;
-  return legacyKeys.reduce((acc, key) => {
-    if (themeState?.[key]) acc[key] = themeState[key];
-    return acc;
-  }, {});
+	const legacyKeys = [
+		"primaryColor",
+		"secondaryColor",
+		"backgroundColor",
+		"surfaceColor",
+		"surfaceMutedColor",
+		"borderColor",
+		"textColor",
+		"textMutedColor",
+		"dangerColor",
+	];
+	const hasLegacy = legacyKeys.some((key) => themeState?.[key]);
+	if (!hasLegacy) return null;
+	return legacyKeys.reduce((acc, key) => {
+		if (themeState?.[key]) acc[key] = themeState[key];
+		return acc;
+	}, {});
 }
 
 function getCustomThemeColors() {
-  const themeState = state.settings.theme || {};
-  const legacyColors = getLegacyThemeColors(themeState);
-  const customColors = themeState.customColors || legacyColors || {};
-  return Object.assign({}, defaultState.settings.theme.customColors, customColors);
+	const themeState = state.settings.theme || {};
+	const legacyColors = getLegacyThemeColors(themeState);
+	const customColors = themeState.customColors || legacyColors || {};
+	return Object.assign(
+		{},
+		defaultState.settings.theme.customColors,
+		customColors,
+	);
 }
 
 function setCustomThemeColor(key, value) {
-  if (!state.settings.theme) state.settings.theme = {};
-  state.settings.theme.presetId = "custom";
-  state.settings.theme.customColors = Object.assign({}, getCustomThemeColors(), { [key]: value });
+	if (!state.settings.theme) state.settings.theme = {};
+	state.settings.theme.presetId = "custom";
+	state.settings.theme.customColors = Object.assign(
+		{},
+		getCustomThemeColors(),
+		{ [key]: value },
+	);
 }
 
 function setThemePreset(presetId) {
-  if (!state.settings.theme) state.settings.theme = {};
-  if (presetId === "custom") {
-    state.settings.theme.presetId = "custom";
-    state.settings.theme.customColors = getCustomThemeColors();
-    return;
-  }
-  state.settings.theme.presetId = THEME_PRESETS[presetId]
-    ? presetId
-    : defaultState.settings.theme.presetId;
+	if (!state.settings.theme) state.settings.theme = {};
+	if (presetId === "custom") {
+		state.settings.theme.presetId = "custom";
+		state.settings.theme.customColors = getCustomThemeColors();
+		return;
+	}
+	state.settings.theme.presetId = THEME_PRESETS[presetId]
+		? presetId
+		: defaultState.settings.theme.presetId;
 }
 
 function applyThemeColors() {
-  const theme = getThemeSettings();
-  const root = document.documentElement;
-  root.style.setProperty("--primary-color", theme.primaryColor);
-  root.style.setProperty("--secondary-color", theme.secondaryColor);
-  root.style.setProperty("--background-color", theme.backgroundColor);
-  root.style.setProperty("--surface-color", theme.surfaceColor);
-  root.style.setProperty("--surface-muted-color", theme.surfaceMutedColor);
-  root.style.setProperty("--border-color", theme.borderColor);
-  root.style.setProperty("--text-color", theme.textColor);
-  root.style.setProperty("--text-muted-color", theme.textMutedColor);
-  root.style.setProperty("--danger-color", theme.dangerColor);
-  const meta = document.querySelector("meta[name='theme-color']");
-  if (meta) meta.setAttribute("content", theme.backgroundColor);
+	const theme = getThemeSettings();
+	const root = document.documentElement;
+	root.style.setProperty("--primary-color", theme.primaryColor);
+	root.style.setProperty("--secondary-color", theme.secondaryColor);
+	root.style.setProperty("--background-color", theme.backgroundColor);
+	root.style.setProperty("--surface-color", theme.surfaceColor);
+	root.style.setProperty("--surface-muted-color", theme.surfaceMutedColor);
+	root.style.setProperty("--border-color", theme.borderColor);
+	root.style.setProperty("--text-color", theme.textColor);
+	root.style.setProperty("--text-muted-color", theme.textMutedColor);
+	root.style.setProperty("--danger-color", theme.dangerColor);
+	const meta = document.querySelector("meta[name='theme-color']");
+	if (meta) meta.setAttribute("content", theme.backgroundColor);
 }
 
 function getThemeSettings() {
-  const presetId = resolveThemePresetId();
-  if (presetId !== "custom" && THEME_PRESETS[presetId]) {
-    return Object.assign({}, THEME_PRESETS[presetId].colors);
-  }
-  return getCustomThemeColors();
+	const presetId = resolveThemePresetId();
+	if (presetId !== "custom" && THEME_PRESETS[presetId]) {
+		return Object.assign({}, THEME_PRESETS[presetId].colors);
+	}
+	return getCustomThemeColors();
 }
 
 function toLocalInputValue(d) {
-  const pad = (n) => String(n).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  const mm = pad(d.getMonth() + 1);
-  const dd = pad(d.getDate());
-  const hh = pad(d.getHours());
-  const mi = pad(d.getMinutes());
-  return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+	const pad = (n) => String(n).padStart(2, "0");
+	const yyyy = d.getFullYear();
+	const mm = pad(d.getMonth() + 1);
+	const dd = pad(d.getDate());
+	const hh = pad(d.getHours());
+	const mi = pad(d.getMinutes());
+	return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
 }
 
 function formatHMS(ms) {
-  const total = Math.max(0, Math.floor(ms / 1000));
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+	const total = Math.max(0, Math.floor(ms / 1000));
+	const h = Math.floor(total / 3600);
+	const m = Math.floor((total % 3600) / 60);
+	const s = total % 60;
+	return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
 function formatElapsedShort(ms) {
-  const totalMinutes = Math.max(0, Math.floor(ms / 60000));
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  if (hours <= 0) return `${minutes}m`;
-  return `${hours}h ${minutes}m`;
+	const totalMinutes = Math.max(0, Math.floor(ms / 60000));
+	const hours = Math.floor(totalMinutes / 60);
+	const minutes = totalMinutes % 60;
+	if (hours <= 0) return `${minutes}m`;
+	return `${hours}h ${minutes}m`;
 }
 
 function formatDateTime(d) {
-  return d.toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+	return d.toLocaleString(undefined, {
+		month: "short",
+		day: "numeric",
+		hour: "2-digit",
+		minute: "2-digit",
+	});
 }
 
 function formatTimeShort(d) {
-  return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+	return d.toLocaleTimeString(undefined, {
+		hour: "2-digit",
+		minute: "2-digit",
+	});
 }
 
 function startOfMonth(d) {
-  return new Date(d.getFullYear(), d.getMonth(), 1);
+	return new Date(d.getFullYear(), d.getMonth(), 1);
 }
 function getDaysInMonth(d) {
-  return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+	return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
 }
 function addMonths(d, amount) {
-  return new Date(d.getFullYear(), d.getMonth() + amount, 1);
+	return new Date(d.getFullYear(), d.getMonth() + amount, 1);
 }
 
 function formatDateKey(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+	const y = d.getFullYear();
+	const m = String(d.getMonth() + 1).padStart(2, "0");
+	const day = String(d.getDate()).padStart(2, "0");
+	return `${y}-${m}-${day}`;
 }
 
 function parseDateKey(dateKey) {
-  if (!dateKey) return null;
-  const parts = dateKey.split("-");
-  if (parts.length !== 3) return null;
-  const [y, m, d] = parts.map(Number);
-  if (!y || !m || !d) return null;
-  return new Date(y, m - 1, d);
+	if (!dateKey) return null;
+	const parts = dateKey.split("-");
+	if (parts.length !== 3) return null;
+	const [y, m, d] = parts.map(Number);
+	if (!y || !m || !d) return null;
+	return new Date(y, m - 1, d);
 }
 
 async function registerServiceWorker() {
-  if (!("serviceWorker" in navigator)) return;
-  try {
-    swReg = await navigator.serviceWorker.register("./sw.js");
-  } catch {}
+	if (!("serviceWorker" in navigator)) return;
+	try {
+		swReg = await navigator.serviceWorker.register("./sw.js");
+	} catch {}
 }
