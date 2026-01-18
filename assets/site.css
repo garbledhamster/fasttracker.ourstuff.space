@@ -1,0 +1,66 @@
+:root {
+  --site-max-width: var(--size-content-3);
+}
+
+main.container {
+  width: min(100%, var(--site-max-width));
+  margin-inline: auto;
+  padding: var(--size-5) var(--size-4) var(--size-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-6);
+}
+
+#app,
+#auth-screen {
+  width: 100%;
+}
+
+.surface,
+.surface-soft,
+.surface-glass,
+.modal-sheet,
+.note-editor-panel {
+  border-radius: var(--radius-3);
+  box-shadow: var(--shadow-2);
+}
+
+a,
+button,
+input,
+select,
+textarea,
+.pressable-surface {
+  transition: background-color var(--transition-fast) var(--ease-3),
+    color var(--transition-fast) var(--ease-3),
+    border-color var(--transition-fast) var(--ease-3),
+    box-shadow var(--transition-fast) var(--ease-3),
+    transform var(--transition-fast) var(--ease-3);
+}
+
+a:hover,
+button:hover,
+.pressable-surface:hover {
+  box-shadow: var(--shadow-3);
+  transform: translateY(calc(var(--size-1) * -0.5));
+}
+
+:focus-visible {
+  outline: var(--border-size-2) solid var(--cyan-5);
+  outline-offset: var(--size-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate__animated {
+    animation: none !important;
+  }
+}

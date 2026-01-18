@@ -59,7 +59,7 @@ body.bg-slate-950 {
 }
 
 .tab-no-scroll #app,
-.tab-no-scroll #app main {
+.tab-no-scroll #app .app-main {
   height: 100dvh;
 }
 

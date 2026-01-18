@@ -15,6 +15,11 @@
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/open-props/normalize.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/open-props/open-props.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <link rel="stylesheet" href="assets/site.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = { theme: { extend: { colors: { brand: { 500: "#06b6d4", 600: "#0891b2" }}}}};
@@ -22,15 +27,16 @@
   <script src="firebase-config.js"></script>
 </head>
 <body class="min-h-screen bg-app text-default">
-  <div id="toast" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 hidden px-3 py-2 rounded-full surface border border-default text-sm md:text-xs text-default"></div>
-  <div id="nav-tooltip" class="fixed z-50 hidden px-2 py-1 rounded-md surface border border-default text-[11px] text-default pointer-events-none shadow-lg"></div>
+  <main class="container">
+    <div id="toast" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 hidden px-3 py-2 rounded-full surface border border-default text-sm md:text-xs text-default"></div>
+    <div id="nav-tooltip" class="fixed z-50 hidden px-2 py-1 rounded-md surface border border-default text-[11px] text-default pointer-events-none shadow-lg"></div>
 
-  <div id="auth-screen" class="min-h-screen hidden px-4 py-10 flex items-center justify-center">
-    <div class="w-full max-w-md surface-glass border border-default rounded-3xl p-6 md:p-5 shadow-xl">
-      <div class="mb-5">
-        <h2 id="auth-title" class="text-2xl md:text-xl font-semibold text-default">Welcome back</h2>
-        <p id="auth-subtitle" class="text-sm md:text-xs text-muted mt-1">Sign in to keep your fasting history synced.</p>
-      </div>
+    <section id="auth-screen" class="min-h-screen hidden px-4 py-10 flex items-center justify-center">
+      <div class="w-full max-w-md surface-glass border border-default rounded-3xl p-6 md:p-5 shadow-xl">
+        <div class="mb-5">
+          <h2 id="auth-title" class="text-2xl md:text-xl font-semibold text-default">Welcome back</h2>
+          <p id="auth-subtitle" class="text-sm md:text-xs text-muted mt-1">Sign in to keep your fasting history synced.</p>
+        </div>
 
       <form id="auth-form" class="space-y-4">
         <div>
@@ -81,12 +87,12 @@
         <button id="auth-toggle" type="button" class="font-medium ml-1">Create an account</button>
       </div>
     </div>
-  </div>
+    </section>
 
   <div id="app" class="flex flex-col min-h-screen hidden">
     <header class="px-4 pt-4 md:pt-16 pb-3 flex items-center justify-between">
       <div class="flex flex-col">
-        <h1 class="text-xl md:text-lg font-semibold tracking-tight">Fast Track</h1>
+        <h1 class="text-xl md:text-lg font-semibold tracking-tight animate__animated animate__fadeInUp">Fast Track</h1>
         <p id="header-subtitle" class="text-sm md:text-xs text-muted">No active fast</p>
       </div>
       <div class="flex items-center gap-2">
@@ -108,7 +114,7 @@
       </div>
     </header>
 
-    <main class="flex-1 px-4 pb-28 md:pb-20 pt-1 md:pt-2">
+    <section class="app-main flex-1 px-4 pb-28 md:pb-20 pt-1 md:pt-2">
       <section id="tab-timer" class="tracker-tab h-full flex flex-col gap-6 md:gap-5">
         <div class="tracker-ring-wrap flex justify-center mt-6 md:mt-4">
           <div class="w-full max-w-md">
@@ -377,7 +383,7 @@
           <button id="sign-out" type="button" class="w-full py-3 md:py-2.5 rounded-xl button-outline border text-sm md:text-xs font-medium">Sign out</button>
         </div>
       </section>
-    </main>
+    </section>
 
     <nav class="fixed bottom-0 md:bottom-auto md:top-0 inset-x-0 border-t md:border-t-0 md:border-b border-default surface-appbar backdrop-blur pb-[env(safe-area-inset-bottom)] md:pb-0 md:pt-[env(safe-area-inset-top)]">
       <div class="flex h-20 md:h-14">
@@ -614,6 +620,7 @@
     </div>
   </div>
 
+  </main>
   <script src="script.js" type="module"></script>
 </body>
 </html>
