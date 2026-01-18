@@ -42,6 +42,20 @@ export default [
       "no-var": "warn",
     },
   },
+  // Service Worker specific configuration
+  {
+    files: ["sw.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        self: "readonly",
+        caches: "readonly",
+        fetch: "readonly",
+        console: "readonly",
+      },
+    },
+  },
   {
     ignores: ["node_modules/", "dist/", "build/", "*.min.js"],
   },

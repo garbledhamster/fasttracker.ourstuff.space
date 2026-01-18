@@ -1,5 +1,15 @@
 # Personal-Fast-Tracker
 
+## Code Quality Tools
+
+This project uses several code quality tools to maintain high standards. See [CODE_QUALITY.md](CODE_QUALITY.md) for detailed information.
+
+**Quick start:**
+```bash
+npm install
+npm run check  # Run all code quality checks
+```
+
 ## Firebase configuration
 
 This app expects Firebase configuration to be provided in `firebase-config.js` and loaded before `script.js`.
