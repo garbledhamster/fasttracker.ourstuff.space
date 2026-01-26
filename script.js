@@ -1340,6 +1340,72 @@ async function decryptNotePayload(payload) {
   return decoded;
 }
 
+async function encryptApiKey(apiKeyValue) {
+  if (!cryptoKey) throw new Error("missing-key");
+  if (!apiKeyValue || typeof apiKeyValue !== "string") return null;
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encodedKey = new TextEncoder().encode(apiKeyValue);
+  const cipherBuffer = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, cryptoKey, encodedKey);
+  return {
+    version: ENCRYPTION_VERSION,
+    iv: encodeBase64(iv),
+    ciphertext: encodeBase64(new Uint8Array(cipherBuffer)),
+  };
+}
+
+async function decryptApiKey(payload) {
+  if (!cryptoKey) throw new Error("missing-key");
+  if (!payload?.iv || !payload?.ciphertext) return null;
+  const iv = decodeBase64(payload.iv);
+  const ciphertext = decodeBase64(payload.ciphertext);
+  const decryptedBuffer = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    cryptoKey,
+    ciphertext,
+  );
+  return new TextDecoder().decode(decryptedBuffer);
+}
+
+async function saveSecureKey(keyName, keyValue) {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const encryptedKey = await encryptApiKey(keyValue);
+  if (!encryptedKey) return;
+
+  await setDoc(
+    getUserDocRef(user.uid),
+    {
+      secure_keys: {
+        [keyName]: encryptedKey
+      }
+    },
+    { merge: true }
+  );
+}
+
+async function loadSecureKeys() {
+  const user = auth.currentUser;
+  if (!user) return {};
+
+  const userDoc = await getDoc(getUserDocRef(user.uid));
+  const secureKeys = userDoc.data()?.secure_keys || {};
+
+  const decryptedKeys = {};
+  for (const [keyName, encryptedPayload] of Object.entries(secureKeys)) {
+    try {
+      const decryptedValue = await decryptApiKey(encryptedPayload);
+      if (decryptedValue) {
+        decryptedKeys[keyName] = decryptedValue;
+      }
+    } catch (err) {
+      console.error(`Failed to decrypt secure key: ${keyName}`, err);
+    }
+  }
+
+  return decryptedKeys;
+}
+
 function handleNotesDecryptError(err) {
   const message = err?.message === "missing-key" ? "missing-password" : err?.message;
   if (message === "missing-password" || message === "decrypt-failed") {
@@ -1405,7 +1471,20 @@ async function loadState() {
         else throw new Error("missing-password");
       }
     }
-    return clone(defaultState);
+
+    const newState = clone(defaultState);
+
+    // Load secure keys from user document even for new users
+    try {
+      const secureKeys = await loadSecureKeys();
+      if (secureKeys.openaikey) {
+        newState.settings.openaiApiKey = secureKeys.openaikey;
+      }
+    } catch (err) {
+      console.error("Failed to load secure keys:", err);
+    }
+
+    return newState;
   }
 
   if (!payload.iv || !payload.ciphertext) throw new Error("invalid-payload");
@@ -1424,7 +1503,19 @@ async function loadState() {
 
   try {
     const decrypted = await decryptStatePayload(payload);
-    return mergeStateWithDefaults(decrypted);
+    const mergedState = mergeStateWithDefaults(decrypted);
+
+    // Load secure keys from user document (takes priority for cross-device sync)
+    try {
+      const secureKeys = await loadSecureKeys();
+      if (secureKeys.openaikey) {
+        mergedState.settings.openaiApiKey = secureKeys.openaikey;
+      }
+    } catch (err) {
+      console.error("Failed to load secure keys:", err);
+    }
+
+    return mergedState;
   } catch {
     cryptoKey = null;
     keySalt = null;
@@ -2780,9 +2871,19 @@ function initButtons() {
     renderCalories();
   });
 
-  $("openai-api-key").addEventListener("change", (event) => {
-    state.settings.openaiApiKey = event.target.value.trim();
+  $("openai-api-key").addEventListener("change", async (event) => {
+    const apiKey = event.target.value.trim();
+    state.settings.openaiApiKey = apiKey;
     void saveState();
+
+    // Save encrypted key to user document for cross-device sync
+    if (apiKey) {
+      try {
+        await saveSecureKey("openaikey", apiKey);
+      } catch (err) {
+        console.error("Failed to save API key to user document:", err);
+      }
+    }
   });
 
   $("theme-preset-select").addEventListener("change", (event) => {
