@@ -322,6 +322,15 @@
         </div>
 
         <div class="mt-4 space-y-3">
+          <h2 class="text-xs uppercase tracking-[0.2em] text-subtle mb-1">AI Features</h2>
+          <div>
+            <label class="block text-sm md:text-xs text-muted mb-1" for="openai-api-key">OpenAI API key</label>
+            <input id="openai-api-key" type="password" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="sk-...">
+            <p class="text-xs md:text-[11px] text-subtle mt-1">Your API key is encrypted and stored securely. <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" class="text-brand-500 hover:text-brand-600 underline">Get API Key</a></p>
+          </div>
+        </div>
+
+        <div class="mt-4 space-y-3">
           <h2 class="text-xs uppercase tracking-[0.2em] text-subtle mb-1">Theme</h2>
           <label class="block text-sm md:text-xs text-muted">Theme preset</label>
           <select id="theme-preset-select" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"></select>
@@ -606,7 +615,15 @@
       <label for="note-editor-content" class="block text-sm md:text-xs text-muted mb-1">Note content</label>
       <textarea id="note-editor-content" rows="5" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="What do you want to remember?"></textarea>
       <label for="note-editor-calories" class="block text-sm md:text-xs text-muted mb-1 mt-3">Calories</label>
-      <input id="note-editor-calories" type="number" min="0" step="1" class="w-full surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="0">
+      <div class="flex gap-2">
+        <input id="note-editor-calories" type="number" min="0" step="1" class="flex-1 surface border border-default rounded-xl px-3 py-3 md:py-2 text-sm md:text-xs focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="0">
+        <button id="note-editor-ai-estimate" type="button" class="ai-estimate-btn surface border border-default rounded-xl px-3 py-3 md:py-2 text-brand-500 hover:bg-brand-500/10 focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors" aria-label="Estimate calories with AI" title="Estimate calories with AI">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6" />
+          </svg>
+        </button>
+      </div>
       <div class="flex gap-2 mt-3">
         <button id="note-editor-delete" type="button" class="flex-1 py-3 md:py-2.5 rounded-xl button-danger border text-sm md:text-xs font-medium hidden">Delete</button>
         <button id="note-editor-save" type="button" class="flex-1 py-3 md:py-2.5 rounded-xl button-primary text-sm md:text-xs font-semibold">Save note</button>
