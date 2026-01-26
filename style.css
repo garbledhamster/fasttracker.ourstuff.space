@@ -650,3 +650,14 @@ body.bg-slate-950 {
 .note-editor-modal.is-open .note-editor-backdrop {
   opacity: 1;
 }
+
+/* AI button animations */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}

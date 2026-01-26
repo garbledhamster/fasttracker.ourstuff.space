@@ -109,6 +109,7 @@ const defaultState = {
     alertsEnabled: false,
     showRingEmojis: true,
     timeDisplayMode: "elapsed",
+    openaiApiKey: "",
     calories: {
       dailyTarget: null,
       goal: "",
@@ -2650,6 +2651,73 @@ function usePendingFastType() {
   showToast("Fast type applied");
 }
 
+async function estimateCaloriesWithAI(noteText) {
+  const apiKey = state.settings.openaiApiKey?.trim();
+
+  if (!apiKey) {
+    showToast("Please add your OpenAI API key in settings first");
+    return null;
+  }
+
+  if (!noteText || !noteText.trim()) {
+    showToast("Please enter food information in the note first");
+    return null;
+  }
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a precise nutritional expert. When given a description of food, you must respond with ONLY a number representing the total estimated calories. Do not include any other text, explanations, units, or formatting - just the number. Be as accurate as possible based on typical serving sizes if not specified. If multiple items are listed, provide the sum total."
+          },
+          {
+            role: "user",
+            content: noteText
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 50,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error("OpenAI API error:", error);
+      showToast(`API error: ${error.error?.message || "Unknown error"}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const calorieText = data.choices[0]?.message?.content?.trim();
+
+    if (!calorieText) {
+      showToast("No response from AI");
+      return null;
+    }
+
+    // Extract just the number from the response
+    const calorieMatch = calorieText.match(/\d+/);
+    if (!calorieMatch) {
+      showToast("Could not parse calorie estimate from AI response");
+      return null;
+    }
+
+    return parseInt(calorieMatch[0], 10);
+  } catch (error) {
+    console.error("Error calling OpenAI API:", error);
+    showToast("Failed to estimate calories. Check your internet connection.");
+    return null;
+  }
+}
+
 function initButtons() {
   $("start-fast-btn").addEventListener("click", confirmStartFast);
   $("stop-fast-btn").addEventListener("click", confirmStopFast);
@@ -2710,6 +2778,11 @@ function initButtons() {
     applyRingEmojiVisibility();
     updateTimer();
     renderCalories();
+  });
+
+  $("openai-api-key").addEventListener("change", (event) => {
+    state.settings.openaiApiKey = event.target.value.trim();
+    void saveState();
   });
 
   $("theme-preset-select").addEventListener("change", (event) => {
@@ -2833,6 +2906,26 @@ function initButtons() {
   $("note-editor-close").addEventListener("click", closeNoteEditor);
   $("note-editor-save").addEventListener("click", saveNoteEditor);
   $("note-editor-delete").addEventListener("click", removeNote);
+  $("note-editor-ai-estimate").addEventListener("click", async () => {
+    const noteContent = $("note-editor-content").value;
+    const button = $("note-editor-ai-estimate");
+    const originalHTML = button.innerHTML;
+
+    // Disable button and show loading state
+    button.disabled = true;
+    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>';
+
+    const estimatedCalories = await estimateCaloriesWithAI(noteContent);
+
+    // Re-enable button and restore original icon
+    button.disabled = false;
+    button.innerHTML = originalHTML;
+
+    if (estimatedCalories !== null) {
+      $("note-editor-calories").value = estimatedCalories;
+      showToast(`Estimated ${estimatedCalories} calories`);
+    }
+  });
   attachNoteEditorSwipeHandlers();
 
   document.addEventListener("visibilitychange", () => {
@@ -2998,6 +3091,7 @@ function renderSettings() {
   $("toggle-hourly-alert").classList.toggle("on", !!state.settings.hourlyReminders);
   $("toggle-ring-emojis").classList.toggle("on", state.settings.showRingEmojis !== false);
   if (unitSelect) unitSelect.value = unitSystem;
+  $("openai-api-key").value = state.settings.openaiApiKey || "";
   $("theme-preset-select").value = presetId;
   $("theme-custom-controls").classList.toggle("hidden", presetId !== "custom");
   $("theme-primary-color").value = customTheme.primaryColor;
